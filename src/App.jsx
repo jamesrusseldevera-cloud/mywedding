@@ -110,7 +110,7 @@ const DEFAULT_DETAILS = {
   ceremonyTime: "3:00 PM",
   ceremonyVenue: "Sacred Heart of Jesus Parish",
   ceremonyAddress: "Muntinlupa, Philippines",
-  ceremonyPhotoUrl: "https://drive.google.com/file/d/1O1LT4IA7r_Z9gDdjyR87ufmgeTxbLwMM/view?usp=sharing, https://drive.google.com/file/d/1I1dZliHB_yu0TWBy9Siqs_XHRAeQK084/view?usp=sharing,https://drive.google.com/file/d/1Cmj0TFtZMBJql9jtw0Of-cYHfzmRMzIa/view?usp=sharing",
+  ceremonyPhotoUrl: "https://www.brideworthy.com/churches/sacred-heart-of-jesus-muntinlupa/",
   ceremonyMapUrl: "",
   receptionDate: "Friday, April 10th, 2026",
   receptionTime: "6:00 PM onwards",
