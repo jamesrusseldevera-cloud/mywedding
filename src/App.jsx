@@ -5,7 +5,7 @@ import {
   BarChart, Phone, Mail, Edit2, Check, MessageSquareHeart, 
   ChevronLeft, ChevronRight, LayoutGrid, StickyNote, Info, 
   Github, Globe, Terminal, Cloud, AlertCircle, ExternalLink, 
-  MapPin, Music, Play, Pause, MailOpen
+  MapPin, Music, Play, Pause, MailOpen, Camera
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
@@ -209,7 +209,7 @@ const ImageSlider = ({ photoString, altText, containerClass, imageClass }) => {
           key={idx}
           src={url}
           alt={`${altText} ${idx + 1}`}
-          className={`absolute inset-0 w-full h-full object-cover transition-all duration-[2000ms] ease-in-out ${idx === currentIndex ? 'opacity-100 scale-105' : 'opacity-0 scale-100'} ${imageClass || ''}`}
+          className={`absolute inset-0 w-full h-full object-cover transition-all duration-[2000ms] ease-in-out ${idx === currentIndex ? 'opacity-100 scale-105 z-10' : 'opacity-0 scale-100 z-0'} ${imageClass || ''}`}
         />
       ))}
     </div>
@@ -353,6 +353,17 @@ export default function App() {
     return () => { unsubConfig(); unsubGuests(); };
   }, [user]);
 
+  // Sync Audio tag specifically if URL changes in DB while app is active
+  useEffect(() => {
+    if (audioRef.current && details.backgroundMusicUrl && !isLanding) {
+      const isCurrentlyPlaying = !audioRef.current.paused;
+      if (audioRef.current.src !== details.backgroundMusicUrl) {
+         audioRef.current.src = details.backgroundMusicUrl;
+         if (isCurrentlyPlaying) audioRef.current.play().catch(()=>{});
+      }
+    }
+  }, [details.backgroundMusicUrl, isLanding]);
+
   // --- RSVP HANDLER ---
   const handleRsvpSubmit = async (e) => {
     e.preventDefault();
@@ -476,46 +487,78 @@ export default function App() {
   // 5. ADMIN FIELD COMPONENT
   // ==========================================
 
-  const Field = ({ label, name, isTextArea = false, isAudio = false }) => {
+  const Field = ({ label, name, isTextArea = false, isAudio = false, isImage = false }) => {
     const [uploading, setUploading] = useState(false);
-    const audioInputRef = useRef(null);
+    const fileInputRefLocal = useRef(null);
 
     if (!editForm) return null;
 
-    const handleAudioUpload = async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      if (!file.type.includes('audio')) {
-        showToast("Please upload a valid audio file.");
-        return;
-      }
+    const handleFileUpload = async (e) => {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      
       setUploading(true);
       try {
-        const safeName = file.name.replace(/[^a-zA-Z0-9.]/g, '');
-        const storageRef = ref(storage, `artifacts/${appId}/public/audio/${Date.now()}_${safeName}`);
-        const snapshot = await uploadBytes(storageRef, file);
-        const url = await getDownloadURL(snapshot.ref);
-        setEditForm(prev => ({ ...prev, [name]: url }));
-        showToast("MP3 uploaded successfully!");
+        const newUrls = [];
+        for(let i = 0; i < files.length; i++) {
+           const file = files[i];
+           const safeName = file.name.replace(/[^a-zA-Z0-9.]/g, '');
+           const folder = isAudio ? 'audio' : 'images';
+           const storageRef = ref(storage, `artifacts/${appId}/public/${folder}/${Date.now()}_${safeName}`);
+           const snapshot = await uploadBytes(storageRef, file);
+           const url = await getDownloadURL(snapshot.ref);
+           newUrls.push(url);
+        }
+
+        if (isImage) {
+          const existingUrls = editForm[name] ? editForm[name].split(',').map(s=>s.trim()).filter(Boolean) : [];
+          const combinedUrls = [...existingUrls, ...newUrls].join(', ');
+          setEditForm(prev => ({ ...prev, [name]: combinedUrls }));
+          showToast("Images uploaded successfully!");
+        } else {
+          setEditForm(prev => ({ ...prev, [name]: newUrls[0] }));
+          showToast("Audio uploaded successfully!");
+        }
       } catch (err) { 
         showToast("Upload failed. Verify Storage permissions."); 
       }
       setUploading(false);
+      if(fileInputRefLocal.current) fileInputRefLocal.current.value = "";
     };
 
     return (
       <div className="mb-6">
         <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">{label}</label>
-        {isAudio ? (
+        {isAudio || isImage ? (
           <div className="flex flex-col gap-3">
-            <input type="file" accept="audio/mpeg, audio/mp3, audio/ogg" ref={audioInputRef} onChange={handleAudioUpload} className="hidden" />
+            <input 
+              type="file" 
+              multiple={isImage}
+              accept={isAudio ? "audio/*" : "image/*"} 
+              ref={fileInputRefLocal} 
+              onChange={handleFileUpload} 
+              className="hidden" 
+            />
             <div className="flex gap-2">
-              <button type="button" onClick={() => audioInputRef.current?.click()} disabled={uploading} className="bg-weddingSage text-white px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest disabled:opacity-50">
-                {uploading ? 'Uploading...' : 'Upload Music (MP3)'}
+              <button 
+                type="button" 
+                onClick={() => fileInputRefLocal.current?.click()} 
+                disabled={uploading} 
+                className="bg-weddingSage text-white px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+              >
+                {uploading ? 'Uploading...' : isImage ? <><Camera size={14}/> Upload Photo(s)</> : <><Music size={14}/> Upload Music</>}
               </button>
-              <input type="text" value={editForm[name] || ''} onChange={e => setEditForm({...editForm, [name]: e.target.value})} className="flex-1 p-2.5 bg-weddingSage/10 border border-weddingSage/30 rounded-lg text-xs" placeholder="Or paste Audio URL" />
+              <input 
+                type="text" 
+                value={editForm[name] || ''} 
+                onChange={e => setEditForm({...editForm, [name]: e.target.value})} 
+                className="flex-1 p-2.5 bg-weddingSage/10 border border-weddingSage/30 rounded-lg text-xs" 
+                placeholder={`Or paste ${isImage ? 'image URLs (comma separated)' : 'Audio URL'} here...`} 
+              />
             </div>
-            {editForm[name] && <div className="text-[10px] italic text-gray-400 truncate">{editForm[name]}</div>}
+            {editForm[name] && isImage && (
+              <div className="text-[10px] italic text-gray-400">Current photos will show as a slider. Separate multiple URLs with commas.</div>
+            )}
           </div>
         ) : isTextArea ? (
           <textarea value={editForm[name] || ''} onChange={e => setEditForm({...editForm, [name]: e.target.value})} className="w-full p-3 bg-weddingSage/10 border border-weddingSage/30 rounded-xl text-sm" rows="4" />
@@ -537,7 +580,7 @@ export default function App() {
   if (isAdminAuth) {
     return (
       <div className="min-h-screen bg-gray-50 p-6 font-sans">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <div className="flex justify-between items-center mb-12 border-b border-gray-200 pb-6">
             <h1 className="text-3xl font-serif text-weddingDark italic">Admin Portal</h1>
             <div className="flex gap-4">
@@ -600,35 +643,97 @@ export default function App() {
               setIsSavingDetails(true);
               try { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wedding_config', 'main'), editForm); showToast("Published Successfully!"); } catch(e) { showToast("Save failed."); }
               setIsSavingDetails(false);
-            }} className="space-y-8 animate-in fade-in duration-500">
-              <div className="sticky top-4 z-50 bg-white p-4 rounded-2xl shadow-sm border flex justify-between items-center px-6">
-                 <h2 className="text-lg font-serif italic">Wedding Details</h2>
+            }} className="space-y-8 animate-in fade-in duration-500 pb-20">
+              <div className="sticky top-4 z-50 bg-white p-4 rounded-2xl shadow-lg border flex justify-between items-center px-6">
+                 <h2 className="text-lg font-serif italic">Wedding Details Manager</h2>
                  <button type="submit" disabled={isSavingDetails} className="bg-weddingYellow text-weddingDark px-10 py-3 rounded-xl font-bold uppercase text-[11px] tracking-widest shadow-md">
                    {isSavingDetails ? 'Publishing...' : 'Publish Changes'}
                  </button>
               </div>
+
               <div className="grid md:grid-cols-2 gap-8">
-                <div className="bg-white p-8 rounded-2xl border">
-                  <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-weddingAccent mb-6 border-b pb-2">Primary Info</h3>
+                <div className="bg-white p-8 rounded-2xl border shadow-sm">
+                  <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-weddingAccent mb-6 border-b pb-2">Basic Details</h3>
                   <Field label="Groom's Name" name="groomName" />
                   <Field label="Bride's Name" name="brideName" />
                   <Field label="Wedding Date" name="weddingDate" />
-                  <Field label="Location" name="weddingLocation" />
-                  <Field label="Background Music" name="backgroundMusicUrl" isAudio />
+                  <Field label="General Location" name="weddingLocation" />
+                  <Field label="RSVP Deadline" name="rsvpDeadline" />
+                  <div className="grid grid-cols-2 gap-4">
+                     <Field label="Contact Phone" name="contactPhone" />
+                     <Field label="Contact Email" name="contactEmail" />
+                  </div>
                 </div>
-                <div className="bg-white p-8 rounded-2xl border">
-                  <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-weddingAccent mb-6 border-b pb-2">Family & Entourage</h3>
-                  <Field label="Principal Sponsors" name="entouragePrincipal" isTextArea />
-                  <Field label="Groom's Parents" name="groomParents" isTextArea />
-                  <Field label="Bride's Parents" name="brideParents" isTextArea />
+
+                <div className="bg-white p-8 rounded-2xl border shadow-sm">
+                  <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-weddingAccent mb-6 border-b pb-2">Story & Text</h3>
+                  <Field label="Our Story Content" name="ourStory" isTextArea />
+                  <Field label="Dress Code Text" name="dressCodeText" isTextArea />
+                  <Field label="Gift / Registry Text" name="giftText" isTextArea />
                 </div>
               </div>
-              <div className="bg-white p-8 rounded-2xl border">
-                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-weddingAccent mb-6 border-b pb-2">Secondary Sponsors</h3>
+
+              <div className="bg-white p-8 rounded-2xl border shadow-sm">
+                 <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-weddingAccent mb-6 border-b pb-2">Media & Photos</h3>
+                 <div className="grid md:grid-cols-2 gap-6">
+                   <Field label="Background Music (MP3)" name="backgroundMusicUrl" isAudio />
+                   <Field label="Story Photos" name="storyPhotoUrl" isImage />
+                   <Field label="Ceremony Photos" name="ceremonyPhotoUrl" isImage />
+                   <Field label="Reception Photos" name="receptionPhotoUrl" isImage />
+                   <Field label="Dress Code / Inspiration Photos" name="dressCodePhotoUrl" isImage />
+                 </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="bg-white p-8 rounded-2xl border shadow-sm">
+                  <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-weddingAccent mb-6 border-b pb-2">Ceremony Venue</h3>
+                  <Field label="Ceremony Date" name="ceremonyDate" />
+                  <Field label="Ceremony Time" name="ceremonyTime" />
+                  <Field label="Ceremony Venue Name" name="ceremonyVenue" />
+                  <Field label="Ceremony Address" name="ceremonyAddress" />
+                  <Field label="Ceremony Map Link (Google Maps URL)" name="ceremonyMapUrl" />
+                </div>
+                
+                <div className="bg-white p-8 rounded-2xl border shadow-sm">
+                  <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-weddingAccent mb-6 border-b pb-2">Reception Venue</h3>
+                  <Field label="Reception Date" name="receptionDate" />
+                  <Field label="Reception Time" name="receptionTime" />
+                  <Field label="Reception Venue Name" name="receptionVenue" />
+                  <Field label="Reception Address" name="receptionAddress" />
+                  <Field label="Reception Map Link (Google Maps URL)" name="receptionMapUrl" />
+                </div>
+              </div>
+
+              <div className="bg-white p-8 rounded-2xl border shadow-sm">
+                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-weddingAccent mb-6 border-b pb-2">Parents & Entourage</h3>
+                <div className="grid md:grid-cols-2 gap-8">
+                  <Field label="Groom's Parents (One per line)" name="groomParents" isTextArea />
+                  <Field label="Bride's Parents (One per line)" name="brideParents" isTextArea />
+                  <Field label="Best Man" name="bestMan" />
+                  <Field label="Maid of Honor" name="maidOfHonor" />
+                  <Field label="Groomsmen (One per line)" name="groomsmen" isTextArea />
+                  <Field label="Bridesmaids (One per line)" name="bridesmaids" isTextArea />
+                  <div className="col-span-1 md:col-span-2 grid md:grid-cols-3 gap-6">
+                    <Field label="Bible Bearer" name="bibleBearer" />
+                    <Field label="Ring Bearer" name="ringBearer" />
+                    <Field label="Coin Bearer" name="coinBearer" />
+                  </div>
+                  <div className="col-span-1 md:col-span-2">
+                    <Field label="Flower Girls (One per line)" name="flowerGirls" isTextArea />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-8 rounded-2xl border shadow-sm">
+                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-weddingAccent mb-6 border-b pb-2">Sponsors</h3>
+                <div className="mb-6">
+                  <Field label="Principal Sponsors (Alternate Male then Female, One per line)" name="entouragePrincipal" isTextArea />
+                  <p className="text-[10px] text-gray-400 -mt-4 mb-4">Make sure to format correctly: Line 1 = Male Sponsor, Line 2 = Female Sponsor, Line 3 = Male Sponsor, etc.</p>
+                </div>
                 <div className="grid md:grid-cols-3 gap-6">
-                  <Field label="Candle" name="candleSponsors" isTextArea />
-                  <Field label="Veil" name="veilSponsors" isTextArea />
-                  <Field label="Cord" name="cordSponsors" isTextArea />
+                  <Field label="Candle Sponsors (One per line)" name="candleSponsors" isTextArea />
+                  <Field label="Veil Sponsors (One per line)" name="veilSponsors" isTextArea />
+                  <Field label="Cord Sponsors (One per line)" name="cordSponsors" isTextArea />
                 </div>
               </div>
             </form>
@@ -663,8 +768,8 @@ export default function App() {
 
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-40 py-6 bg-[#faf9f6]/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm">
-        <div className="max-w-screen-xl mx-auto px-6 flex justify-center gap-6 md:gap-14 text-[9px] md:text-[10px] uppercase tracking-[0.3em] font-bold text-gray-500 flex-wrap">
-          {['Home', 'Story', 'Entourage', 'Venues', 'Guestbook', 'RSVP'].map(t => (
+        <div className="max-w-screen-xl mx-auto px-6 flex justify-center gap-6 md:gap-10 text-[9px] md:text-[10px] uppercase tracking-[0.3em] font-bold text-gray-500 flex-wrap">
+          {['Home', 'Story', 'Entourage', 'Venues', 'Details', 'Guestbook', 'RSVP'].map(t => (
             <button key={t} onClick={() => document.getElementById(t.toLowerCase()).scrollIntoView({behavior: 'smooth'})} className="hover:text-weddingDark transition-all active:scale-95 border-b-2 border-transparent hover:border-weddingAccent pb-1">{t}</button>
           ))}
         </div>
@@ -678,7 +783,7 @@ export default function App() {
           <p className="text-weddingAccent tracking-[0.6em] uppercase text-[12px] mb-12 font-bold animate-pulse">Join us to celebrate</p>
           <h1 className="text-7xl md:text-9xl lg:text-[11rem] font-script font-bold leading-[0.75] mb-10 text-weddingDark drop-shadow-sm select-none">
             {String(details.groomName)} <br/>
-            <span className="text-4xl md:text-7xl font-serif italic text-weddingAccent my-4 block">&amp;</span> 
+            <span className="text-4xl md:text-7xl font-serif italic text-weddingAccent my-4 block">&</span> 
             {String(details.brideName)}
           </h1>
           <LineAccent />
@@ -705,12 +810,12 @@ export default function App() {
           </div>
         </section>
 
-        {/* ENTOURAGE - EXPANDED TYPOGRAPHY & TIGHTER SPACING */}
+        {/* ENTOURAGE */}
         <section id="entourage" className="py-16 md:py-24 px-4 bg-white/20 backdrop-blur-sm border-y border-white">
           <div className="max-w-screen-lg mx-auto text-center">
             <h2 className="text-6xl md:text-8xl font-serif text-weddingDark mb-16 drop-shadow-sm italic">The Entourage</h2>
             
-            {/* 1. Parents - Increased font, reduced bottom margin */}
+            {/* 1. Parents */}
             <div className="mb-16">
               <h3 className="text-[12px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-10 border-b-2 border-weddingYellow inline-block pb-2">Beloved Parents</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 text-center items-start">
@@ -725,16 +830,16 @@ export default function App() {
               </div>
             </div>
 
-            {/* 2. Principal Sponsors - REVERTED TO 1 COLUMN BY PAIR (Enlarged) */}
+            {/* 2. Principal Sponsors - ALIGNMENT FIXED */}
             <div className="mb-16 bg-white/40 p-10 md:p-16 rounded-3xl border border-white shadow-sm">
                <h3 className="text-[12px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-12 inline-block">Principal Sponsors</h3>
-               <div className="flex flex-col items-center gap-8 max-w-3xl mx-auto">
+               <div className="flex flex-col items-center gap-8 max-w-4xl mx-auto">
                  {principalPairs.map((pair, i) => (
                    <div key={i} className="flex flex-col items-center border-b border-weddingSage/10 pb-8 w-full last:border-0 group">
-                     <div className="flex flex-col md:flex-row items-center gap-4 text-3xl md:text-5xl font-serif text-gray-800 transition-all group-hover:text-weddingAccent">
-                       <span>{String(pair.male)}</span>
-                       <span className="text-weddingSage opacity-40 italic text-4xl font-serif">&amp;</span>
-                       <span>{String(pair.female)}</span>
+                     <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 md:gap-12 text-2xl md:text-4xl font-serif text-gray-800 transition-all group-hover:text-weddingAccent w-full">
+                       <div className="text-right">{String(pair.male)}</div>
+                       <div className="text-weddingSage opacity-40 italic text-4xl font-serif text-center px-2">&</div>
+                       <div className="text-left">{String(pair.female)}</div>
                      </div>
                    </div>
                  ))}
@@ -756,7 +861,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Groomsmen & Bridesmaids Partner Alignment - Enlarged Names */}
+            {/* Groomsmen & Bridesmaids Partner Alignment */}
             <div className="max-w-4xl mx-auto text-gray-800 flex flex-col items-center w-full mb-16 relative">
                <div className="grid grid-cols-2 gap-x-12 mb-8 pb-4 border-b border-weddingAccent/30 w-full">
                  <div className="text-right text-[10px] font-bold text-weddingAccent uppercase tracking-widest">Groomsmen</div>
@@ -771,7 +876,7 @@ export default function App() {
                ))}
             </div>
 
-            {/* Secondary Sponsors Grid - Enlarged */}
+            {/* Secondary Sponsors Grid */}
             <div className="max-w-5xl mx-auto my-16">
                <h3 className="text-[12px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-12 text-center">Secondary Sponsors</h3>
                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -790,7 +895,7 @@ export default function App() {
                </div>
             </div>
 
-            {/* Bearers & Flower Girls - Enlarged */}
+            {/* Bearers & Flower Girls */}
             <div className="max-w-4xl mx-auto mt-16">
                <h3 className="text-[12px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-12 text-center">Little Entourage</h3>
                <div className="flex flex-col md:flex-row justify-center items-center md:items-start gap-12 text-center mb-12">
@@ -831,7 +936,7 @@ export default function App() {
                 <h3 className="text-5xl font-serif text-weddingDark mb-6">The Ceremony</h3>
                 <p className="text-[12px] font-bold uppercase tracking-[0.3em] text-weddingAccent mb-3">{String(details.ceremonyDate)} | {String(details.ceremonyTime)}</p>
                 <p className="text-2xl font-serif mb-10 italic text-gray-700">{String(details.ceremonyVenue)}</p>
-                <a href={String(details.ceremonyMapUrl)} target="_blank" className="inline-flex items-center gap-3 px-10 py-4 bg-weddingDark text-white rounded-xl text-[11px] font-bold uppercase tracking-widest hover:bg-weddingAccent transition-all shadow-xl">
+                <a href={String(details.ceremonyMapUrl)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-3 px-10 py-4 bg-weddingDark text-white rounded-xl text-[11px] font-bold uppercase tracking-widest hover:bg-weddingAccent transition-all shadow-xl">
                   <MapPin size={18} /> View Location
                 </a>
               </div>
@@ -845,7 +950,7 @@ export default function App() {
                 <h3 className="text-5xl font-serif text-weddingDark mb-6">The Reception</h3>
                 <p className="text-[12px] font-bold uppercase tracking-[0.3em] text-weddingAccent mb-3">{String(details.receptionTime)}</p>
                 <p className="text-2xl font-serif mb-10 italic text-gray-700">{String(details.receptionVenue)}</p>
-                <a href={String(details.receptionMapUrl)} target="_blank" className="inline-flex items-center gap-3 px-10 py-4 bg-weddingDark text-white rounded-xl text-[11px] font-bold uppercase tracking-widest hover:bg-weddingAccent transition-all shadow-xl">
+                <a href={String(details.receptionMapUrl)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-3 px-10 py-4 bg-weddingDark text-white rounded-xl text-[11px] font-bold uppercase tracking-widest hover:bg-weddingAccent transition-all shadow-xl">
                   <MapPin size={18} /> View Location
                 </a>
               </div>
@@ -853,10 +958,31 @@ export default function App() {
           </div>
         </section>
 
+        {/* DETAILS (Dress Code & Registry) */}
+        <section id="details" className="py-24 md:py-32 px-4 bg-white/60 border-y border-white">
+          <div className="max-w-screen-xl mx-auto grid lg:grid-cols-2 gap-20 items-center">
+             <div className="text-center md:text-left">
+                <h2 className="text-[12px] font-bold tracking-[0.4em] text-weddingAccent uppercase mb-4 opacity-80 border-b border-weddingSage/30 pb-4 inline-block">Dress Code & Details</h2>
+                <h3 className="text-5xl font-serif text-weddingDark mb-8 italic mt-4">Attire</h3>
+                <p className="text-xl md:text-2xl font-serif leading-relaxed text-gray-800 mb-12">
+                   {String(details.dressCodeText)}
+                </p>
+
+                <h3 className="text-5xl font-serif text-weddingDark mb-8 italic mt-4">Gifts</h3>
+                <p className="text-xl md:text-2xl font-serif leading-relaxed text-gray-800">
+                   {String(details.giftText)}
+                </p>
+             </div>
+             <div className="aspect-[4/5] bg-white p-2 shadow-2xl overflow-hidden rounded-t-full">
+                <ImageSlider photoString={details.dressCodePhotoUrl} altText="Dress Code Inspiration" containerClass="w-full h-full" imageClass="rounded-t-full" />
+             </div>
+          </div>
+        </section>
+
         {/* GUESTBOOK Carousel */}
         <section id="guestbook" className="py-24 md:py-32 px-4 relative bg-white/40 backdrop-blur-md border-b">
           <div className="max-w-screen-xl mx-auto text-center">
-            <h2 className="text-[12px] font-bold tracking-[0.4em] text-weddingAccent uppercase mb-4 opacity-80">Wishes &amp; Love</h2>
+            <h2 className="text-[12px] font-bold tracking-[0.4em] text-weddingAccent uppercase mb-4 opacity-80">Wishes & Love</h2>
             <h3 className="text-4xl md:text-7xl font-serif text-weddingDark mb-24 italic">Guestbook</h3>
             
             <div className="relative w-full overflow-hidden min-h-[400px]">
@@ -947,7 +1073,7 @@ export default function App() {
 
       {/* FOOTER */}
       <footer className="py-24 text-center bg-[#faf9f6] border-t border-gray-200 relative z-10">
-        <p className="font-script text-7xl md:text-[8rem] text-weddingDark mb-8 select-none">{String(details.groomName)} &amp; {String(details.brideName)}</p>
+        <p className="font-script text-7xl md:text-[8rem] text-weddingDark mb-8 select-none">{String(details.groomName)} & {String(details.brideName)}</p>
         <div className="w-24 h-px bg-weddingSage mx-auto mb-12 opacity-50"></div>
         <p className="text-[11px] uppercase font-bold tracking-[0.5em] text-gray-500 mb-12">{String(details.weddingDate)} • {String(details.weddingLocation)}</p>
         
