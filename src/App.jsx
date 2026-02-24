@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, Lock, CheckCircle, X, Gift, Save, Image as ImageIcon, KeyRound, UserPlus, Trash2, Upload, Download, FileSpreadsheet, BarChart, Phone, Mail, Edit2, Check, MessageSquareHeart, ChevronLeft, ChevronRight, LayoutGrid, StickyNote, Info, Github, Globe, Terminal, Cloud, AlertCircle, ExternalLink, MapPin, Music, Play, Pause } from 'lucide-react';
+import { 
+  Heart, Lock, CheckCircle, X, Gift, Save, Image as ImageIcon, 
+  KeyRound, UserPlus, Trash2, Upload, Download, FileSpreadsheet, 
+  BarChart, Phone, Mail, Edit2, Check, MessageSquareHeart, 
+  ChevronLeft, ChevronRight, LayoutGrid, StickyNote, Info, 
+  Github, Globe, Terminal, Cloud, AlertCircle, ExternalLink, 
+  MapPin, Music, Play, Pause, MailOpen, Volume2
+} from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, collection, addDoc, onSnapshot, query, doc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
@@ -25,7 +32,55 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'wedding-app-default';
 
-// --- Decorative & Feature Components ---
+// ==========================================
+// 2. CONSTANTS & DEFAULTS
+// ==========================================
+const DEFAULT_DETAILS = {
+  groomName: "James",
+  brideName: "Cassie",
+  weddingDate: "April 10, 2026",
+  weddingLocation: "Muntinlupa, Philippines",
+  backgroundMusicUrl: "https://upload.wikimedia.org/wikipedia/commons/4/4b/Chopin_-_Nocturne_op._9_no._2.ogg",
+  ourStory: "Love is patient, love is kind (1 Corinthians 13:4)—and their love proved to be brave, choosing each other every day in faith. What began as a quiet night at Ooma became a story God was already writing—told through shared meals from Jollibee to Din Tai Fung, sweet evenings at Amano, and journeys to Australia, Vigan, La Union, Baguio, and Thailand. In grand adventures and quiet Sundays at Mass, they discovered that home is not a place but a person, and that with God at the center, their love would not easily be broken. Two years later, they stand certain—ready to begin a forever rooted in faith, devotion, and a love that grows sweeter with time.",
+  storyPhotoUrl: "https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&q=80&w=800",
+  contactPhone: "+63 912 345 6789",
+  contactEmail: "weddings@example.com",
+  groomParents: "Manuel P. De Vera (+)\nAtty. Anthony Luigi B. De Vera\n& Lilia B. De Vera",
+  brideParents: "Roberto M. Pinoy\n& Maria Rosario C. Pinoy",
+  entouragePrincipal: "Ms. Shirly L. Fauni\nEricson Barroquillo\nDir. Diane Gail L. Maharjan\nRolendes C. Fabi\nNimfa Serafica\nVitaliano Biala\nElaine N. Villanueva\nPaolo Fresnoza\nAdorie B. Servito\nMgen. Loreto Pasamonte\nTimmy Aquino\nSen. Bam Aquino\nDiego \"Jigs\" Rombawa\nLorenza M. Candela",
+  candleSponsors: "Janet Pinoy\nAntonio Pinoy",
+  veilSponsors: "Liezl B. De Vera\nMark Joedel B. De Vera",
+  cordSponsors: "Carnation Flores\nKristina C. Pinoy",
+  bestMan: "Melvin B. De Vera",
+  maidOfHonor: "Sofia Camille C. Pinoy",
+  groomsmen: "Christian Robert C. Pinoy\nJohn Paolo B. De Vera\nMark Lester B. Biala\nJustin Servito\nJohn Lester Selga\nJan Gabriel Pinoy\nLester Luis Ramirez\nRon Carlo C. Biala",
+  bridesmaids: "Angela Cherish C. Pinoy\nKristel Ann B. De Vera\nMylene B. De Vera\nBea Michaela B. De Vera\nCarmela Ella\nNatasha Coreos\nKaye Marie Abelo\nPrincess Jelian B. Almonte",
+  bibleBearer: "Kyler Timothy A. De Vera",
+  ringBearer: "Dean Lukas A. De Vera",
+  coinBearer: "Gabriel Santos",
+  flowerGirls: "Amara Faith A. De Vera\nMarthina D. Hernandez\nAmare Faith Fresnoza\nMaree Margaret S. Dela Peña",
+  ceremonyDate: "Friday, April 10th, 2026",
+  ceremonyTime: "3:00 PM",
+  ceremonyVenue: "Sacred Heart of Jesus Parish",
+  ceremonyAddress: "Muntinlupa, Philippines",
+  ceremonyPhotoUrl: "https://images.unsplash.com/photo-1548625361-ec85cb209210?auto=format&fit=crop&q=80&w=800",
+  ceremonyMapUrl: "https://maps.app.goo.gl/aXMEUhYAbS7nEfv58",
+  receptionDate: "Friday, April 10th, 2026",
+  receptionTime: "6:00 PM onwards",
+  receptionVenue: "Main Ballroom, Acacia Hotel",
+  receptionAddress: "Alabang, Muntinlupa",
+  receptionPhotoUrl: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&q=80&w=800",
+  receptionMapUrl: "https://maps.app.goo.gl/8aSbQNbNAr31iXPT6",
+  dressCodeText: "Filipiniana or Formal Attire. We kindly request our guests to dress elegantly in shades of Sage Green, Pastel Yellow, Beige, or neutral light tones. Please avoid wearing bright neon colors or pure white.",
+  dressCodeColors: "#B8C6A7, #FDFD96, #F5F5DC, #FAF9F6, #D2B48C, #E5E7D1",
+  dressCodePhotoUrl: "https://images.unsplash.com/photo-1566737236500-c8ac43014a67?auto=format&fit=crop&q=80&w=800, https://images.unsplash.com/photo-1516726855505-e5ed699fd49d?auto=format&fit=crop&q=80&w=800",
+  giftText: "With all that we have, we’ve been truly blessed. Your presence and prayers are all that we request. But if you desire to give nonetheless, a monetary gift is one we suggest.",
+  rsvpDeadline: "March 1st, 2026"
+};
+
+// ==========================================
+// 3. UI COMPONENTS
+// ==========================================
 
 const HandpaintedFlower = ({ className }) => (
   <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className={`${className} filter drop-shadow-sm`}>
@@ -34,44 +89,52 @@ const HandpaintedFlower = ({ className }) => (
     <path d="M100 100C80 120 50 130 30 110C10 90 40 60 70 70" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round"/>
     <path d="M100 100C80 80 70 50 90 30C110 10 140 40 130 70" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round"/>
     <circle cx="100" cy="100" r="4" fill="#f4f0d3" stroke="currentColor" strokeWidth="0.2" />
-    <path d="M100 100L110 140M110 140C115 150 125 155 135 150" stroke="currentColor" strokeWidth="0.8" opacity="0.4"/>
   </svg>
 );
 
-const OrganicLeaf = ({ className, color = "#B8C6A7" }) => (
-  <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className={className}>
-    <path fill="none" stroke={color} strokeWidth="1.2" d="M100,200 C100,100 20,80 50,20 C80,-40 180,20 180,80 C180,140 100,100 100,200 Z" opacity="0.8"/>
-    <path fill={color} opacity="0.15" d="M100,200 C100,100 20,80 50,20 C80,-40 180,20 180,80 C180,140 100,100 100,200 Z" />
-  </svg>
-);
-
-const LineAccent = () => (
-  <div className="flex items-center justify-center gap-4 my-8 opacity-40 w-full">
-    <div className="w-16 h-px bg-weddingSage"></div>
-    <div className="w-2 h-2 rotate-45 bg-weddingAccent shadow-sm"></div>
-    <div className="w-16 h-px bg-weddingSage"></div>
-  </div>
-);
-
-const AnimatedLeaves = () => (
-  <div className="fixed inset-0 pointer-events-none z-[-20] overflow-hidden">
-    {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+const AnimatedLeaves = ({ count = 10 }) => (
+  <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    {[...Array(count)].map((_, i) => (
       <div 
         key={i} 
-        className={`absolute text-weddingSage opacity-40 animate-float`}
+        className="absolute text-weddingSage opacity-30 animate-float"
         style={{
           left: `${Math.random() * 100}%`,
           top: `-10%`,
-          animationDuration: `${12 + Math.random() * 15}s`,
-          animationDelay: `${Math.random() * 10}s`,
-          transform: `scale(${0.8 + Math.random() * 1.2})`
+          animationDuration: `${15 + Math.random() * 10}s`,
+          animationDelay: `${Math.random() * 5}s`,
+          transform: `scale(${0.5 + Math.random() * 1})`
         }}
       >
-        <svg width="50" height="50" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 22C12 22 20 18 20 12C20 6 12 2 12 2C12 2 4 6 4 12C4 18 12 22 12 22Z" />
         </svg>
       </div>
     ))}
+  </div>
+);
+
+const LandingPage = ({ onOpen, groom, bride }) => (
+  <div className="fixed inset-0 z-[200] bg-[#faf9f6] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-1000 overflow-hidden">
+    <AnimatedLeaves count={15} />
+    <div className="max-w-md w-full border border-weddingSage/30 p-12 rounded-full aspect-[1/1.5] flex flex-col items-center justify-center relative overflow-hidden shadow-2xl bg-white/80 backdrop-blur-sm z-10 scale-90 md:scale-100">
+       <div className="absolute inset-4 border border-weddingSage/10 rounded-full"></div>
+       <div className="z-20 flex flex-col items-center">
+         <p className="text-weddingAccent tracking-[0.4em] uppercase text-[10px] mb-8 font-bold">You are invited to the wedding of</p>
+         <h1 className="text-6xl font-script text-weddingDark mb-2">{groom}</h1>
+         <span className="text-2xl font-serif italic text-weddingSage mb-2">&</span>
+         <h1 className="text-6xl font-script text-weddingDark mb-8">{bride}</h1>
+         <button 
+           onClick={onOpen}
+           className="mt-6 flex flex-col items-center gap-4 group focus:outline-none"
+         >
+           <div className="w-20 h-20 bg-weddingYellow rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 group-active:scale-95 transition-all duration-500">
+             <MailOpen className="text-weddingDark w-8 h-8" />
+           </div>
+           <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-weddingDark animate-pulse">Open Invitation</span>
+         </button>
+       </div>
+    </div>
   </div>
 );
 
@@ -81,16 +144,10 @@ const CountdownTimer = ({ targetDate }) => {
   useEffect(() => {
     const target = new Date(targetDate).getTime();
     if (isNaN(target)) return;
-
     const interval = setInterval(() => {
       const now = new Date().getTime();
       const distance = target - now;
-
-      if (distance < 0) {
-        clearInterval(interval);
-        return;
-      }
-
+      if (distance < 0) { clearInterval(interval); return; }
       setTimeLeft({
         days: Math.floor(distance / (1000 * 60 * 60 * 24)),
         hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
@@ -98,7 +155,6 @@ const CountdownTimer = ({ targetDate }) => {
         seconds: Math.floor((distance % (1000 * 60)) / 1000)
       });
     }, 1000);
-
     return () => clearInterval(interval);
   }, [targetDate]);
 
@@ -146,57 +202,12 @@ const ImageSlider = ({ photoString, altText, containerClass, imageClass }) => {
   );
 };
 
-const DEFAULT_DETAILS = {
-  groomName: "James",
-  brideName: "Cassie",
-  weddingDate: "April 10, 2026",
-  weddingLocation: "Muntinlupa, Philippines",
-  ourStory: "Love is patient, love is kind (1 Corinthians 13:4)—and their love proved to be brave, choosing each other every day in faith. What began as a quiet night at Ooma became a story God was already writing—told through shared meals from Jollibee to Din Tai Fung, sweet evenings at Amano, and journeys to Australia, Vigan, La Union, Baguio, and Thailand. In grand adventures and quiet Sundays at Mass, they discovered that home is not a place but a person, and that with God at the center, their love would not easily be broken. Two years later, they stand certain—ready to begin a forever rooted in faith, devotion, and a love that grows sweeter with time.",
-  storyPhotoUrl: "https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&q=80&w=800",
-  contactPhone: "+63 912 345 6789",
-  contactEmail: "weddings@example.com",
-  groomParents: "Manuel P. De Vera (+)\nAtty. Anthony Luigi B. De Vera\n& Lilia B. De Vera",
-  brideParents: "Roberto M. Pinoy\n& Maria Rosario C. Pinoy",
-  entouragePrincipal: "Ms. Shirly L. Fauni\nEricson Barroquillo\nDir. Diane Gail L. Maharjan\nRolendes C. Fabi\nNimfa Serafica\nVitaliano Biala\nElaine N. Villanueva\nPaolo Fresnoza\nAdorie B. Servito\nMgen. Loreto Pasamonte\nTimmy Aquino\nSen. Bam Aquino\nDiego \"Jigs\" Rombawa\nLorenza M. Candela",
-  candleSponsors: "Janet Pinoy\nAntonio Pinoy",
-  veilSponsors: "Liezl B. De Vera\nMark Joedel B. De Vera",
-  cordSponsors: "Carnation Flores\nKristina C. Pinoy",
-  bestMan: "Melvin B. De Vera",
-  maidOfHonor: "Sofia Camille C. Pinoy",
-  groomsmen: "Christian Robert C. Pinoy\nJohn Paolo B. De Vera\nMark Lester B. Biala\nJustin Servito\nJohn Lester Selga\nJan Gabriel Pinoy\nLester Luis Ramirez\nRon Carlo C. Biala",
-  bridesmaids: "Angela Cherish C. Pinoy\nKristel Ann B. De Vera\nMylene B. De Vera\nBea Michaela B. De Vera\nCarmela Ella\nNatasha Correos\nKaye Marie Abelo\nPrincess Jelian B. Almonte",
-  bibleBearer: "Kyler Timothy A. De Vera",
-  ringBearer: "Dean Lukas A. De Vera",
-  coinBearer: "Insert Name Here",
-  flowerGirls: "Amara Faith A. De Vera\nMarthina D. Hernandez\nAmare Faith Fresnoza\nMaree Margaret S. Dela Peña",
-  ceremonyDate: "Friday, April 10th, 2026",
-  ceremonyTime: "3:00 PM",
-  ceremonyVenue: "Sacred Heart of Jesus Parish",
-  ceremonyAddress: "Muntinlupa, Philippines",
-  ceremonyPhotoUrl: "https://images.unsplash.com/photo-1548625361-ec85cb209210?auto=format&fit=crop&q=80&w=800",
-  ceremonyMapUrl: "https://maps.app.goo.gl/aXMEUhYAbS7nEfv58",
-  receptionDate: "Friday, April 10th, 2026",
-  receptionTime: "6:00 PM onwards",
-  receptionVenue: "Main Ballroom, Acacia Hotel",
-  receptionAddress: "Alabang, Muntinlupa",
-  receptionPhotoUrl: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&q=80&w=800",
-  receptionMapUrl: "https://maps.app.goo.gl/8aSbQNbNAr31iXPT6",
-  dressCodeText: "Filipiniana or Formal Attire. We kindly request our guests to dress elegantly in shades of Sage Green, Pastel Yellow, Beige, or neutral light tones. Please avoid wearing bright neon colors or pure white.",
-  dressCodeColors: "#B8C6A7, #FDFD96, #F5F5DC, #FAF9F6, #D2B48C, #E5E7D1",
-  dressCodePhotoUrl: "https://images.unsplash.com/photo-1566737236500-c8ac43014a67?auto=format&fit=crop&q=80&w=800, https://images.unsplash.com/photo-1516726855505-e5ed699fd49d?auto=format&fit=crop&q=80&w=800",
-  giftText: "With all that we have, we’ve been truly blessed. Your presence and prayers are all that we request. But if you desire to give nonetheless, a monetary gift is one we suggest.",
-  rsvpDeadline: "March 1st, 2026"
-};
-
-const SAMPLE_MESSAGES = [
-  { id: 's1', message: "Wishing you a lifetime of love, laughter, and endless happiness. We cannot wait to witness your beautiful day!", submittedName: "The Smith Family" },
-  { id: 's2', message: "So incredibly happy for you both! Cheers to the beautiful couple and the amazing journey ahead.", submittedName: "Aunt Sarah & Uncle Mike" },
-  { id: 's3', message: "May your love grow stronger with each passing year. Counting down the days until we celebrate!", submittedName: "Mark & Jessica" },
-  { id: 's4', message: "Welcome to the adventure of a lifetime! We love you both so much.", submittedName: "The Garcia Crew" },
-  { id: 's5', message: "To the most beautiful couple, inside and out. Best wishes on your wedding day!", submittedName: "Elena & Luis" }
-];
+// ==========================================
+// 4. MAIN APPLICATION
+// ==========================================
 
 export default function App() {
+  const [isLanding, setIsLanding] = useState(true);
   const [user, setUser] = useState(null);
   const [details, setDetails] = useState(DEFAULT_DETAILS);
   const [invitees, setInvitees] = useState([]);
@@ -208,21 +219,12 @@ export default function App() {
   const [adminPassword, setAdminPassword] = useState('');
   const [isAdminAuth, setIsAdminAuth] = useState(false);
   const [adminTab, setAdminTab] = useState('guests'); 
-  const [adminError, setAdminError] = useState('');
-  const [newGuestName, setNewGuestName] = useState('');
-  const [newGuestCode, setNewGuestCode] = useState('');
   const [editForm, setEditForm] = useState(null);
   const [isSavingDetails, setIsSavingDetails] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  
-  const [currentGbSlide, setCurrentGbSlide] = useState(0);
-  
-  // Audio Player State
   const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef(null);
-  
-  const fileInputRef = useRef(null);
 
+  const audioRef = useRef(null);
   const ADMIN_PASSWORD = "Eternity&Leaves2026!";
 
   const showToast = (msg) => {
@@ -230,29 +232,28 @@ export default function App() {
     setTimeout(() => setToastMessage(''), 3500);
   };
 
-  const toggleAudio = () => {
+  // --- AUDIO ACTIONS ---
+  const handleOpenInvitation = () => {
+    setIsLanding(false);
     if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-        setIsPlaying(false);
-      } else {
-        const playPromise = audioRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.then(() => {
-            setIsPlaying(true);
-          }).catch(error => {
-            console.error("Audio playback failed:", error);
-            showToast("Audio playback could not be started automatically.");
-            setIsPlaying(false);
-          });
-        } else {
-          setIsPlaying(true);
-        }
-      }
+      audioRef.current.volume = 0.5;
+      audioRef.current.play()
+        .then(() => setIsPlaying(true))
+        .catch(() => setIsPlaying(false));
     }
   };
 
-  // --- Layout Fix: SELF-HEALING CDN INJECTION ---
+  const toggleAudio = () => {
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  // --- STYLES INJECTION ---
   useEffect(() => {
     const tailwindScript = document.createElement('script');
     tailwindScript.src = 'https://cdn.tailwindcss.com';
@@ -265,7 +266,7 @@ export default function App() {
             fontFamily: {
               serif: ['"Playfair Display"', 'serif'],
               sans: ['Montserrat', 'sans-serif'],
-              script: ['"Bodega Script"', '"Great Vibes"', 'cursive'],
+              script: ['"Great Vibes"', 'cursive'],
             },
             colors: {
               weddingSage: '#B8C6A7',
@@ -288,27 +289,17 @@ export default function App() {
     };
 
     const fontLink = document.createElement('link');
-    fontLink.href = 'https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Montserrat:wght@200;300;400;500;600&display=swap';
+    fontLink.href = 'https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;600;700&display=swap';
     fontLink.rel = 'stylesheet';
     document.head.appendChild(fontLink);
-
-    const customFont = document.createElement('style');
-    customFont.innerHTML = `
-      @font-face {
-        font-family: 'Bodega Script';
-        src: local('Bodega Script'), local('BodegaScript');
-      }
-    `;
-    document.head.appendChild(customFont);
 
     return () => {
       if (document.head.contains(tailwindScript)) document.head.removeChild(tailwindScript);
       if (document.head.contains(fontLink)) document.head.removeChild(fontLink);
-      if (document.head.contains(customFont)) document.head.removeChild(customFont);
     };
   }, []);
 
-  // --- Auth & Data Listeners ---
+  // --- FIREBASE SYNC ---
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -317,9 +308,7 @@ export default function App() {
         } else {
           await signInAnonymously(auth);
         }
-      } catch (error) {
-        try { await signInAnonymously(auth); } catch(e) {}
-      }
+      } catch (error) { await signInAnonymously(auth); }
     };
     initAuth();
     const unsubscribe = onAuthStateChanged(auth, setUser);
@@ -327,814 +316,428 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!user || !db) return;
-    const unsubscribeConfig = onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_config')), (snapshot) => {
+    if (!user) return;
+    const unsubConfig = onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_config')), (snapshot) => {
       const mainDoc = snapshot.docs.find(doc => doc.id === 'main');
       if (mainDoc) {
-        const remoteData = { ...DEFAULT_DETAILS, ...mainDoc.data() };
-        setDetails(remoteData);
-        setEditForm(prev => prev === null ? remoteData : prev);
+        const data = { ...DEFAULT_DETAILS, ...mainDoc.data() };
+        setDetails(data);
+        if (!editForm) setEditForm(data);
       } else {
         setDetails(DEFAULT_DETAILS);
-        setEditForm(prev => prev === null ? DEFAULT_DETAILS : prev);
+        if (!editForm) setEditForm(DEFAULT_DETAILS);
       }
     });
-    const unsubscribeInvitees = onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees')), (snapshot) => {
-      const inviteesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      inviteesData.sort((a, b) => b.timestamp - a.timestamp);
-      setInvitees(inviteesData);
+    const unsubGuests = onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees')), (snapshot) => {
+      setInvitees(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
-    return () => { unsubscribeConfig(); unsubscribeInvitees(); };
+    return () => { unsubConfig(); unsubGuests(); };
   }, [user]);
 
+  // --- RSVP HANDLER ---
   const handleRsvpSubmit = async (e) => {
     e.preventDefault();
     setSubmitError('');
-    if (!user || !db) return;
-    const enteredCode = rsvpForm.enteredCode.trim().toUpperCase();
-    const matchedInvitee = invitees.find(invitee => String(invitee.code) === enteredCode);
-    
-    if (!matchedInvitee) {
-      setSubmitError("Invalid Security Code. Please check your physical invitation.");
-      return;
-    }
-    
+    const code = rsvpForm.enteredCode.trim().toUpperCase();
+    const guest = invitees.find(i => String(i.code) === code);
+    if (!guest) { setSubmitError("Security code not found. Please check your invitation."); return; }
     setIsSubmitting(true);
     try {
-      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees', matchedInvitee.id), {
+      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees', guest.id), {
         status: rsvpForm.attending === 'yes' ? 'Attending' : 'Declined',
         submittedName: rsvpForm.name,
         message: rsvpForm.message,
         respondedAt: Date.now()
       });
       setSubmitSuccess(true);
-    } catch (error) { setSubmitError("Error updating RSVP. Please try again."); }
+    } catch (err) { setSubmitError("System error. Try again later."); }
     setIsSubmitting(false);
   };
 
-  const handleAdminLogin = (e) => {
-    e.preventDefault();
-    if (adminPassword === ADMIN_PASSWORD) {
-      setIsAdminAuth(true);
-      setShowAdminLogin(false);
-      setAdminPassword('');
-    } else { setAdminError('Incorrect password'); }
-  };
-
-  const handleAddGuest = async (e) => {
-    e.preventDefault();
-    if (!user || !db || !newGuestName || !newGuestCode) return;
-    try {
-      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), {
-        name: newGuestName, code: String(newGuestCode).trim().toUpperCase(),
-        status: 'Pending', submittedName: '', email: '', message: '',
-        messageApproved: false, timestamp: Date.now()
-      });
-      setNewGuestName(''); setNewGuestCode('');
-      showToast("Guest added successfully");
-    } catch (error) { showToast("Error adding guest"); }
-  };
-
-  const toggleMessageApproval = async (id, currentStatus) => {
-    if(!user || !db) return;
-    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees', id), { messageApproved: !currentStatus });
-  };
-
-  const handleDeleteGuest = async (id) => {
-    if(!user || !db) return;
-    try {
-      await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees', id));
-      showToast("Guest removed");
-    } catch (error) { showToast("Failed to remove guest"); }
-  };
-
-  const handleDownloadCSV = () => {
-    const headers = ['Name', 'Code', 'RSVP Status', 'Submitted Name', 'Message'];
-    const csvRows = invitees.map(i => `"${i.name}","${i.code}","${i.status}","${i.submittedName}","${(i.message || '').replace(/"/g, '""')}"`);
-    const csvContent = "data:text/csv;charset=utf-8," + headers.join(',') + '\n' + csvRows.join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "wedding_guest_list.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const handleBulkUploadCSV = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const text = event.target.result;
-      const rows = text.split('\n');
-      for (let i = 1; i < rows.length; i++) {
-        const cols = rows[i].split(',');
-        if (cols.length >= 2) {
-          const name = cols[0].replace(/"/g, '').trim();
-          const code = cols[1].replace(/"/g, '').trim().toUpperCase();
-          if (name && code) {
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), {
-              name, code, status: 'Pending', submittedName: '', message: '', messageApproved: false, timestamp: Date.now()
-            });
-          }
-        }
-      }
-      showToast("Bulk upload complete.");
-    };
-    reader.readAsText(file);
-    e.target.value = null;
-  };
-
-  const handleSaveDetails = async (e) => {
-    e.preventDefault();
-    if (!user || !db || !editForm) return;
-    setIsSavingDetails(true);
-    try {
-      await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wedding_config', 'main'), editForm);
-      showToast("Published Successfully!");
-    } catch (error) { showToast("Error saving changes."); }
-    setIsSavingDetails(false);
-  };
-
-  // --- Derived Data ---
-  const colorArray = (details.dressCodeColors || '').split(',').map(s => s.trim()).filter(Boolean);
+  // --- DATA PROCESSING (PRINCIPAL SPONSORS) ---
   const principalArray = (details.entouragePrincipal || '').split('\n').map(s => s.trim()).filter(Boolean);
-  const groomsmenArray = (details.groomsmen || '').split('\n').map(s => s.trim()).filter(Boolean);
-  const bridesmaidsArray = (details.bridesmaids || '').split('\n').map(s => s.trim()).filter(Boolean);
-  const candleArray = (details.candleSponsors || '').split('\n').map(s => s.trim()).filter(Boolean);
-  const veilArray = (details.veilSponsors || '').split('\n').map(s => s.trim()).filter(Boolean);
-  const cordArray = (details.cordSponsors || '').split('\n').map(s => s.trim()).filter(Boolean);
-  const flowerGirlsArray = (details.flowerGirls || '').split('\n').map(s => s.trim()).filter(Boolean);
-
-  const dbApprovedMessages = invitees.filter(i => i.message && i.messageApproved && i.submittedName);
-  const displayMessages = dbApprovedMessages.length > 0 ? dbApprovedMessages : SAMPLE_MESSAGES;
-  
-  const gbSlides = [];
-  for (let i = 0; i < displayMessages.length; i += 3) {
-    gbSlides.push(displayMessages.slice(i, i + 3));
+  const principalPairs = [];
+  for (let i = 0; i < principalArray.length; i += 2) {
+    principalPairs.push({ male: principalArray[i] || '', female: principalArray[i+1] || '' });
   }
 
-  const entouragePartners = Array.from({ length: Math.max(groomsmenArray.length, bridesmaidsArray.length) }).map((_, i) => ({
-    groomSide: groomsmenArray[i] || '',
-    brideSide: bridesmaidsArray[i] || ''
-  }));
+  // ==========================================
+  // 5. ADMIN FIELD COMPONENT
+  // ==========================================
 
-  const Field = ({ label, name, isTextArea = false, isImageUrl = false }) => {
+  const Field = ({ label, name, isTextArea = false, isAudio = false }) => {
     const [uploading, setUploading] = useState(false);
-    const fileInputRef = useRef(null);
+    const audioInputRef = useRef(null);
 
     if (!editForm) return null;
-    const value = editForm[name] || '';
-    const images = isImageUrl ? value.split(',').map(s => s.trim()).filter(Boolean) : [];
 
-    const handleUpload = async (e) => {
-      const files = e.target.files;
-      if (!files || files.length === 0) return;
+    const handleAudioUpload = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
       setUploading(true);
       try {
-        const uploadedUrls = [];
-        for (let i = 0; i < files.length; i++) {
-          const file = files[i];
-          const safeName = file.name.replace(/[^a-zA-Z0-9.]/g, '');
-          const storageRef = ref(storage, `artifacts/${appId}/public/images/${Date.now()}_${safeName}`);
-          const snapshot = await uploadBytes(storageRef, file);
-          const url = await getDownloadURL(snapshot.ref);
-          uploadedUrls.push(url);
-        }
-        
-        const existing = editForm[name] ? editForm[name].trim() : '';
-        const newVal = existing ? `${existing}, ${uploadedUrls.join(', ')}` : uploadedUrls.join(', ');
-        
-        setEditForm({ ...editForm, [name]: newVal });
-        showToast("Image(s) uploaded successfully!");
+        const safeName = file.name.replace(/[^a-zA-Z0-9.]/g, '');
+        const storageRef = ref(storage, `artifacts/${appId}/public/audio/${Date.now()}_${safeName}`);
+        const snapshot = await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(snapshot.ref);
+        setEditForm({ ...editForm, [name]: url });
+        showToast("Audio uploaded successfully!");
       } catch (err) {
-        console.error("Upload failed", err);
-        showToast("Failed to upload image.");
+        showToast("Failed to upload audio.");
       }
       setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
     return (
-      <div className="mb-8 w-full">
+      <div className="mb-6">
         <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">{label}</label>
-        
-        {isImageUrl && (
-          <div className="mb-3 flex flex-wrap items-center gap-4">
-            <input type="file" accept="image/*" multiple className="hidden" ref={fileInputRef} onChange={handleUpload} />
-            <button 
-              type="button" 
-              onClick={() => fileInputRef.current?.click()} 
-              disabled={uploading} 
-              className="bg-weddingSage/20 text-weddingDark px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-weddingSage/40 transition-colors flex items-center gap-2"
-            >
-              <Upload size={14} /> {uploading ? 'Uploading...' : 'Upload Image(s)'}
-            </button>
-            <span className="text-[10px] text-gray-400 italic">Or paste URL(s) below</span>
+        {isAudio ? (
+          <div className="flex flex-col gap-3">
+            <input type="file" accept="audio/*" ref={audioInputRef} onChange={handleAudioUpload} className="hidden" />
+            <div className="flex gap-2">
+              <button 
+                type="button" 
+                onClick={() => audioInputRef.current?.click()} 
+                disabled={uploading}
+                className="bg-weddingSage text-white px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest disabled:opacity-50"
+              >
+                {uploading ? 'Uploading...' : 'Upload Music'}
+              </button>
+              <input 
+                type="text" 
+                value={editForm[name] || ''} 
+                onChange={e => setEditForm({...editForm, [name]: e.target.value})} 
+                className="flex-1 p-2.5 bg-weddingSage/10 border border-weddingSage/30 rounded-lg text-xs" 
+                placeholder="Or paste Audio URL"
+              />
+            </div>
+            {editForm[name] && <audio controls className="w-full h-8 scale-90" src={editForm[name]} />}
           </div>
-        )}
-
-        {isTextArea ? (
-          <textarea value={value} onChange={e => setEditForm({...editForm, [name]: e.target.value})} className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-weddingSage bg-white/50 text-sm leading-relaxed" rows="4" />
+        ) : isTextArea ? (
+          <textarea 
+            value={editForm[name] || ''} 
+            onChange={e => setEditForm({...editForm, [name]: e.target.value})} 
+            className="w-full p-3 bg-weddingSage/10 border border-weddingSage/30 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-weddingSage" rows="4" 
+          />
         ) : (
-          <input type="text" value={value} onChange={e => setEditForm({...editForm, [name]: e.target.value})} className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-weddingSage bg-white/50 text-sm" placeholder={isImageUrl ? "https://..." : ""} />
-        )}
-        
-        {isImageUrl && images.length > 0 && (
-          <div className="flex gap-4 mt-4 overflow-x-auto pb-2">
-            {images.map((img, i) => (
-              <div key={i} className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border border-gray-100 shadow-sm bg-gray-50 group">
-                <img src={img} alt="Preview" className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://placehold.co/100x100?text=Error'} />
-                <button 
-                  type="button" 
-                  onClick={() => {
-                    const newImages = [...images];
-                    newImages.splice(i, 1);
-                    setEditForm({...editForm, [name]: newImages.join(', ')});
-                  }} 
-                  className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Remove Image"
-                >
-                  <X size={12} />
-                </button>
-              </div>
-            ))}
-          </div>
+          <input 
+            type="text" 
+            value={editForm[name] || ''} 
+            onChange={e => setEditForm({...editForm, [name]: e.target.value})} 
+            className="w-full p-3 bg-weddingSage/10 border border-weddingSage/30 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-weddingSage" 
+          />
         )}
       </div>
     );
   };
 
-  // --- ADMIN VIEW ---
+  // ==========================================
+  // 6. RENDER LOGIC
+  // ==========================================
+
+  if (isLanding) {
+    return <LandingPage onOpen={handleOpenInvitation} groom={String(details.groomName)} bride={String(details.brideName)} />;
+  }
+
   if (isAdminAuth) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6 md:p-12 font-sans text-weddingDark pb-20">
-        {toastMessage && (
-          <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-weddingDark text-white px-8 py-4 rounded-full shadow-2xl z-[200] flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5">
-            <CheckCircle size={18} className="text-weddingSage" />
-            <p className="font-bold tracking-widest text-xs uppercase">{toastMessage}</p>
-          </div>
-        )}
-        
-        <div className="max-w-screen-xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-10 border-b border-gray-200 pb-6 gap-6">
-            <h1 className="text-3xl font-serif text-weddingDark italic flex items-center gap-4"><Lock className="w-6 h-6 text-weddingSage"/> Admin Portal</h1>
-            <div className="flex flex-wrap gap-3">
-              <button onClick={() => setAdminTab('guests')} className={`px-6 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-widest transition-all ${adminTab === 'guests' ? 'bg-weddingSage text-white shadow-md' : 'bg-white border border-gray-200 hover:border-weddingSage'}`}>Guests</button>
-              <button onClick={() => setAdminTab('details')} className={`px-6 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-widest transition-all ${adminTab === 'details' ? 'bg-weddingSage text-white shadow-md' : 'bg-white border border-gray-200 hover:border-weddingSage'}`}>Content</button>
-              <button onClick={() => setIsAdminAuth(false)} className="px-6 py-2.5 bg-red-50 text-red-600 rounded-full text-[11px] font-bold uppercase tracking-widest border border-red-100">Exit</button>
+      <div className="min-h-screen bg-gray-50 p-6 font-sans">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex justify-between items-center mb-12 pb-6 border-b border-gray-200">
+            <h1 className="text-3xl font-serif text-weddingDark italic">Admin Portal</h1>
+            <div className="flex gap-4">
+              <button onClick={() => setAdminTab('guests')} className={`px-6 py-2.5 rounded-full text-[10px] uppercase font-bold tracking-widest transition-all ${adminTab === 'guests' ? 'bg-weddingDark text-white' : 'bg-white border'}`}>Guests</button>
+              <button onClick={() => setAdminTab('details')} className={`px-6 py-2.5 rounded-full text-[10px] uppercase font-bold tracking-widest transition-all ${adminTab === 'details' ? 'bg-weddingDark text-white' : 'bg-white border'}`}>Content</button>
+              <button onClick={() => setIsAdminAuth(false)} className="px-6 py-2.5 text-[10px] uppercase font-bold text-red-500 hover:bg-red-50 rounded-full">Logout</button>
             </div>
           </div>
-
-          {adminTab === 'guests' && (
-            <div className="animate-in fade-in duration-500">
-               <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-8">
-                <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex gap-4 items-end flex-1 w-full">
-                  <div className="flex-1">
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Guest Name</label>
-                    <input value={newGuestName} onChange={e=>setNewGuestName(e.target.value)} placeholder="e.g. John Doe" className="w-full p-2.5 border border-gray-200 rounded-lg focus:outline-none" />
-                  </div>
-                  <div className="flex-1">
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Invite Code</label>
-                    <input value={newGuestCode} onChange={e=>setNewGuestCode(e.target.value)} placeholder="e.g. JD2026" className="w-full p-2.5 border border-gray-200 rounded-lg uppercase font-mono" />
-                  </div>
-                  <button onClick={handleAddGuest} className="bg-weddingDark text-white px-6 py-2.5 rounded-lg font-bold uppercase text-xs tracking-widest">Add</button>
-                </div>
-                <div className="flex gap-3">
-                  <input type="file" accept=".csv" ref={fileInputRef} onChange={handleBulkUploadCSV} className="hidden" />
-                  <button onClick={() => fileInputRef.current?.click()} className="px-5 py-3 bg-white border border-gray-200 rounded-xl text-[10px] font-bold uppercase tracking-widest flex items-center gap-2"><Upload size={14}/> Import</button>
-                  <button onClick={handleDownloadCSV} className="px-5 py-3 bg-white border border-gray-200 rounded-xl text-[10px] font-bold uppercase tracking-widest flex items-center gap-2"><Download size={14}/> Export</button>
-                </div>
-              </div>
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="bg-gray-50 text-[10px] uppercase tracking-widest text-gray-400 font-bold border-b border-gray-100">
-                      <th className="p-4">Guest</th>
-                      <th className="p-4">Status</th>
-                      <th className="p-4">Guestbook Message</th>
-                      <th className="p-4">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+          
+          {adminTab === 'guests' ? (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+               <table className="w-full text-left text-sm">
+                 <thead className="bg-gray-50 text-[10px] uppercase tracking-widest font-bold text-gray-400">
+                    <tr><th className="p-6">Guest Name</th><th className="p-6">Invite Code</th><th className="p-6">Status</th><th className="p-6">Message</th></tr>
+                 </thead>
+                 <tbody>
                     {invitees.map(i => (
-                      <tr key={i.id} className="border-b border-gray-50 hover:bg-gray-50/50">
-                        <td className="p-4">
-                          <div className="font-bold text-sm text-gray-800">{String(i.name)}</div>
-                          <div className="text-[10px] font-mono text-gray-400 uppercase">{String(i.code)}</div>
+                      <tr key={i.id} className="border-t border-gray-50 hover:bg-gray-50/50">
+                        <td className="p-6 font-bold text-gray-800">{String(i.name)}</td>
+                        <td className="p-6 font-mono text-xs text-gray-400">{String(i.code)}</td>
+                        <td className="p-6">
+                          <span className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase ${i.status === 'Attending' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{String(i.status)}</span>
                         </td>
-                        <td className="p-4">
-                          <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase ${i.status === 'Attending' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{String(i.status)}</span>
-                        </td>
-                        <td className="p-4 text-sm italic text-gray-600 max-w-xs truncate">
-                          {i.message ? (
-                            <div className="flex flex-col gap-1.5 items-start">
-                              <span className="truncate w-full">"{i.message}"</span>
-                              <button onClick={() => toggleMessageApproval(i.id, i.messageApproved)} className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest transition-colors ${i.messageApproved ? 'bg-pink-100 text-pink-600 hover:bg-pink-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
-                                <Heart className="w-3 h-3" fill={i.messageApproved ? "currentColor" : "none"} /> {i.messageApproved ? 'Public' : 'Hidden'}
-                              </button>
-                            </div>
-                          ) : <span className="text-gray-300">No message</span>}
-                        </td>
-                        <td className="p-4">
-                          <button onClick={() => handleDeleteGuest(i.id)} className="text-gray-300 hover:text-red-500"><Trash2 size={16}/></button>
-                        </td>
+                        <td className="p-6 italic text-gray-400 truncate max-w-xs">{i.message ? String(i.message) : '-'}</td>
                       </tr>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                 </tbody>
+               </table>
             </div>
-          )}
-
-          {adminTab === 'details' && (
-            <form onSubmit={handleSaveDetails} className="space-y-8 animate-in fade-in duration-500">
-              <div className="sticky top-6 z-50 bg-white/90 backdrop-blur-xl p-4 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center px-6">
-                <span className="text-xs font-bold tracking-widest uppercase text-weddingSage flex items-center gap-2"><Edit2 size={14}/> Edit Mode</span>
-                <button type="submit" disabled={isSavingDetails} className="bg-weddingYellow text-weddingDark px-8 py-2.5 rounded-lg font-bold uppercase tracking-widest text-[11px] shadow-sm disabled:opacity-50 hover:shadow-md transition-shadow">
+          ) : (
+            <form className="space-y-8" onSubmit={async (e) => {
+              e.preventDefault();
+              setIsSavingDetails(true);
+              try { 
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wedding_config', 'main'), editForm); 
+                showToast("Invitation Published!"); 
+              } catch(e) { showToast("Save failed."); }
+              setIsSavingDetails(false);
+            }}>
+              <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center sticky top-4 z-50">
+                 <h2 className="text-xl font-serif italic">Wedding Details</h2>
+                 <button type="submit" disabled={isSavingDetails} className="bg-weddingYellow text-weddingDark px-10 py-3 rounded-xl font-bold uppercase text-[11px] tracking-widest shadow-md hover:shadow-lg disabled:opacity-50">
                    {isSavingDetails ? 'Publishing...' : 'Publish Changes'}
-                </button>
+                 </button>
               </div>
-
-              <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-                 <h3 className="text-lg font-serif mb-6 border-b border-gray-100 pb-3 text-weddingDark">Hero & Story</h3>
-                 <div className="grid md:grid-cols-2 gap-x-6">
-                    <Field label="Groom's Name" name="groomName" />
-                    <Field label="Bride's Name" name="brideName" />
-                    <Field label="Wedding Date (Top)" name="weddingDate" />
-                    <Field label="Location (Top)" name="weddingLocation" />
-                 </div>
-                 <Field label="Our Story Text" name="ourStory" isTextArea={true} />
-                 <Field label="Story Image URL" name="storyPhotoUrl" isImageUrl={true} />
-              </div>
-
-              <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-                 <h3 className="text-lg font-serif mb-6 border-b border-gray-100 pb-3 text-weddingDark">Family & Entourage</h3>
-                 <div className="grid md:grid-cols-2 gap-x-6">
-                    <Field label="Groom's Parents" name="groomParents" isTextArea={true} />
-                    <Field label="Bride's Parents" name="brideParents" isTextArea={true} />
-                    <Field label="Principal Sponsors (List)" name="entouragePrincipal" isTextArea={true} />
-                    <div className="space-y-4">
-                       <Field label="Best Man" name="bestMan" />
-                       <Field label="Maid of Honor" name="maidOfHonor" />
-                    </div>
-                    <Field label="Groomsmen" name="groomsmen" isTextArea={true} />
-                    <Field label="Bridesmaids" name="bridesmaids" isTextArea={true} />
-                    <Field label="Candle" name="candleSponsors" isTextArea={true} />
-                    <Field label="Veil" name="veilSponsors" isTextArea={true} />
-                    <Field label="Cord" name="cordSponsors" isTextArea={true} />
-                    <div className="space-y-4">
-                       <Field label="Bible Bearer" name="bibleBearer" />
-                       <Field label="Ring Bearer" name="ringBearer" />
-                       <Field label="Coin Bearer" name="coinBearer" />
-                    </div>
-                    <Field label="Flower Girls" name="flowerGirls" isTextArea={true} />
-                 </div>
-              </div>
-
-              <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-                 <h3 className="text-lg font-serif mb-6 border-b border-gray-100 pb-3 text-weddingDark">Venues</h3>
-                 <div className="grid md:grid-cols-2 gap-8">
-                    <div className="space-y-3">
-                       <h4 className="text-[10px] font-bold uppercase tracking-widest text-weddingSage">Ceremony</h4>
-                       <Field label="Venue Name" name="ceremonyVenue" />
-                       <Field label="Address" name="ceremonyAddress" />
-                       <Field label="Time" name="ceremonyTime" />
-                       <Field label="Image URL" name="ceremonyPhotoUrl" isImageUrl={true} />
-                       <Field label="Google Maps Link" name="ceremonyMapUrl" />
-                    </div>
-                    <div className="space-y-3">
-                       <h4 className="text-[10px] font-bold uppercase tracking-widest text-weddingSage">Reception</h4>
-                       <Field label="Venue Name" name="receptionVenue" />
-                       <Field label="Address" name="receptionAddress" />
-                       <Field label="Time" name="receptionTime" />
-                       <Field label="Image URL" name="receptionPhotoUrl" isImageUrl={true} />
-                       <Field label="Google Maps Link" name="receptionMapUrl" />
-                    </div>
-                 </div>
-              </div>
-
-              <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-                 <h3 className="text-lg font-serif mb-6 border-b border-gray-100 pb-3 text-weddingDark">Registry & Style</h3>
-                 <Field label="Dress Code Guidelines" name="dressCodeText" isTextArea={true} />
-                 <Field label="Color Palette (Hex codes, comma separated)" name="dressCodeColors" />
-                 <Field label="Inspiration Photos (URLs)" name="dressCodePhotoUrl" isImageUrl={true} />
-                 <Field label="Registry Message" name="giftText" isTextArea={true} />
-                 <Field label="RSVP Deadline" name="rsvpDeadline" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                  <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-weddingAccent mb-6 border-b pb-2">Primary Info</h3>
+                  <Field label="Groom Name" name="groomName" />
+                  <Field label="Bride Name" name="brideName" />
+                  <Field label="Background Music" name="backgroundMusicUrl" isAudio />
+                </div>
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                  <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-weddingAccent mb-6 border-b pb-2">Entourage</h3>
+                  <Field label="Principal Sponsors (List names line by line)" name="entouragePrincipal" isTextArea />
+                  <Field label="Groom's Parents" name="groomParents" isTextArea />
+                  <Field label="Bride's Parents" name="brideParents" isTextArea />
+                </div>
               </div>
             </form>
           )}
         </div>
+        {toastMessage && (
+          <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-weddingDark text-white px-10 py-4 rounded-full text-[11px] uppercase font-bold tracking-widest z-[300] shadow-2xl animate-bounce">
+            {toastMessage}
+          </div>
+        )}
       </div>
     );
   }
 
-  // --- MAIN PUBLIC UI ---
   return (
     <div className="min-h-screen text-weddingDark flex flex-col relative w-full overflow-x-hidden selection:bg-weddingYellow/40" style={{ fontFamily: "'Montserrat', sans-serif" }}>
       
-      {/* 1. EDITORIAL BACKGROUND WITH OVERLAY WASH */}
-      <div 
-        className="fixed inset-0 z-[-50] bg-cover bg-center bg-no-repeat opacity-50" 
-        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&q=80')" }}
-      ></div>
+      {/* Background Layers */}
+      <div className="fixed inset-0 z-[-50] bg-cover bg-center opacity-50" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&q=80')" }}></div>
       <div className="fixed inset-0 z-[-49] bg-gradient-to-b from-[#faf9f6]/95 via-[#faf9f6]/90 to-[#faf9f6]/95 backdrop-blur-[2px]"></div>
       
-      {/* 2. THEME FEATURE: Animated Leaves */}
-      <AnimatedLeaves />
-      
-      {/* Interactive Music Player Feature */}
-      <audio ref={audioRef} loop src="https://upload.wikimedia.org/wikipedia/commons/4/4b/Chopin_-_Nocturne_op._9_no._2.ogg" />
+      <AnimatedLeaves count={12} />
+      <audio ref={audioRef} loop src={details.backgroundMusicUrl || "https://upload.wikimedia.org/wikipedia/commons/4/4b/Chopin_-_Nocturne_op._9_no._2.ogg"} />
+
+      {/* Music Control */}
       <button 
         onClick={toggleAudio} 
-        className={`fixed left-5 bottom-5 md:left-8 md:bottom-8 z-50 px-5 py-3 md:px-6 md:py-4 rounded-full shadow-[0_0_20px_rgba(184,198,167,0.4)] transition-all group border-2 hover:scale-105 active:scale-95 flex items-center gap-2 md:gap-3 ${isPlaying ? 'bg-weddingSage border-weddingSage text-weddingDark' : 'bg-weddingYellow border-weddingYellow text-weddingDark animate-pulse'}`}
-        aria-label="Toggle Background Music"
+        className={`fixed left-8 bottom-8 z-50 p-6 rounded-full shadow-2xl transition-all border-2 active:scale-90 ${isPlaying ? 'bg-weddingSage border-weddingSage' : 'bg-weddingYellow border-weddingYellow animate-pulse'}`}
       >
-        {isPlaying ? <Music className="w-5 h-5 md:w-6 md:h-6" /> : <Play className="w-5 h-5 md:w-6 md:h-6 ml-1" />}
-        <span className="font-bold uppercase tracking-widest text-[10px] md:text-xs">
-          {isPlaying ? 'Pause' : 'Play Music'}
-        </span>
-      </button>
-
-      {/* Floating Action Button for RSVP */}
-      <button onClick={() => document.getElementById('rsvp').scrollIntoView({behavior: 'smooth'})} className="fixed right-5 bottom-5 md:right-8 md:bottom-8 z-50 bg-weddingYellow text-weddingDark p-4 md:p-5 rounded-full shadow-xl border-2 border-weddingYellow hover:scale-105 active:scale-95 transition-all group">
-        <Mail className="w-5 h-5 md:w-6 md:h-6 text-weddingDark" />
-        <span className="absolute right-full mr-4 top-1/2 -translate-y-1/2 bg-weddingDark text-white px-4 py-2 rounded shadow-lg text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">RSVP</span>
+        {isPlaying ? <Music size={24} className="text-weddingDark" /> : <Play size={24} className="text-weddingDark" />}
       </button>
 
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-40 py-5 bg-[#faf9f6]/80 backdrop-blur-lg border-b border-gray-200/50 shadow-sm">
-        <div className="max-w-screen-xl mx-auto px-6 flex flex-wrap justify-center gap-5 md:gap-10 text-[9px] md:text-[10px] uppercase tracking-widest font-bold text-gray-500">
-          {['Home', 'Story', 'Entourage', 'Venues', 'Guestbook', 'Details', 'RSVP'].map(t => (
-            <button key={t} onClick={() => document.getElementById(t.toLowerCase()).scrollIntoView({behavior: 'smooth'})} className={`hover:text-weddingDark transition-all border-b-2 py-0.5 ${t === 'RSVP' ? 'text-weddingAccent border-weddingAccent' : 'border-transparent'}`}>{t}</button>
+      <nav className="fixed top-0 left-0 right-0 z-40 py-6 bg-[#faf9f6]/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm">
+        <div className="max-w-screen-xl mx-auto px-6 flex justify-center gap-8 md:gap-14 text-[10px] uppercase tracking-[0.3em] font-bold text-gray-500">
+          {['Home', 'Story', 'Entourage', 'Venues', 'RSVP'].map(t => (
+            <button key={t} onClick={() => document.getElementById(t.toLowerCase()).scrollIntoView({behavior: 'smooth'})} className="hover:text-weddingDark transition-all active:scale-95 border-b-2 border-transparent hover:border-weddingAccent pb-1">{t}</button>
           ))}
         </div>
       </nav>
 
-      <main className="flex-grow w-full relative z-10">
+      <main className="flex-grow w-full relative z-10 pt-20">
         
-        {/* HERO SECTION */}
-        <section id="home" className="min-h-screen flex flex-col items-center justify-center text-center px-4 relative w-full overflow-hidden pt-24 pb-12">
-          <HandpaintedFlower className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] max-w-[700px] text-weddingSage opacity-5 pointer-events-none" />
-          
-          <p className="text-weddingAccent tracking-[0.5em] uppercase text-[10px] md:text-xs mb-8 font-bold animate-pulse">Join us to celebrate</p>
-          <h1 className="text-6xl md:text-8xl lg:text-[9rem] font-script font-bold leading-[0.8] mb-8 pr-2 drop-shadow-sm text-weddingDark">
-            {String(details.groomName)} <br/><span className="text-4xl md:text-6xl font-serif italic text-weddingAccent my-2 block">&amp;</span> {String(details.brideName)}
+        {/* HERO - Massive Font Sizes */}
+        <section id="home" className="min-h-screen flex flex-col items-center justify-center text-center px-4 relative overflow-hidden pb-20">
+          <HandpaintedFlower className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] max-w-[900px] text-weddingSage opacity-5 pointer-events-none" />
+          <p className="text-weddingAccent tracking-[0.6em] uppercase text-[12px] mb-12 font-bold animate-pulse">Join us to celebrate</p>
+          <h1 className="text-7xl md:text-9xl lg:text-[11rem] font-script font-bold leading-[0.75] mb-10 text-weddingDark drop-shadow-sm select-none">
+            {String(details.groomName)} <br/>
+            <span className="text-4xl md:text-7xl font-serif italic text-weddingAccent my-4 block">&amp;</span> 
+            {String(details.brideName)}
           </h1>
-          <LineAccent />
-          <p className="text-xl md:text-3xl tracking-[0.25em] font-light text-gray-800 mb-2 uppercase">{String(details.weddingDate)}</p>
-          <p className="text-[10px] md:text-xs tracking-[0.4em] text-gray-500 font-bold uppercase">{String(details.weddingLocation)}</p>
-          
-          {/* THEME FEATURE: Live Countdown */}
+          <div className="flex items-center justify-center gap-6 my-10 opacity-40 w-full">
+            <div className="w-24 h-px bg-weddingSage"></div>
+            <div className="w-3 h-3 rotate-45 bg-weddingAccent"></div>
+            <div className="w-24 h-px bg-weddingSage"></div>
+          </div>
+          <p className="text-3xl md:text-5xl tracking-[0.3em] font-light text-gray-800 uppercase mb-4">{String(details.weddingDate)}</p>
+          <p className="text-[13px] tracking-[0.5em] text-gray-400 font-bold uppercase mb-12">{String(details.weddingLocation)}</p>
           <CountdownTimer targetDate={details.weddingDate} />
-          
-          <button onClick={() => document.getElementById('rsvp').scrollIntoView({behavior: 'smooth'})} className="mt-12 px-12 py-4 bg-weddingYellow text-weddingDark text-[10px] font-bold uppercase tracking-widest rounded-full shadow-md border border-white hover:shadow-lg hover:-translate-y-0.5 transition-all">RSVP Now</button>
         </section>
 
-        {/* STORY SECTION */}
-        <section id="story" className="py-16 md:py-24 px-6 md:px-10 max-w-screen-lg mx-auto relative">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-12 lg:gap-20 relative">
-            <div className="w-full md:w-5/12 aspect-[4/5] rounded-t-full rounded-b-sm border-t-[16px] border-b-[6px] border-x-[16px] border-white/80 shadow-xl p-1 relative bg-white/60 flex-shrink-0 z-10">
-              <ImageSlider photoString={details.storyPhotoUrl} altText="Story" containerClass="absolute inset-1" imageClass="rounded-t-full rounded-b-sm" />
+        {/* STORY */}
+        <section id="story" className="py-32 px-6 max-w-screen-xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center gap-20 relative">
+            <div className="w-full md:w-5/12 aspect-[4/5] rounded-t-full border-[16px] border-white shadow-2xl relative overflow-hidden z-10 p-1 bg-white">
+              <ImageSlider photoString={details.storyPhotoUrl} altText="Story" containerClass="absolute inset-0" imageClass="rounded-t-full" />
             </div>
-            <div className="w-full md:w-7/12 text-center md:text-left relative z-20 md:-ml-12">
-              <div className="bg-white/80 backdrop-blur-md p-8 md:p-12 lg:p-14 border border-white shadow-lg rounded-sm">
-                <h2 className="text-[10px] md:text-[11px] font-bold tracking-widest text-weddingAccent mb-8 uppercase border-b border-weddingSage/30 pb-3 inline-block">The Beginning</h2>
-                <div className="relative">
-                  <span className="absolute -left-4 -top-8 text-5xl text-weddingYellow opacity-50 font-serif leading-none select-none">"</span>
-                  <p className="text-base md:text-lg lg:text-xl font-serif leading-snug text-gray-800 relative z-10 text-justify md:text-left">
-                    {String(details.ourStory)}
-                  </p>
+            <div className="w-full md:w-7/12 text-center md:text-left z-20">
+              <div className="bg-white/70 backdrop-blur-xl p-12 md:p-16 rounded-sm border border-white shadow-xl">
+                <h2 className="text-[12px] font-bold tracking-[0.4em] text-weddingAccent mb-10 uppercase border-b border-weddingSage/30 pb-4 inline-block">The Journey</h2>
+                <div className="text-xl md:text-3xl font-serif leading-relaxed text-gray-800 italic text-justify md:text-left">
+                   <span className="text-5xl text-weddingYellow block mb-4 opacity-50">"</span>
+                   {String(details.ourStory)}
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ENTOURAGE SECTION */}
-        <section id="entourage" className="py-16 md:py-24 px-4 md:px-8 text-center relative w-full">
-          <div className="max-w-screen-lg mx-auto">
-            <h2 className="text-4xl md:text-7xl font-serif text-weddingDark mb-16 drop-shadow-sm">The Entourage</h2>
+        {/* ENTOURAGE - Reordered: Parents First, Two Column Sponsors */}
+        <section id="entourage" className="py-32 px-4 bg-white/20 backdrop-blur-sm border-y border-white">
+          <div className="max-w-screen-lg mx-auto text-center">
+            <h2 className="text-6xl md:text-8xl font-serif text-weddingDark mb-24 drop-shadow-sm italic">The Entourage</h2>
             
-            {/* Parents Typography Grid */}
-            <div className="flex flex-col md:flex-row justify-center items-center md:items-start gap-12 md:gap-24 mb-20 border-y border-weddingSage/20 py-12">
-              <div className="flex-1 text-center md:text-right md:border-r border-weddingSage/20 md:pr-12">
-                <h3 className="text-[10px] md:text-[11px] font-bold text-weddingAccent tracking-widest uppercase mb-6">Parents of the Groom</h3>
-                <p className="text-xl md:text-3xl font-serif whitespace-pre-line leading-snug text-gray-800">{String(details.groomParents)}</p>
-              </div>
-              <div className="flex-1 text-center md:text-left md:pl-12">
-                <h3 className="text-[10px] md:text-[11px] font-bold text-weddingAccent tracking-widest uppercase mb-6">Parents of the Bride</h3>
-                <p className="text-xl md:text-3xl font-serif whitespace-pre-line leading-snug text-gray-800">{String(details.brideParents)}</p>
+            {/* 1. Parents (Centered & Elevated) */}
+            <div className="mb-32">
+              <h3 className="text-[12px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-12 border-b-2 border-weddingYellow inline-block pb-2">Beloved Parents</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24 text-center items-start">
+                <div className="flex flex-col items-center md:items-end md:pr-12 md:border-r border-weddingSage/20">
+                  <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">Parents of the Groom</h4>
+                  <p className="text-2xl md:text-4xl font-serif whitespace-pre-line text-gray-800 leading-snug">{String(details.groomParents)}</p>
+                </div>
+                <div className="flex flex-col items-center md:items-start md:pl-12">
+                  <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">Parents of the Bride</h4>
+                  <p className="text-2xl md:text-4xl font-serif whitespace-pre-line text-gray-800 leading-snug">{String(details.brideParents)}</p>
+                </div>
               </div>
             </div>
 
-            {/* Principal Sponsors Grid */}
-            <div className="mb-24">
-               <h3 className="text-[10px] md:text-[11px] font-bold text-weddingAccent tracking-widest uppercase mb-12 border-b-2 border-weddingYellow inline-block pb-2">Principal Sponsors</h3>
-               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-8 text-base md:text-lg font-serif italic text-gray-800 w-full px-4">
-                 {principalArray.map((n, i) => (
-                   <div key={i} className="py-2 border-b border-weddingSage/15 flex items-center justify-center">
-                     {String(n)}
+            {/* 2. Principal Sponsors (Two-Column Pairs) */}
+            <div className="mb-32 bg-white/40 p-10 md:p-20 rounded-3xl border border-white shadow-sm">
+               <h3 className="text-[12px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-16 inline-block">Principal Sponsors</h3>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-20 gap-y-10 max-w-5xl mx-auto px-6">
+                 {principalPairs.map((pair, i) => (
+                   <div key={i} className="flex flex-col md:flex-row justify-between items-center border-b border-weddingSage/10 pb-6 gap-4 group hover:bg-white/20 transition-all rounded-lg px-4">
+                     <span className="text-xl md:text-2xl font-serif text-gray-800">{String(pair.male)}</span>
+                     <span className="text-weddingSage opacity-40 font-serif md:px-4 text-3xl">&</span>
+                     <span className="text-xl md:text-2xl font-serif text-gray-800">{String(pair.female)}</span>
                    </div>
                  ))}
                </div>
             </div>
 
-            {/* Best Man & Maid of Honor */}
-            <div className="max-w-3xl mx-auto flex flex-col items-center w-full mb-20 bg-white/60 backdrop-blur-md p-10 rounded-sm border border-white/80 shadow-sm">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10 w-full text-center relative">
-                <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-weddingSage/30 -translate-x-1/2"></div>
-                <div className="flex flex-col items-center flex-1 md:pr-8">
-                  <h4 className="text-[10px] font-bold text-weddingAccent uppercase tracking-widest mb-4">Best Man</h4>
-                  <p className="text-xl md:text-3xl font-serif text-weddingDark">{String(details.bestMan)}</p>
-                </div>
-                <div className="flex flex-col items-center flex-1 md:pl-8">
-                  <h4 className="text-[10px] font-bold text-weddingAccent uppercase tracking-widest mb-4">Maid of Honor</h4>
-                  <p className="text-xl md:text-3xl font-serif text-weddingDark">{String(details.maidOfHonor)}</p>
-                </div>
+            {/* Rest of Entourage Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-16 text-center">
+              <div className="flex flex-col items-center">
+                <h4 className="text-[10px] font-bold text-weddingAccent uppercase tracking-widest mb-4">Best Man</h4>
+                <p className="text-2xl font-serif">{String(details.bestMan)}</p>
+              </div>
+              <div className="flex flex-col items-center">
+                <h4 className="text-[10px] font-bold text-weddingAccent uppercase tracking-widest mb-4">Maid of Honor</h4>
+                <p className="text-2xl font-serif">{String(details.maidOfHonor)}</p>
+              </div>
+              <div className="flex flex-col items-center">
+                <h4 className="text-[10px] font-bold text-weddingAccent uppercase tracking-widest mb-4">Bible Bearer</h4>
+                <p className="text-2xl font-serif">{String(details.bibleBearer)}</p>
               </div>
             </div>
-
-            {/* Groomsmen & Bridesmaids List - Symmetrical Partner Alignment */}
-            <div className="max-w-4xl mx-auto text-gray-800 flex flex-col items-center w-full mb-24 relative">
-               <div className="grid grid-cols-2 gap-x-6 md:gap-x-16 mb-10 pb-4 border-b border-weddingAccent/30 w-full">
-                 <div className="text-right text-[10px] font-bold text-weddingAccent uppercase tracking-widest">Groomsmen</div>
-                 <div className="text-left text-[10px] font-bold text-weddingAccent uppercase tracking-widest">Bridesmaids</div>
-               </div>
-               
-               {/* Elegant central line */}
-               <div className="absolute left-1/2 top-16 bottom-0 w-px bg-weddingSage/20 -translate-x-1/2"></div>
-               
-               {entouragePartners.map((partner, i) => (
-                 <div key={i} className="grid grid-cols-2 gap-x-6 md:gap-x-16 mb-6 w-full items-start relative z-10">
-                   <div className="text-right flex justify-end">
-                     <p className="text-sm md:text-lg font-serif">{String(partner.groomSide)}</p>
-                   </div>
-                   <div className="text-left flex justify-start">
-                     <p className="text-sm md:text-lg font-serif">{String(partner.brideSide)}</p>
-                   </div>
-                 </div>
-               ))}
-            </div>
-
-            <LineAccent />
-
-            {/* Secondary Sponsors */}
-            <div className="max-w-4xl mx-auto my-24">
-               <h3 className="text-[10px] md:text-[11px] font-bold text-weddingAccent tracking-widest uppercase mb-12 text-center">Secondary Sponsors</h3>
-               <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-                  <div className="text-center md:text-right border-b md:border-b-0 md:border-r border-weddingSage/20 pb-8 md:pb-0 md:pr-8">
-                     <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-6">Candle</h4>
-                     {candleArray.map((n, i) => <p key={i} className="text-base md:text-lg font-serif mb-2 text-gray-800">{n}</p>)}
-                  </div>
-                  <div className="text-center border-b md:border-b-0 border-weddingSage/20 pb-8 md:pb-0 px-4">
-                     <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-6">Veil</h4>
-                     {veilArray.map((n, i) => <p key={i} className="text-base md:text-lg font-serif mb-2 text-gray-800">{n}</p>)}
-                  </div>
-                  <div className="text-center md:text-left md:border-l border-weddingSage/20 pt-8 md:pt-0 md:pl-8">
-                     <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-6">Cord</h4>
-                     {cordArray.map((n, i) => <p key={i} className="text-base md:text-lg font-serif mb-2 text-gray-800">{n}</p>)}
-                  </div>
-               </div>
-            </div>
-
-            {/* Little Entourage */}
-            <div className="max-w-4xl mx-auto mt-24">
-               <h3 className="text-[10px] md:text-[11px] font-bold text-weddingAccent tracking-widest uppercase mb-12 text-center">Little Entourage</h3>
-               <div className="flex flex-col md:flex-row justify-center items-center md:items-start gap-12 text-center mb-16">
-                  <div className="flex-1">
-                     <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-4 border-b border-gray-200 pb-2 inline-block px-4">Bible Bearer</h4>
-                     <p className="text-lg md:text-xl font-serif text-weddingDark mt-2">{String(details.bibleBearer)}</p>
-                  </div>
-                  <div className="flex-1">
-                     <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-4 border-b border-gray-200 pb-2 inline-block px-4">Coin Bearer</h4>
-                     <p className="text-lg md:text-xl font-serif text-weddingDark mt-2">{String(details.coinBearer)}</p>
-                  </div>
-                  <div className="flex-1">
-                     <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-4 border-b border-gray-200 pb-2 inline-block px-4">Ring Bearer</h4>
-                     <p className="text-lg md:text-xl font-serif text-weddingDark mt-2">{String(details.ringBearer)}</p>
-                  </div>
-               </div>
-               
-               <div className="pt-10 text-center max-w-2xl mx-auto">
-                  <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-6 inline-block px-5 py-2 border border-gray-200 rounded-full">Flower Girls</h4>
-                  <div className="flex flex-wrap justify-center gap-x-8 md:gap-x-12 gap-y-4">
-                     {flowerGirlsArray.map((n, i) => (
-                        <p key={i} className="text-base md:text-xl font-serif text-weddingDark italic">{n}</p>
-                     ))}
-                  </div>
-               </div>
-            </div>
-
           </div>
         </section>
 
-        {/* VENUES SECTION */}
-        <section id="venues" className="py-16 md:py-24 px-4 md:px-8 relative bg-white/20 backdrop-blur-sm border-y border-white/60">
-           <div className="max-w-screen-lg mx-auto">
-             <h2 className="text-[10px] md:text-[11px] font-bold tracking-widest text-center text-weddingDark uppercase mb-20 w-full">The Celebration</h2>
-             
-             {/* Ceremony */}
-             <div className="flex flex-col lg:flex-row items-center justify-center mb-24 relative">
-                <div className="w-full lg:w-7/12 aspect-[16/10] bg-white p-2 shadow-lg relative z-10">
-                   <ImageSlider photoString={details.ceremonyPhotoUrl} altText="Ceremony" containerClass="absolute inset-2" imageClass="" />
-                </div>
-                <div className="w-[90%] lg:w-5/12 bg-[#faf9f6]/95 backdrop-blur-xl p-8 md:p-12 shadow-xl relative z-20 -mt-16 lg:mt-0 lg:-ml-16 border border-white">
-                   <h3 className="text-3xl md:text-5xl font-serif mb-6 text-weddingDark">Ceremony</h3>
-                   <div className="w-12 h-1 bg-weddingSage mb-6 opacity-60"></div>
-                   <p className="text-gray-800 font-bold tracking-[0.2em] text-[10px] md:text-[11px] uppercase mb-4 leading-normal">{String(details.ceremonyDate)} <br/> {String(details.ceremonyTime)}</p>
-                   <p className="text-2xl md:text-3xl font-serif text-weddingAccent mb-4 italic">{String(details.ceremonyVenue)}</p>
-                   <p className="text-[10px] md:text-[11px] tracking-widest uppercase text-gray-500 mb-8 leading-normal">{String(details.ceremonyAddress)}</p>
-                   {details.ceremonyMapUrl && (
-                     <a href={details.ceremonyMapUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-6 py-3 bg-weddingDark text-white hover:bg-[#1a261c] rounded text-[9px] font-bold uppercase tracking-widest transition-colors">
-                       <MapPin size={12} /> View Map
-                     </a>
-                   )}
-                </div>
-             </div>
-
-             {/* Reception */}
-             <div className="flex flex-col lg:flex-row-reverse items-center justify-center relative">
-                <div className="w-full lg:w-7/12 aspect-[16/10] bg-white p-2 shadow-lg relative z-10">
-                   <ImageSlider photoString={details.receptionPhotoUrl} altText="Reception" containerClass="absolute inset-2" imageClass="" />
-                </div>
-                <div className="w-[90%] lg:w-5/12 bg-[#faf9f6]/95 backdrop-blur-xl p-8 md:p-12 shadow-xl relative z-20 -mt-16 lg:mt-0 lg:-mr-16 border border-white text-left lg:text-right flex flex-col items-start lg:items-end">
-                   <h3 className="text-3xl md:text-5xl font-serif mb-6 text-weddingDark">Reception</h3>
-                   <div className="w-12 h-1 bg-weddingSage mb-6 opacity-60"></div>
-                   <p className="text-gray-800 font-bold tracking-[0.2em] text-[10px] md:text-[11px] uppercase mb-4 leading-normal">{String(details.receptionDate)} <br/> {String(details.receptionTime)}</p>
-                   <p className="text-2xl md:text-3xl font-serif text-weddingAccent mb-4 italic">{String(details.receptionVenue)}</p>
-                   <p className="text-[10px] md:text-[11px] tracking-widest uppercase text-gray-500 mb-8 leading-normal text-left lg:text-right">{String(details.receptionAddress)}</p>
-                   {details.receptionMapUrl && (
-                     <a href={details.receptionMapUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-6 py-3 bg-weddingDark text-white hover:bg-[#1a261c] rounded text-[9px] font-bold uppercase tracking-widest transition-colors">
-                       <MapPin size={12} /> View Map
-                     </a>
-                   )}
-                </div>
-             </div>
-           </div>
+        {/* VENUES */}
+        <section id="venues" className="py-32 px-4 max-w-screen-xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-20">
+            {/* Ceremony */}
+            <div className="bg-white p-3 shadow-2xl relative">
+              <div className="aspect-[16/10] overflow-hidden">
+                <ImageSlider photoString={details.ceremonyPhotoUrl} altText="Ceremony" containerClass="w-full h-full" />
+              </div>
+              <div className="p-12 text-center">
+                <h3 className="text-5xl font-serif text-weddingDark mb-6">The Ceremony</h3>
+                <p className="text-[12px] font-bold uppercase tracking-[0.3em] text-weddingAccent mb-3">{String(details.ceremonyDate)} | {String(details.ceremonyTime)}</p>
+                <p className="text-2xl font-serif mb-10 italic text-gray-700">{String(details.ceremonyVenue)}</p>
+                <a href={String(details.ceremonyMapUrl)} target="_blank" className="inline-flex items-center gap-3 px-10 py-4 bg-weddingDark text-white rounded-xl text-[11px] font-bold uppercase tracking-widest hover:bg-weddingAccent transition-all shadow-xl">
+                  <MapPin size={18} /> View Location
+                </a>
+              </div>
+            </div>
+            {/* Reception */}
+            <div className="bg-white p-3 shadow-2xl relative">
+              <div className="aspect-[16/10] overflow-hidden">
+                <ImageSlider photoString={details.receptionPhotoUrl} altText="Reception" containerClass="w-full h-full" />
+              </div>
+              <div className="p-12 text-center">
+                <h3 className="text-5xl font-serif text-weddingDark mb-6">The Reception</h3>
+                <p className="text-[12px] font-bold uppercase tracking-[0.3em] text-weddingAccent mb-3">{String(details.receptionTime)}</p>
+                <p className="text-2xl font-serif mb-10 italic text-gray-700">{String(details.receptionVenue)}</p>
+                <a href={String(details.receptionMapUrl)} target="_blank" className="inline-flex items-center gap-3 px-10 py-4 bg-weddingDark text-white rounded-xl text-[11px] font-bold uppercase tracking-widest hover:bg-weddingAccent transition-all shadow-xl">
+                  <MapPin size={18} /> View Location
+                </a>
+              </div>
+            </div>
+          </div>
         </section>
 
-        {/* GUESTBOOK SECTION */}
-        <section id="guestbook" className="py-16 md:py-24 px-4 md:px-8 relative bg-white/40 backdrop-blur-md border-b border-white/60">
-          <div className="max-w-screen-xl mx-auto text-center">
-            <h2 className="text-[10px] md:text-[11px] font-bold tracking-widest text-weddingAccent uppercase mb-4 opacity-80">Wishes & Love</h2>
-            <h3 className="text-3xl md:text-5xl font-serif text-weddingDark mb-16 drop-shadow-sm">Guestbook</h3>
-            
-            <div className="relative w-full overflow-hidden min-h-[350px]">
-              {gbSlides.length > 0 ? gbSlides.map((slide, slideIdx) => (
-                <div 
-                  key={slideIdx} 
-                  className={`w-full grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 transition-all duration-[1000ms] ease-in-out ${slideIdx === currentGbSlide ? 'opacity-100 translate-x-0 relative z-10' : 'opacity-0 translate-x-12 absolute top-0 left-0 pointer-events-none z-0'}`}
-                >
-                  {slide.map((m, i) => (
-                    <div key={m.id} className="bg-[#faf9f6]/95 p-8 md:p-10 border border-white shadow-lg rounded flex flex-col justify-between text-left group hover:-translate-y-1 transition-transform duration-300">
-                      <MessageSquareHeart className="w-6 h-6 text-weddingSage/60 mb-6 group-hover:text-weddingAccent transition-colors" />
-                      <p className="text-base md:text-lg font-serif italic leading-relaxed text-gray-800 mb-8">"{String(m.message)}"</p>
-                      <p className="text-[9px] md:text-[10px] uppercase tracking-widest font-bold text-gray-500 border-t border-gray-200/80 pt-4">- {String(m.submittedName)}</p>
-                    </div>
+        {/* RSVP - Sage Green Inputs */}
+        <section id="rsvp" className="py-32 px-4 bg-[#1f2b22] text-white">
+          <div className="max-w-screen-md mx-auto">
+            <div className="text-center mb-20">
+              <h2 className="text-[12px] font-bold tracking-[0.5em] text-weddingYellow uppercase mb-6">RSVP</h2>
+              <h3 className="text-5xl md:text-7xl font-serif mb-10">Join the Celebration</h3>
+              <p className="text-weddingYellow font-serif italic text-xl border border-weddingYellow/20 px-10 py-3 inline-block bg-weddingYellow/5 rounded-full">Please respond by {String(details.rsvpDeadline)}</p>
+            </div>
+
+            {submitSuccess ? (
+              <div className="bg-weddingSage text-weddingDark p-20 rounded-[3rem] text-center shadow-2xl animate-in zoom-in duration-500">
+                <CheckCircle size={100} className="mx-auto mb-10 text-weddingDark animate-bounce" />
+                <h4 className="text-5xl font-serif mb-6">Thank You!</h4>
+                <p className="font-serif italic text-2xl">We can't wait to see you there.</p>
+                <button onClick={() => setSubmitSuccess(false)} className="mt-12 text-[11px] uppercase font-bold border-b-2 border-weddingDark pb-1">Edit RSVP</button>
+              </div>
+            ) : (
+              <form onSubmit={handleRsvpSubmit} className="space-y-10">
+                <div className="grid md:grid-cols-2 gap-10">
+                  <div className="bg-weddingSage/10 p-10 rounded-3xl border border-weddingSage/30 focus-within:border-weddingYellow/50 transition-all">
+                    <label className="block text-[10px] font-bold tracking-widest uppercase mb-4 text-weddingYellow/60">Security Code</label>
+                    <input required value={rsvpForm.enteredCode} onChange={e=>setRsvpForm({...rsvpForm, enteredCode: e.target.value})} className="w-full bg-weddingSage/20 rounded-xl px-4 py-4 focus:outline-none focus:bg-weddingSage/40 text-3xl font-serif uppercase tracking-[0.5em] text-white placeholder:text-white/20" placeholder="----" />
+                  </div>
+                  <div className="bg-weddingSage/10 p-10 rounded-3xl border border-weddingSage/30 focus-within:border-weddingYellow/50 transition-all">
+                    <label className="block text-[10px] font-bold tracking-widest uppercase mb-4 text-weddingYellow/60">Full Name</label>
+                    <input required value={rsvpForm.name} onChange={e=>setRsvpForm({...rsvpForm, name: e.target.value})} className="w-full bg-weddingSage/20 rounded-xl px-4 py-4 focus:outline-none focus:bg-weddingSage/40 text-3xl font-serif italic text-white placeholder:text-white/20" placeholder="Name" />
+                  </div>
+                </div>
+                
+                <div className="flex flex-col md:flex-row gap-6">
+                  {['yes', 'no'].map(v => (
+                    <label key={v} className={`flex-1 py-10 text-center rounded-3xl border-2 cursor-pointer transition-all ${rsvpForm.attending === v ? 'bg-weddingYellow border-weddingYellow text-weddingDark shadow-2xl scale-105' : 'border-white/10 hover:border-white/30 bg-white/5'}`}>
+                      <input type="radio" className="hidden" value={v} checked={rsvpForm.attending === v} onChange={e=>setRsvpForm({...rsvpForm, attending: e.target.value})} />
+                      <span className="text-[12px] font-bold uppercase tracking-widest">{v === 'yes' ? 'Happily Accepting' : 'Regretfully Declining'}</span>
+                    </label>
                   ))}
                 </div>
-              )) : (
-                <div className="text-center text-gray-500 font-serif italic py-16 text-lg md:text-xl">Be the first to leave a beautiful message...</div>
-              )}
-            </div>
-            
-            {gbSlides.length > 1 && (
-              <div className="flex justify-center gap-4 mt-12">
-                {gbSlides.map((_, i) => (
-                  <button 
-                    key={i} 
-                    onClick={() => setCurrentGbSlide(i)} 
-                    className={`h-1.5 transition-all duration-300 rounded-full ${i === currentGbSlide ? 'w-12 bg-weddingAccent shadow-sm' : 'w-4 bg-gray-300 hover:bg-gray-400'}`}
-                    aria-label={`Go to slide ${i + 1}`}
-                  ></button>
-                ))}
-              </div>
+
+                <div className="bg-weddingSage/10 p-10 rounded-3xl border border-weddingSage/30">
+                  <label className="block text-[10px] font-bold tracking-widest uppercase mb-6 text-weddingYellow/60">Wishes for the Couple</label>
+                  <textarea value={rsvpForm.message} onChange={e=>setRsvpForm({...rsvpForm, message: e.target.value})} className="w-full bg-weddingSage/20 rounded-xl p-6 focus:outline-none focus:bg-weddingSage/40 text-xl font-serif italic text-white resize-none h-40" placeholder="Leave a message..." />
+                </div>
+
+                {submitError && <div className="text-red-300 text-center p-6 bg-red-900/40 rounded-2xl border border-red-500/30 text-xs font-bold uppercase tracking-widest">{String(submitError)}</div>}
+                <button type="submit" disabled={isSubmitting} className="w-full bg-weddingYellow text-weddingDark py-10 rounded-3xl font-bold uppercase tracking-[0.3em] text-[13px] shadow-2xl hover:bg-white active:scale-[0.98] transition-all disabled:opacity-50">
+                  {isSubmitting ? 'Processing RSVP...' : 'Confirm My Attendance'}
+                </button>
+              </form>
             )}
           </div>
-        </section>
-
-        {/* DETAILS & STYLE */}
-        <section id="details" className="py-16 md:py-24 px-4 md:px-8 relative">
-           <div className="max-w-screen-lg mx-auto flex flex-col gap-24 items-center">
-              
-              {/* Dress Code */}
-              <div className="flex flex-col md:flex-row gap-12 md:gap-20 items-center w-full">
-                <div className="flex-1 text-center md:text-left">
-                   <h3 className="text-[10px] md:text-[11px] font-bold tracking-widest uppercase text-weddingAccent mb-4">Attire Guidelines</h3>
-                   <h2 className="text-4xl md:text-5xl font-serif mb-6 text-weddingDark">Dress Code</h2>
-                   <p className="text-lg md:text-xl mb-10 leading-snug text-gray-800 drop-shadow-sm">{String(details.dressCodeText)}</p>
-                   <div className="flex gap-4 flex-wrap justify-center md:justify-start">
-                      {colorArray.map((c, i) => (
-                        <div key={i} className="group relative">
-                          <div className="w-12 h-12 md:w-16 md:h-16 rounded-full border-[4px] border-white shadow-lg transition-transform group-hover:-translate-y-1" style={{ backgroundColor: String(c) }}></div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-                <div className="flex-1 grid grid-cols-2 gap-4 md:gap-6 w-full relative">
-                   <div className="absolute inset-0 bg-weddingSage/10 rounded-sm transform rotate-2 scale-105 z-[-1]"></div>
-                   {String(details.dressCodePhotoUrl).split(',').map((url, idx) => (
-                     <div key={idx} className={`bg-white p-2 shadow-xl aspect-[4/5] ${idx === 2 ? 'col-span-2 aspect-[21/9]' : ''}`}>
-                       <img src={url.trim()} alt="Style" className="w-full h-full object-cover" />
-                     </div>
-                   ))}
-                </div>
-              </div>
-
-              {/* Gift Protocol */}
-              <div className="bg-[#faf9f6] p-12 md:p-20 border border-gray-200 text-center shadow-xl relative max-w-3xl w-full">
-                 <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-weddingYellow p-4 rounded-full shadow-lg">
-                    <Gift className="w-6 h-6 md:w-8 md:h-8 text-weddingDark" />
-                 </div>
-                 <h3 className="text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-6 mt-4">Registry</h3>
-                 <p className="text-gray-800 font-serif text-2xl md:text-4xl leading-snug italic border-y border-weddingSage/30 py-10 px-4 md:px-10">"{String(details.giftText)}"</p>
-              </div>
-           </div>
-        </section>
-
-        {/* RSVP SECTION */}
-        <section id="rsvp" className="py-20 md:py-28 px-4 md:px-8 bg-[#1f2b22] text-white relative w-full overflow-hidden">
-           <div className="max-w-screen-md mx-auto relative z-10">
-              <div className="text-center mb-16">
-                 <h2 className="text-[10px] md:text-[11px] font-bold tracking-widest uppercase text-weddingYellow mb-6">RSVP</h2>
-                 <h3 className="text-4xl md:text-6xl font-serif mb-8 w-full">Join the Celebration</h3>
-                 <p className="text-[9px] uppercase font-bold tracking-widest text-weddingYellow border border-weddingYellow/40 px-6 py-2.5 inline-block bg-weddingYellow/5 rounded-sm">Please Reply by {String(details.rsvpDeadline)}</p>
-              </div>
-
-              {submitSuccess ? (
-                <div className="text-center py-16 bg-weddingSage text-weddingDark border border-weddingSage/50 p-8 shadow-xl rounded-2xl">
-                   <CheckCircle className="w-16 h-16 text-weddingDark mx-auto mb-8 animate-bounce" />
-                   <p className="text-2xl md:text-4xl font-serif italic mb-8">We can't wait to see you!</p>
-                   <button onClick={() => setSubmitSuccess(false)} className="text-[10px] md:text-xs uppercase font-bold text-weddingDark border-b-2 border-weddingDark pb-1 hover:opacity-80 transition-opacity">Edit My RSVP</button>
-                </div>
-              ) : (
-                <form onSubmit={handleRsvpSubmit} className="space-y-8">
-                   <div className="bg-weddingSage text-weddingDark p-6 md:p-8 rounded-2xl shadow-lg transition-transform focus-within:-translate-y-1">
-                      <label className="block text-[10px] md:text-[11px] font-bold tracking-widest uppercase mb-4 text-weddingDark/80">Security Code</label>
-                      <input required value={rsvpForm.enteredCode} onChange={e=>setRsvpForm({...rsvpForm, enteredCode: e.target.value})} className="w-full bg-transparent border-b-2 border-weddingDark/20 py-2 focus:outline-none focus:border-weddingDark uppercase tracking-[0.8em] text-3xl md:text-4xl font-serif text-weddingDark placeholder:text-weddingDark/40" placeholder="----" />
-                   </div>
-                   
-                   <div className="bg-weddingSage text-weddingDark p-6 md:p-8 rounded-2xl shadow-lg transition-transform focus-within:-translate-y-1">
-                      <label className="block text-[10px] md:text-[11px] font-bold tracking-widest uppercase mb-4 text-weddingDark/80">Your Name</label>
-                      <input required value={rsvpForm.name} onChange={e=>setRsvpForm({...rsvpForm, name: e.target.value})} className="w-full bg-transparent border-b-2 border-weddingDark/20 py-2 focus:outline-none focus:border-weddingDark text-2xl md:text-3xl font-serif italic text-weddingDark placeholder:text-weddingDark/40" placeholder="Full Name" />
-                   </div>
-                   
-                   <div className="flex flex-col md:flex-row gap-6 pt-2">
-                      {['yes', 'no'].map(v => (
-                         <label key={v} className={`flex-1 py-5 md:py-6 text-center border-2 cursor-pointer transition-all rounded-2xl ${rsvpForm.attending === v ? 'bg-weddingYellow text-weddingDark border-weddingYellow shadow-lg' : 'border-white/30 hover:border-white/50 bg-white/5 text-white'}`}>
-                            <input type="radio" className="hidden" value={String(v)} checked={rsvpForm.attending === v} onChange={e=>setRsvpForm({...rsvpForm, attending: e.target.value})} />
-                            <span className="text-[10px] md:text-[11px] font-bold uppercase tracking-widest">{v === 'yes' ? 'Happily Accepting' : 'Regretfully Declining'}</span>
-                         </label>
-                      ))}
-                   </div>
-                   
-                   <div className="bg-weddingSage text-weddingDark p-6 md:p-8 rounded-2xl shadow-lg transition-transform focus-within:-translate-y-1">
-                      <label className="block text-[10px] md:text-[11px] font-bold tracking-widest uppercase mb-6 text-weddingDark/80">Wishes for the Couple</label>
-                      <textarea value={rsvpForm.message} onChange={e=>setRsvpForm({...rsvpForm, message: e.target.value})} placeholder="Write a message for our digital guestbook..." className="w-full bg-transparent border-none focus:outline-none min-h-[120px] text-xl md:text-2xl font-serif italic text-weddingDark placeholder:text-weddingDark/50 resize-none" ></textarea>
-                   </div>
-                   
-                   {submitError && <div className="text-red-200 text-center text-xs md:text-sm font-bold bg-red-900/50 py-4 border border-red-800/50 rounded-lg">{String(submitError)}</div>}
-                   
-                   <button type="submit" disabled={isSubmitting} className="w-full bg-weddingYellow text-weddingDark py-5 md:py-6 font-bold uppercase tracking-widest text-[11px] md:text-xs shadow-lg rounded-2xl disabled:opacity-50 hover:bg-white transition-colors mt-4">
-                      {isSubmitting ? 'Processing...' : 'Confirm RSVP'}
-                   </button>
-                </form>
-              )}
-           </div>
         </section>
       </main>
 
       {/* FOOTER */}
-      <footer className="py-16 md:py-20 text-center bg-[#faf9f6] relative border-t border-gray-200 z-10">
-         <div className="max-w-screen-xl mx-auto px-6 relative">
-           <p className="font-script font-bold text-5xl md:text-7xl mb-6 pr-2 drop-shadow-sm text-weddingDark">{String(details.groomName)} <span className="font-serif italic text-3xl md:text-4xl">&amp;</span> {String(details.brideName)}</p>
-           <div className="w-16 h-px bg-weddingSage mx-auto mb-8 opacity-50"></div>
-           <p className="text-[9px] md:text-[10px] uppercase font-bold tracking-widest text-gray-500 mb-12">{String(details.ceremonyDate)} • {String(details.weddingLocation)}</p>
-           
-           <div className="flex flex-col items-center gap-6 mb-16 max-w-xl mx-auto">
-              <div className="flex flex-col md:flex-row justify-center gap-6 md:gap-8 text-[10px] font-bold text-gray-700 uppercase tracking-widest bg-white/60 px-8 py-4 rounded-full border border-gray-200 shadow-sm">
-                 <span className="flex items-center gap-2"><Phone size={14} className="text-weddingSage"/> {details.contactPhone}</span>
-                 <span className="hidden md:block text-gray-300">|</span>
-                 <span className="flex items-center gap-2"><Mail size={14} className="text-weddingSage"/> {details.contactEmail}</span>
-              </div>
-           </div>
-
-           <button onClick={() => setShowAdminLogin(true)} className="px-8 py-3 text-[9px] uppercase tracking-widest text-gray-400 hover:text-weddingDark transition-colors"><Lock className="w-3 h-3 inline mr-1.5 opacity-60"/> Staff Access</button>
-         </div>
+      <footer className="py-24 text-center bg-[#faf9f6] border-t border-gray-200 relative z-10">
+        <p className="font-script text-7xl md:text-[8rem] text-weddingDark mb-8 select-none">{String(details.groomName)} & {String(details.brideName)}</p>
+        <div className="w-24 h-px bg-weddingSage mx-auto mb-12 opacity-50"></div>
+        <p className="text-[11px] uppercase font-bold tracking-[0.5em] text-gray-500 mb-20">{String(details.weddingDate)} • {String(details.weddingLocation)}</p>
+        <button onClick={() => setShowAdminLogin(true)} className="text-[10px] uppercase tracking-widest text-gray-300 hover:text-weddingDark transition-colors flex items-center gap-3 mx-auto px-6 py-3 border border-gray-100 rounded-full"><Lock size={14}/> Staff Login</button>
       </footer>
 
+      {/* ADMIN LOGIN */}
       {showAdminLogin && (
-        <div className="fixed inset-0 bg-[#faf9f6]/95 backdrop-blur-xl z-[100] flex items-center justify-center p-6 text-weddingDark">
-          <div className="max-w-sm w-full text-center">
-             <button onClick={() => setShowAdminLogin(false)} className="mb-10 hover:scale-110 transition-transform"><X size={32} className="text-gray-400 hover:text-weddingDark mx-auto" /></button>
-             <h3 className="text-2xl font-serif mb-8 italic">Secure Access</h3>
-             <form onSubmit={handleAdminLogin}>
-                <input type="password" autoFocus value={adminPassword} onChange={e=>setAdminPassword(e.target.value)} className="w-full border-b border-weddingDark text-center py-3 mb-8 tracking-[0.5em] text-xl focus:outline-none bg-transparent" placeholder="••••••••" />
-                {adminError && <p className="text-red-500 text-[10px] font-bold mb-6 uppercase tracking-widest">{String(adminError)}</p>}
-                <button className="w-full bg-weddingDark text-white py-3.5 rounded font-bold uppercase tracking-widest text-[10px] hover:bg-[#1a261c] transition-colors">Login</button>
-             </form>
+        <div className="fixed inset-0 z-[300] bg-[#faf9f6]/95 backdrop-blur-2xl flex items-center justify-center p-6 text-weddingDark">
+          <div className="max-w-sm w-full text-center animate-in zoom-in duration-500">
+            <button onClick={() => setShowAdminLogin(false)} className="mb-12 text-gray-300 hover:text-black transition-transform hover:rotate-90 focus:outline-none"><X size={40} className="mx-auto" /></button>
+            <h3 className="text-3xl font-serif mb-10 italic">Secure Access</h3>
+            <form onSubmit={handleAdminLogin}>
+              <input type="password" autoFocus value={adminPassword} onChange={e=>setAdminPassword(e.target.value)} className="w-full border-b-2 border-weddingDark text-center py-6 mb-12 tracking-[0.8em] text-3xl focus:outline-none bg-transparent" placeholder="••••••••" />
+              {adminError && <p className="text-red-500 text-[10px] font-bold mb-8 uppercase tracking-[0.2em]">{String(adminError)}</p>}
+              <button className="w-full bg-weddingDark text-white py-5 rounded-2xl font-bold uppercase tracking-[0.3em] text-[11px] shadow-2xl active:scale-95 transition-all">Verify Credentials</button>
+            </form>
           </div>
         </div>
       )}
