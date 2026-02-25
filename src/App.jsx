@@ -5,7 +5,7 @@ import {
   BarChart, Phone, Mail, Edit2, Check, MessageSquareHeart, 
   ChevronLeft, ChevronRight, LayoutGrid, StickyNote, Info, 
   Github, Globe, Terminal, Cloud, AlertCircle, ExternalLink, 
-  MapPin, Music, Play, Pause, MailOpen, Camera
+  MapPin, Music, Play, Pause, MailOpen, Camera, GripVertical
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
@@ -217,7 +217,200 @@ const ImageSlider = ({ photoString, altText, containerClass, imageClass }) => {
 };
 
 // ==========================================
-// 4. MAIN APPLICATION
+// 4. ADMIN COMPONENTS (Moved outside to fix focus issues)
+// ==========================================
+
+const AdminField = ({ label, name, isTextArea = false, isAudio = false, isImage = false, editForm, setEditForm, storage, appId, showToast }) => {
+  const [uploading, setUploading] = useState(false);
+  const fileInputRefLocal = useRef(null);
+
+  if (!editForm) return null;
+
+  const handleFileUpload = async (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    setUploading(true);
+    try {
+      const newUrls = [];
+      for(let i = 0; i < files.length; i++) {
+         const file = files[i];
+         const safeName = file.name.replace(/[^a-zA-Z0-9.]/g, '');
+         const folder = isAudio ? 'audio' : 'images';
+         const storageRef = ref(storage, `artifacts/${appId}/public/data/${folder}/${Date.now()}_${safeName}`);
+         const snapshot = await uploadBytes(storageRef, file);
+         const url = await getDownloadURL(snapshot.ref);
+         newUrls.push(url);
+      }
+
+      if (isImage) {
+        const existingUrls = editForm[name] ? editForm[name].split(',').map(s=>s.trim()).filter(Boolean) : [];
+        const combinedUrls = [...existingUrls, ...newUrls].join(', ');
+        setEditForm(prev => ({ ...prev, [name]: combinedUrls }));
+        showToast("Images uploaded successfully!");
+      } else {
+        setEditForm(prev => ({ ...prev, [name]: newUrls[0] }));
+        showToast("Audio uploaded successfully!");
+      }
+    } catch (err) { 
+      console.error("Upload Error Details:", err);
+      if (typeof __firebase_config !== 'undefined') {
+          showToast("Uploads disabled in Preview. Please paste public URLs instead.");
+      } else {
+          showToast("Firebase Denied! Set Storage Rules to 'allow read, write: if true;'");
+      }
+    }
+    setUploading(false);
+    if(fileInputRefLocal.current) fileInputRefLocal.current.value = "";
+  };
+
+  return (
+    <div className="mb-6">
+      <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">{label}</label>
+      {isAudio || isImage ? (
+        <div className="flex flex-col gap-3">
+          <input 
+            type="file" 
+            multiple={isImage}
+            accept={isAudio ? "audio/*" : "image/*"} 
+            ref={fileInputRefLocal} 
+            onChange={handleFileUpload} 
+            className="hidden" 
+          />
+          <div className="flex gap-2">
+            <button 
+              type="button" 
+              onClick={() => fileInputRefLocal.current?.click()} 
+              disabled={uploading} 
+              className="bg-weddingSage text-white px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+            >
+              {uploading ? 'Uploading...' : isImage ? <><Camera size={14}/> Upload Photo(s)</> : <><Music size={14}/> Upload Music</>}
+            </button>
+            <input 
+              type="text" 
+              value={editForm[name] || ''} 
+              onChange={e => setEditForm({...editForm, [name]: e.target.value})} 
+              className="flex-1 p-2.5 bg-weddingSage/10 border border-weddingSage/30 rounded-lg text-xs" 
+              placeholder={`Or paste ${isImage ? 'image URLs (comma separated)' : 'Audio URL'} here...`} 
+            />
+          </div>
+          {editForm[name] && isImage && (
+            <div className="text-[10px] italic text-gray-400">Current photos will show as a slider. Separate multiple URLs with commas.</div>
+          )}
+          <div className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1">
+            Note: If upload fails, host files externally (e.g., Google Drive, Imgur) and paste the direct URLs.
+          </div>
+        </div>
+      ) : isTextArea ? (
+        <textarea value={editForm[name] || ''} onChange={e => setEditForm({...editForm, [name]: e.target.value})} className="w-full p-3 bg-weddingSage/10 border border-weddingSage/30 rounded-xl text-sm" rows="4" />
+      ) : (
+        <input type="text" value={editForm[name] || ''} onChange={e => setEditForm({...editForm, [name]: e.target.value})} className="w-full p-3 bg-weddingSage/10 border border-weddingSage/30 rounded-xl text-sm" />
+      )}
+    </div>
+  );
+};
+
+const DraggableListField = ({ label, name, editForm, setEditForm, subtitle, isPairs = false }) => {
+  if (!editForm) return null;
+  // Initialize from string, preserving empty arrays if string is entirely empty
+  const items = editForm[name] ? editForm[name].split('\n') : [];
+  const [draggedIdx, setDraggedIdx] = useState(null);
+
+  const handleDragStart = (e, index) => {
+    setDraggedIdx(index);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault(); // allow drop
+  };
+
+  const handleDrop = (e, index) => {
+    e.preventDefault();
+    if (draggedIdx === null || draggedIdx === index) return;
+    
+    const newItems = [...items];
+    const draggedItem = newItems[draggedIdx];
+    newItems.splice(draggedIdx, 1);
+    newItems.splice(index, 0, draggedItem);
+    
+    setEditForm({ ...editForm, [name]: newItems.join('\n') });
+    setDraggedIdx(null);
+  };
+
+  const handleChange = (val, idx) => {
+    const newItems = [...items];
+    newItems[idx] = val;
+    setEditForm({ ...editForm, [name]: newItems.join('\n') });
+  };
+
+  const handleRemove = (idx) => {
+     const newItems = items.filter((_, i) => i !== idx);
+     setEditForm({ ...editForm, [name]: newItems.join('\n') });
+  };
+
+  const handleAdd = () => {
+     const newItems = [...items, "New Person"];
+     setEditForm({ ...editForm, [name]: newItems.join('\n') });
+  };
+
+  return (
+    <div className="mb-6 bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
+      <div className="mb-4">
+        <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest">{label}</label>
+        {subtitle && <p className="text-[10px] text-gray-400 mt-1">{subtitle}</p>}
+      </div>
+      
+      <div className="space-y-2 mb-4">
+        {items.map((item, idx) => (
+          <div 
+            key={idx}
+            draggable
+            onDragStart={(e) => handleDragStart(e, idx)}
+            onDragOver={(e) => handleDragOver(e, idx)}
+            onDrop={(e) => handleDrop(e, idx)}
+            className={`flex items-center gap-3 bg-weddingSage/10 p-2.5 rounded-lg border transition-all ${draggedIdx === idx ? 'opacity-50 border-dashed border-weddingDark' : 'border-weddingSage/30'}`}
+          >
+            <div className="text-gray-400 cursor-move hover:text-weddingDark" title="Drag to reorder">
+              <GripVertical size={16}/>
+            </div>
+            
+            {isPairs && (
+              <span className="text-[10px] font-bold uppercase w-16 text-weddingAccent tracking-wider">
+                {idx % 2 === 0 ? 'Male:' : 'Female:'}
+              </span>
+            )}
+            
+            <input 
+              type="text" 
+              value={item} 
+              onChange={(e) => handleChange(e.target.value, idx)}
+              className="flex-1 bg-transparent border-b border-transparent focus:border-weddingSage/50 focus:outline-none text-sm font-serif"
+              placeholder="Enter name..."
+            />
+            
+            <button type="button" onClick={() => handleRemove(idx)} className="text-red-300 hover:text-red-600 transition-colors p-1" title="Remove">
+              <X size={16}/>
+            </button>
+          </div>
+        ))}
+        {items.length === 0 && <div className="text-xs text-gray-400 italic p-2 text-center border border-dashed rounded-lg">No names added yet</div>}
+      </div>
+      
+      <button 
+        type="button" 
+        onClick={handleAdd} 
+        className="w-full py-2.5 rounded-lg border border-weddingAccent/30 text-weddingAccent text-[10px] font-bold uppercase tracking-widest hover:bg-weddingAccent hover:text-white transition-colors flex justify-center items-center gap-2"
+      >
+        <UserPlus size={14}/> Add New Person
+      </button>
+    </div>
+  );
+};
+
+
+// ==========================================
+// 5. MAIN APPLICATION
 // ==========================================
 
 export default function App() {
@@ -484,92 +677,6 @@ export default function App() {
   }
 
   // ==========================================
-  // 5. ADMIN FIELD COMPONENT
-  // ==========================================
-
-  const Field = ({ label, name, isTextArea = false, isAudio = false, isImage = false }) => {
-    const [uploading, setUploading] = useState(false);
-    const fileInputRefLocal = useRef(null);
-
-    if (!editForm) return null;
-
-    const handleFileUpload = async (e) => {
-      const files = e.target.files;
-      if (!files || files.length === 0) return;
-      
-      setUploading(true);
-      try {
-        const newUrls = [];
-        for(let i = 0; i < files.length; i++) {
-           const file = files[i];
-           const safeName = file.name.replace(/[^a-zA-Z0-9.]/g, '');
-           const folder = isAudio ? 'audio' : 'images';
-           const storageRef = ref(storage, `artifacts/${appId}/public/${folder}/${Date.now()}_${safeName}`);
-           const snapshot = await uploadBytes(storageRef, file);
-           const url = await getDownloadURL(snapshot.ref);
-           newUrls.push(url);
-        }
-
-        if (isImage) {
-          const existingUrls = editForm[name] ? editForm[name].split(',').map(s=>s.trim()).filter(Boolean) : [];
-          const combinedUrls = [...existingUrls, ...newUrls].join(', ');
-          setEditForm(prev => ({ ...prev, [name]: combinedUrls }));
-          showToast("Images uploaded successfully!");
-        } else {
-          setEditForm(prev => ({ ...prev, [name]: newUrls[0] }));
-          showToast("Audio uploaded successfully!");
-        }
-      } catch (err) { 
-        showToast("Upload failed. Verify Storage permissions."); 
-      }
-      setUploading(false);
-      if(fileInputRefLocal.current) fileInputRefLocal.current.value = "";
-    };
-
-    return (
-      <div className="mb-6">
-        <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">{label}</label>
-        {isAudio || isImage ? (
-          <div className="flex flex-col gap-3">
-            <input 
-              type="file" 
-              multiple={isImage}
-              accept={isAudio ? "audio/*" : "image/*"} 
-              ref={fileInputRefLocal} 
-              onChange={handleFileUpload} 
-              className="hidden" 
-            />
-            <div className="flex gap-2">
-              <button 
-                type="button" 
-                onClick={() => fileInputRefLocal.current?.click()} 
-                disabled={uploading} 
-                className="bg-weddingSage text-white px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
-              >
-                {uploading ? 'Uploading...' : isImage ? <><Camera size={14}/> Upload Photo(s)</> : <><Music size={14}/> Upload Music</>}
-              </button>
-              <input 
-                type="text" 
-                value={editForm[name] || ''} 
-                onChange={e => setEditForm({...editForm, [name]: e.target.value})} 
-                className="flex-1 p-2.5 bg-weddingSage/10 border border-weddingSage/30 rounded-lg text-xs" 
-                placeholder={`Or paste ${isImage ? 'image URLs (comma separated)' : 'Audio URL'} here...`} 
-              />
-            </div>
-            {editForm[name] && isImage && (
-              <div className="text-[10px] italic text-gray-400">Current photos will show as a slider. Separate multiple URLs with commas.</div>
-            )}
-          </div>
-        ) : isTextArea ? (
-          <textarea value={editForm[name] || ''} onChange={e => setEditForm({...editForm, [name]: e.target.value})} className="w-full p-3 bg-weddingSage/10 border border-weddingSage/30 rounded-xl text-sm" rows="4" />
-        ) : (
-          <input type="text" value={editForm[name] || ''} onChange={e => setEditForm({...editForm, [name]: e.target.value})} className="w-full p-3 bg-weddingSage/10 border border-weddingSage/30 rounded-xl text-sm" />
-        )}
-      </div>
-    );
-  };
-
-  // ==========================================
   // 6. RENDER LOGIC
   // ==========================================
 
@@ -654,72 +761,72 @@ export default function App() {
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="bg-white p-8 rounded-2xl border shadow-sm">
                   <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-weddingAccent mb-6 border-b pb-2">Basic Details</h3>
-                  <Field label="Groom's Name" name="groomName" />
-                  <Field label="Bride's Name" name="brideName" />
-                  <Field label="Wedding Date" name="weddingDate" />
-                  <Field label="General Location" name="weddingLocation" />
-                  <Field label="RSVP Deadline" name="rsvpDeadline" />
+                  <AdminField label="Groom's Name" name="groomName" editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
+                  <AdminField label="Bride's Name" name="brideName" editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
+                  <AdminField label="Wedding Date" name="weddingDate" editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
+                  <AdminField label="General Location" name="weddingLocation" editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
+                  <AdminField label="RSVP Deadline" name="rsvpDeadline" editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
                   <div className="grid grid-cols-2 gap-4">
-                     <Field label="Contact Phone" name="contactPhone" />
-                     <Field label="Contact Email" name="contactEmail" />
+                     <AdminField label="Contact Phone" name="contactPhone" editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
+                     <AdminField label="Contact Email" name="contactEmail" editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
                   </div>
                 </div>
 
                 <div className="bg-white p-8 rounded-2xl border shadow-sm">
                   <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-weddingAccent mb-6 border-b pb-2">Story & Text</h3>
-                  <Field label="Our Story Content" name="ourStory" isTextArea />
-                  <Field label="Dress Code Text" name="dressCodeText" isTextArea />
-                  <Field label="Gift / Registry Text" name="giftText" isTextArea />
+                  <AdminField label="Our Story Content" name="ourStory" isTextArea editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
+                  <AdminField label="Dress Code Text" name="dressCodeText" isTextArea editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
+                  <AdminField label="Gift / Registry Text" name="giftText" isTextArea editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
                 </div>
               </div>
 
               <div className="bg-white p-8 rounded-2xl border shadow-sm">
                  <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-weddingAccent mb-6 border-b pb-2">Media & Photos</h3>
                  <div className="grid md:grid-cols-2 gap-6">
-                   <Field label="Background Music (MP3)" name="backgroundMusicUrl" isAudio />
-                   <Field label="Story Photos" name="storyPhotoUrl" isImage />
-                   <Field label="Ceremony Photos" name="ceremonyPhotoUrl" isImage />
-                   <Field label="Reception Photos" name="receptionPhotoUrl" isImage />
-                   <Field label="Dress Code / Inspiration Photos" name="dressCodePhotoUrl" isImage />
+                   <AdminField label="Background Music (MP3)" name="backgroundMusicUrl" isAudio editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
+                   <AdminField label="Story Photos" name="storyPhotoUrl" isImage editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
+                   <AdminField label="Ceremony Photos" name="ceremonyPhotoUrl" isImage editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
+                   <AdminField label="Reception Photos" name="receptionPhotoUrl" isImage editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
+                   <AdminField label="Dress Code / Inspiration Photos" name="dressCodePhotoUrl" isImage editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
                  </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="bg-white p-8 rounded-2xl border shadow-sm">
                   <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-weddingAccent mb-6 border-b pb-2">Ceremony Venue</h3>
-                  <Field label="Ceremony Date" name="ceremonyDate" />
-                  <Field label="Ceremony Time" name="ceremonyTime" />
-                  <Field label="Ceremony Venue Name" name="ceremonyVenue" />
-                  <Field label="Ceremony Address" name="ceremonyAddress" />
-                  <Field label="Ceremony Map Link (Google Maps URL)" name="ceremonyMapUrl" />
+                  <AdminField label="Ceremony Date" name="ceremonyDate" editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
+                  <AdminField label="Ceremony Time" name="ceremonyTime" editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
+                  <AdminField label="Ceremony Venue Name" name="ceremonyVenue" editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
+                  <AdminField label="Ceremony Address" name="ceremonyAddress" editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
+                  <AdminField label="Ceremony Map Link (Google Maps URL)" name="ceremonyMapUrl" editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
                 </div>
                 
                 <div className="bg-white p-8 rounded-2xl border shadow-sm">
                   <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-weddingAccent mb-6 border-b pb-2">Reception Venue</h3>
-                  <Field label="Reception Date" name="receptionDate" />
-                  <Field label="Reception Time" name="receptionTime" />
-                  <Field label="Reception Venue Name" name="receptionVenue" />
-                  <Field label="Reception Address" name="receptionAddress" />
-                  <Field label="Reception Map Link (Google Maps URL)" name="receptionMapUrl" />
+                  <AdminField label="Reception Date" name="receptionDate" editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
+                  <AdminField label="Reception Time" name="receptionTime" editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
+                  <AdminField label="Reception Venue Name" name="receptionVenue" editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
+                  <AdminField label="Reception Address" name="receptionAddress" editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
+                  <AdminField label="Reception Map Link (Google Maps URL)" name="receptionMapUrl" editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
                 </div>
               </div>
 
               <div className="bg-white p-8 rounded-2xl border shadow-sm">
                 <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-weddingAccent mb-6 border-b pb-2">Parents & Entourage</h3>
                 <div className="grid md:grid-cols-2 gap-8">
-                  <Field label="Groom's Parents (One per line)" name="groomParents" isTextArea />
-                  <Field label="Bride's Parents (One per line)" name="brideParents" isTextArea />
-                  <Field label="Best Man" name="bestMan" />
-                  <Field label="Maid of Honor" name="maidOfHonor" />
-                  <Field label="Groomsmen (One per line)" name="groomsmen" isTextArea />
-                  <Field label="Bridesmaids (One per line)" name="bridesmaids" isTextArea />
+                  <DraggableListField label="Groom's Parents" name="groomParents" editForm={editForm} setEditForm={setEditForm} />
+                  <DraggableListField label="Bride's Parents" name="brideParents" editForm={editForm} setEditForm={setEditForm} />
+                  <AdminField label="Best Man" name="bestMan" editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
+                  <AdminField label="Maid of Honor" name="maidOfHonor" editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
+                  <DraggableListField label="Groomsmen" name="groomsmen" editForm={editForm} setEditForm={setEditForm} />
+                  <DraggableListField label="Bridesmaids" name="bridesmaids" editForm={editForm} setEditForm={setEditForm} />
                   <div className="col-span-1 md:col-span-2 grid md:grid-cols-3 gap-6">
-                    <Field label="Bible Bearer" name="bibleBearer" />
-                    <Field label="Ring Bearer" name="ringBearer" />
-                    <Field label="Coin Bearer" name="coinBearer" />
+                    <AdminField label="Bible Bearer" name="bibleBearer" editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
+                    <AdminField label="Ring Bearer" name="ringBearer" editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
+                    <AdminField label="Coin Bearer" name="coinBearer" editForm={editForm} setEditForm={setEditForm} storage={storage} appId={appId} showToast={showToast} />
                   </div>
                   <div className="col-span-1 md:col-span-2">
-                    <Field label="Flower Girls (One per line)" name="flowerGirls" isTextArea />
+                    <DraggableListField label="Flower Girls" name="flowerGirls" editForm={editForm} setEditForm={setEditForm} />
                   </div>
                 </div>
               </div>
@@ -727,13 +834,19 @@ export default function App() {
               <div className="bg-white p-8 rounded-2xl border shadow-sm">
                 <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-weddingAccent mb-6 border-b pb-2">Sponsors</h3>
                 <div className="mb-6">
-                  <Field label="Principal Sponsors (Alternate Male then Female, One per line)" name="entouragePrincipal" isTextArea />
-                  <p className="text-[10px] text-gray-400 -mt-4 mb-4">Make sure to format correctly: Line 1 = Male Sponsor, Line 2 = Female Sponsor, Line 3 = Male Sponsor, etc.</p>
+                  <DraggableListField 
+                    label="Principal Sponsors" 
+                    name="entouragePrincipal" 
+                    editForm={editForm} 
+                    setEditForm={setEditForm} 
+                    isPairs={true}
+                    subtitle="Organize as pairs. Drag to reorder. The app will pair them automatically."
+                  />
                 </div>
                 <div className="grid md:grid-cols-3 gap-6">
-                  <Field label="Candle Sponsors (One per line)" name="candleSponsors" isTextArea />
-                  <Field label="Veil Sponsors (One per line)" name="veilSponsors" isTextArea />
-                  <Field label="Cord Sponsors (One per line)" name="cordSponsors" isTextArea />
+                  <DraggableListField label="Candle Sponsors" name="candleSponsors" editForm={editForm} setEditForm={setEditForm} />
+                  <DraggableListField label="Veil Sponsors" name="veilSponsors" editForm={editForm} setEditForm={setEditForm} />
+                  <DraggableListField label="Cord Sponsors" name="cordSponsors" editForm={editForm} setEditForm={setEditForm} />
                 </div>
               </div>
             </form>
