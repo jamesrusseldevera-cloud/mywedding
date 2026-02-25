@@ -783,7 +783,7 @@ export default function App() {
           <p className="text-weddingAccent tracking-[0.6em] uppercase text-[12px] mb-12 font-bold animate-pulse">Join us to celebrate</p>
           <h1 className="text-7xl md:text-9xl lg:text-[11rem] font-script font-bold leading-[0.75] mb-10 text-weddingDark drop-shadow-sm select-none">
             {String(details.groomName)} <br/>
-            <span className="text-4xl md:text-7xl font-serif italic text-weddingAccent my-4 block">&</span> 
+            <span className="text-4xl md:text-7xl font-serif italic text-weddingAccent my-4 block">&amp;</span> 
             {String(details.brideName)}
           </h1>
           <LineAccent />
@@ -838,7 +838,7 @@ export default function App() {
                    <div key={i} className="flex flex-col items-center border-b border-weddingSage/10 pb-8 w-full last:border-0 group">
                      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 md:gap-12 text-2xl md:text-4xl font-serif text-gray-800 transition-all group-hover:text-weddingAccent w-full">
                        <div className="text-right">{String(pair.male)}</div>
-                       <div className="text-weddingSage opacity-40 italic text-4xl font-serif text-center px-2">&</div>
+                       <div className="text-weddingSage opacity-40 italic text-4xl font-serif text-center px-2">&amp;</div>
                        <div className="text-left">{String(pair.female)}</div>
                      </div>
                    </div>
@@ -962,7 +962,7 @@ export default function App() {
         <section id="details" className="py-24 md:py-32 px-4 bg-white/60 border-y border-white">
           <div className="max-w-screen-xl mx-auto grid lg:grid-cols-2 gap-20 items-center">
              <div className="text-center md:text-left">
-                <h2 className="text-[12px] font-bold tracking-[0.4em] text-weddingAccent uppercase mb-4 opacity-80 border-b border-weddingSage/30 pb-4 inline-block">Dress Code & Details</h2>
+                <h2 className="text-[12px] font-bold tracking-[0.4em] text-weddingAccent uppercase mb-4 opacity-80 border-b border-weddingSage/30 pb-4 inline-block">Dress Code &amp; Details</h2>
                 <h3 className="text-5xl font-serif text-weddingDark mb-8 italic mt-4">Attire</h3>
                 <p className="text-xl md:text-2xl font-serif leading-relaxed text-gray-800 mb-12">
                    {String(details.dressCodeText)}
@@ -982,7 +982,7 @@ export default function App() {
         {/* GUESTBOOK Carousel */}
         <section id="guestbook" className="py-24 md:py-32 px-4 relative bg-white/40 backdrop-blur-md border-b">
           <div className="max-w-screen-xl mx-auto text-center">
-            <h2 className="text-[12px] font-bold tracking-[0.4em] text-weddingAccent uppercase mb-4 opacity-80">Wishes & Love</h2>
+            <h2 className="text-[12px] font-bold tracking-[0.4em] text-weddingAccent uppercase mb-4 opacity-80">Wishes &amp; Love</h2>
             <h3 className="text-4xl md:text-7xl font-serif text-weddingDark mb-24 italic">Guestbook</h3>
             
             <div className="relative w-full overflow-hidden min-h-[400px]">
@@ -1073,7 +1073,7 @@ export default function App() {
 
       {/* FOOTER */}
       <footer className="py-24 text-center bg-[#faf9f6] border-t border-gray-200 relative z-10">
-        <p className="font-script text-7xl md:text-[8rem] text-weddingDark mb-8 select-none">{String(details.groomName)} & {String(details.brideName)}</p>
+        <p className="font-script text-7xl md:text-[8rem] text-weddingDark mb-8 select-none">{String(details.groomName)} &amp; {String(details.brideName)}</p>
         <div className="w-24 h-px bg-weddingSage mx-auto mb-12 opacity-50"></div>
         <p className="text-[11px] uppercase font-bold tracking-[0.5em] text-gray-500 mb-12">{String(details.weddingDate)} • {String(details.weddingLocation)}</p>
         
