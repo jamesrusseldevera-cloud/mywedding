@@ -61,7 +61,7 @@ const DEFAULT_DETAILS = {
   maidOfHonor: "Sofia Camille C. Pinoy",
   bibleBearer: "Kyler Timothy A. De Vera",
   ringBearer: "Dean Lukas A. De Vera",
-  coinBearer: "Gabriel Santos",
+  coinBearer: "Crisanto Joaquin C. De Vera",
 
   storyPhotos: ["https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&q=80&w=800"],
   ceremonyPhotos: ["https://images.unsplash.com/photo-1548625361-ec85cb209210?auto=format&fit=crop&q=80&w=800"],
@@ -135,9 +135,9 @@ const LandingPage = ({ onOpen, groom, bride }) => (
        <div className="absolute inset-4 border border-weddingSage/10 rounded-full"></div>
        <div className="z-20 flex flex-col items-center">
          <p className="text-weddingAccent tracking-[0.4em] uppercase text-[10px] mb-8 font-bold">You are invited to the wedding of</p>
-         <h1 className="text-6xl font-script text-weddingDark mb-2 truncate max-w-full px-4">{groom}</h1>
+         <h1 className="text-5xl md:text-6xl font-script text-weddingDark mb-2 break-words max-w-full px-4 leading-normal py-2">{groom}</h1>
          <span className="text-2xl font-serif italic text-weddingSage mb-2">&</span>
-         <h1 className="text-6xl font-script text-weddingDark mb-8 truncate max-w-full px-4">{bride}</h1>
+         <h1 className="text-5xl md:text-6xl font-script text-weddingDark mb-8 break-words max-w-full px-4 leading-normal py-2">{bride}</h1>
          <button onClick={onOpen} className="mt-6 flex flex-col items-center gap-4 group focus:outline-none">
            <div className="w-20 h-20 bg-weddingYellow rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 group-active:scale-95 transition-all duration-500">
              <MailOpen className="text-weddingDark w-8 h-8" />
@@ -227,18 +227,34 @@ const AudioManager = ({ label, url, onChange, showToast }) => {
   const [inputUrl, setInputUrl] = useState('');
   
   const handleSetUrl = () => {
-    if (inputUrl.trim()) { onChange(inputUrl.trim()); setInputUrl(''); showToast("Music updated!"); }
+    if (inputUrl.trim()) { 
+      let finalUrl = inputUrl.trim();
+      
+      // Google Drive Auto-Conversion Logic
+      const gdriveMatch = finalUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+      const idMatch = finalUrl.match(/id=([a-zA-Z0-9_-]+)/);
+      
+      if (gdriveMatch && gdriveMatch[1]) {
+        finalUrl = `https://drive.google.com/uc?export=download&id=${gdriveMatch[1]}`;
+      } else if (idMatch && idMatch[1]) {
+        finalUrl = `https://drive.google.com/uc?export=download&id=${idMatch[1]}`;
+      }
+      
+      onChange(finalUrl); 
+      setInputUrl(''); 
+      showToast("Music updated!"); 
+    }
   };
 
   return (
     <div className="mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2"><Music size={12} className="inline mr-1"/> {label}</label>
-      <div className="text-xs text-gray-500 mb-3 truncate bg-gray-50 p-2 rounded border border-gray-100">Current: {url || 'None'}</div>
+      <div className="text-xs text-gray-500 mb-3 truncate bg-gray-50 p-2 rounded border border-gray-100" title={url}>Current: {url || 'None'}</div>
       <div className="flex gap-2">
-         <input type="text" value={inputUrl} onChange={e=>setInputUrl(e.target.value)} placeholder="Paste MP3 URL here..." className="flex-1 text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:border-weddingAccent" />
+         <input type="text" value={inputUrl} onChange={e=>setInputUrl(e.target.value)} placeholder="Paste MP3 or GDrive URL here..." className="flex-1 text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:border-weddingAccent" />
          <button onClick={handleSetUrl} className="bg-weddingDark text-white px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider hover:bg-weddingAccent transition-colors">Update</button>
       </div>
-      <p className="text-[9px] text-gray-400 mt-2 uppercase tracking-widest">Paste direct URL to .mp3 or .ogg file.</p>
+      <p className="text-[9px] text-gray-400 mt-2 uppercase tracking-widest leading-relaxed">Supports direct .mp3 URLs or Google Drive Share Links (Anyone with link).</p>
     </div>
   );
 };
@@ -750,9 +766,9 @@ export default function App() {
           <section id="home" className="min-h-screen flex flex-col items-center justify-center text-center px-4 relative overflow-hidden pb-12">
             <HandpaintedFlower className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] max-w-[900px] text-weddingSage opacity-5 pointer-events-none" />
             <p className="text-weddingAccent tracking-[0.6em] uppercase text-[12px] mb-8 font-bold animate-pulse">Join us to celebrate</p>
-            <h1 className="text-7xl md:text-9xl lg:text-[11rem] font-script font-bold leading-[0.75] mb-6 text-weddingDark drop-shadow-sm select-none transition-all truncate max-w-full px-4">
+            <h1 className="text-6xl md:text-8xl lg:text-[10rem] font-script font-bold leading-tight mb-6 text-weddingDark drop-shadow-sm select-none transition-all break-words max-w-full px-4 text-center py-4">
               {String(displayData.groomName)} <br/>
-              <span className="text-4xl md:text-7xl font-serif italic text-weddingAccent my-4 block">&amp;</span> 
+              <span className="text-4xl md:text-7xl font-serif italic text-weddingAccent my-4 block leading-normal">&amp;</span> 
               {String(displayData.brideName)}
             </h1>
             <LineAccent />
@@ -790,11 +806,11 @@ export default function App() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-center items-start">
                   <div className="flex flex-col items-center md:items-end md:pr-10 md:border-r border-weddingSage/20 overflow-hidden w-full">
                     <h4 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-3">Parents of the Groom</h4>
-                    {(displayData.groomParents||[]).map((n,i)=><p key={i} className="text-xl md:text-2xl font-serif text-gray-800 truncate max-w-full w-full">{n}</p>)}
+                    {(displayData.groomParents||[]).map((n,i)=><p key={i} className="text-xl md:text-2xl font-serif text-gray-800 break-words w-full">{n}</p>)}
                   </div>
                   <div className="flex flex-col items-center md:items-start md:pl-10 overflow-hidden w-full">
                     <h4 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-3">Parents of the Bride</h4>
-                    {(displayData.brideParents||[]).map((n,i)=><p key={i} className="text-xl md:text-2xl font-serif text-gray-800 truncate max-w-full w-full">{n}</p>)}
+                    {(displayData.brideParents||[]).map((n,i)=><p key={i} className="text-xl md:text-2xl font-serif text-gray-800 break-words w-full">{n}</p>)}
                   </div>
                 </div>
               </div>
@@ -805,9 +821,9 @@ export default function App() {
                  <div className="flex flex-col items-center gap-3 max-w-4xl mx-auto w-full">
                    {principalPairs.map((pair, i) => (
                      <div key={i} className="flex items-center justify-between border-b border-weddingSage/10 pb-3 w-full last:border-0 group overflow-hidden">
-                       <div className="flex-1 text-right truncate text-lg md:text-xl font-serif text-gray-800 px-2 md:px-4">{String(pair.male)}</div>
+                       <div className="flex-1 text-right break-words text-lg md:text-xl font-serif text-gray-800 px-2 md:px-4">{String(pair.male)}</div>
                        <div className="text-weddingSage opacity-40 italic text-xl font-serif text-center px-1 shrink-0">&amp;</div>
-                       <div className="flex-1 text-left truncate text-lg md:text-xl font-serif text-gray-800 px-2 md:px-4">{String(pair.female)}</div>
+                       <div className="flex-1 text-left break-words text-lg md:text-xl font-serif text-gray-800 px-2 md:px-4">{String(pair.female)}</div>
                      </div>
                    ))}
                  </div>
@@ -819,11 +835,11 @@ export default function App() {
                   <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-weddingSage/30 -translate-x-1/2"></div>
                   <div className="flex flex-col items-center flex-1 md:pr-6 overflow-hidden">
                     <h4 className="text-[9px] font-bold text-weddingAccent uppercase tracking-widest mb-3">Best Man</h4>
-                    <p className="text-xl md:text-3xl font-serif text-weddingDark truncate w-full">{String(displayData.bestMan)}</p>
+                    <p className="text-xl md:text-3xl font-serif text-weddingDark break-words w-full leading-snug">{String(displayData.bestMan)}</p>
                   </div>
                   <div className="flex flex-col items-center flex-1 md:pl-6 overflow-hidden">
                     <h4 className="text-[9px] font-bold text-weddingAccent uppercase tracking-widest mb-3">Maid of Honor</h4>
-                    <p className="text-xl md:text-3xl font-serif text-weddingDark truncate w-full">{String(displayData.maidOfHonor)}</p>
+                    <p className="text-xl md:text-3xl font-serif text-weddingDark break-words w-full leading-snug">{String(displayData.maidOfHonor)}</p>
                   </div>
                 </div>
               </div>
@@ -836,10 +852,10 @@ export default function App() {
                  </div>
                  <div className="absolute left-1/2 top-10 bottom-0 w-px bg-weddingSage/20 -translate-x-1/2"></div>
                  {entouragePartners.map((partner, i) => (
-                   <div key={i} className="grid grid-cols-[1fr_auto_1fr] gap-x-2 mb-2 w-full items-center relative z-10">
-                     <div className="text-right overflow-hidden"><p className="text-lg md:text-xl font-serif leading-none truncate">{String(partner.groomSide)}</p></div>
+                   <div key={i} className="grid grid-cols-[1fr_auto_1fr] gap-x-2 mb-3 w-full items-center relative z-10">
+                     <div className="text-right overflow-hidden"><p className="text-lg md:text-xl font-serif leading-snug break-words">{String(partner.groomSide)}</p></div>
                      <div className="w-px h-full bg-transparent mx-2"></div>
-                     <div className="text-left overflow-hidden"><p className="text-lg md:text-xl font-serif leading-none truncate">{String(partner.brideSide)}</p></div>
+                     <div className="text-left overflow-hidden"><p className="text-lg md:text-xl font-serif leading-snug break-words">{String(partner.brideSide)}</p></div>
                    </div>
                  ))}
               </div>
@@ -850,15 +866,15 @@ export default function App() {
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="text-center md:text-right border-b md:border-b-0 md:border-r border-weddingSage/20 pb-6 md:pb-0 md:pr-6 overflow-hidden">
                        <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-4">Candle</h4>
-                       {(displayData.candleSponsors||[]).map((n, i) => <p key={i} className="text-lg md:text-xl font-serif mb-1 text-gray-800 truncate w-full">{n}</p>)}
+                       {(displayData.candleSponsors||[]).map((n, i) => <p key={i} className="text-lg md:text-xl font-serif mb-2 text-gray-800 break-words w-full leading-snug">{n}</p>)}
                     </div>
                     <div className="text-center border-b md:border-b-0 border-weddingSage/20 pb-6 md:pb-0 px-4 overflow-hidden">
                        <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-4">Veil</h4>
-                       {(displayData.veilSponsors||[]).map((n, i) => <p key={i} className="text-lg md:text-xl font-serif mb-1 text-gray-800 truncate w-full">{n}</p>)}
+                       {(displayData.veilSponsors||[]).map((n, i) => <p key={i} className="text-lg md:text-xl font-serif mb-2 text-gray-800 break-words w-full leading-snug">{n}</p>)}
                     </div>
                     <div className="text-center md:text-left md:border-l border-weddingSage/20 pt-6 md:pt-0 md:pl-6 overflow-hidden">
                        <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-4">Cord</h4>
-                       {(displayData.cordSponsors||[]).map((n, i) => <p key={i} className="text-lg md:text-xl font-serif mb-1 text-gray-800 truncate w-full">{n}</p>)}
+                       {(displayData.cordSponsors||[]).map((n, i) => <p key={i} className="text-lg md:text-xl font-serif mb-2 text-gray-800 break-words w-full leading-snug">{n}</p>)}
                     </div>
                  </div>
               </div>
@@ -869,22 +885,22 @@ export default function App() {
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center mb-8">
                     <div className="overflow-hidden w-full px-2">
                        <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-3 border-b pb-2 inline-block px-4">Bible Bearer</h4>
-                       <p className="text-lg md:text-2xl font-serif text-weddingDark mt-1 truncate w-full" title={String(displayData.bibleBearer)}>{String(displayData.bibleBearer)}</p>
+                       <p className="text-lg md:text-xl font-serif text-weddingDark mt-1 break-words w-full leading-snug">{String(displayData.bibleBearer)}</p>
                     </div>
                     <div className="overflow-hidden w-full px-2">
                        <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-3 border-b pb-2 inline-block px-4">Coin Bearer</h4>
-                       <p className="text-lg md:text-2xl font-serif text-weddingDark mt-1 truncate w-full" title={String(displayData.coinBearer)}>{String(displayData.coinBearer)}</p>
+                       <p className="text-lg md:text-xl font-serif text-weddingDark mt-1 break-words w-full leading-snug">{String(displayData.coinBearer)}</p>
                     </div>
                     <div className="overflow-hidden w-full px-2">
                        <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-3 border-b pb-2 inline-block px-4">Ring Bearer</h4>
-                       <p className="text-lg md:text-2xl font-serif text-weddingDark mt-1 truncate w-full" title={String(displayData.ringBearer)}>{String(displayData.ringBearer)}</p>
+                       <p className="text-lg md:text-xl font-serif text-weddingDark mt-1 break-words w-full leading-snug">{String(displayData.ringBearer)}</p>
                     </div>
                  </div>
                  <div className="pt-6 text-center max-w-3xl mx-auto">
                     <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-4 inline-block px-5 py-2 border border-gray-200 rounded-full">Flower Girls</h4>
                     <div className="flex flex-wrap justify-center gap-4">
                        {(displayData.flowerGirls||[]).map((n, i) => (
-                          <p key={i} className="text-lg md:text-xl font-serif text-weddingDark italic truncate max-w-[200px]" title={n}>{n}</p>
+                          <p key={i} className="text-lg md:text-xl font-serif text-weddingDark italic break-words max-w-[200px] leading-snug">{n}</p>
                        ))}
                     </div>
                  </div>
@@ -1026,7 +1042,7 @@ export default function App() {
 
           {/* FOOTER & LOGOUT */}
           <footer className="py-20 text-center bg-[#faf9f6] border-t border-gray-200 relative z-10 transition-all">
-            <p className="font-script text-6xl md:text-[7rem] text-weddingDark mb-6 select-none truncate px-4">{String(displayData.groomName)} &amp; {String(displayData.brideName)}</p>
+            <p className="font-script text-6xl md:text-[7rem] text-weddingDark mb-6 select-none break-words px-4 leading-normal">{String(displayData.groomName)} &amp; {String(displayData.brideName)}</p>
             <div className="w-24 h-px bg-weddingSage mx-auto mb-10 opacity-50"></div>
             <p className="text-[10px] uppercase font-bold tracking-[0.5em] text-gray-500 mb-10">{String(displayData.weddingDate)} • {String(displayData.weddingLocation)}</p>
             
