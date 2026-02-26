@@ -10,6 +10,7 @@ import {
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, collection, addDoc, onSnapshot, query, doc, setDoc, updateDoc, deleteDoc, getDocs } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // ==========================================
 // 1. FIREBASE CONFIGURATION
@@ -28,6 +29,7 @@ const firebaseConfig = typeof __firebase_config !== 'undefined'
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'wedding-app-default';
 
 // ==========================================
@@ -221,14 +223,16 @@ const TextInput = ({ label, value, onChange, isTextArea = false }) => (
   </div>
 );
 
-const AudioManager = ({ label, url, onChange, showToast }) => {
+const AudioManager = ({ label, url, onChange, showToast, user, appId, storage }) => {
   const [inputUrl, setInputUrl] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef(null);
   
   const handleSetUrl = () => {
     if (inputUrl.trim()) { 
       let finalUrl = inputUrl.trim();
       
-      // Google Drive Auto-Conversion Logic (Docs proxy bypasses strict Drive CORS)
+      // Google Drive Auto-Conversion Logic
       const gdriveMatch = finalUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
       const idMatch = finalUrl.match(/id=([a-zA-Z0-9_-]+)/);
       
@@ -244,16 +248,55 @@ const AudioManager = ({ label, url, onChange, showToast }) => {
     }
   };
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!user) {
+      showToast("Authentication required to upload.");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      // Use the strict private user path to bypass sandbox permission blocks
+      const storageRef = ref(storage, `artifacts/${appId}/users/${user.uid}/uploads/audio_${Date.now()}.mp3`);
+      await uploadBytes(storageRef, file);
+      const downloadUrl = await getDownloadURL(storageRef);
+      
+      onChange(downloadUrl);
+      showToast("Audio successfully uploaded & linked!");
+    } catch (error) {
+      console.error("Firebase Upload Error:", error);
+      showToast("Upload failed. Permission denied or file too large.");
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   return (
     <div className="mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2"><Music size={12} className="inline mr-1"/> {label}</label>
-      <div className="text-xs text-gray-500 mb-4 truncate bg-gray-50 p-2 rounded border border-gray-100" title={url}>Current: {url || 'None'}</div>
+      <div className="text-xs text-gray-500 mb-4 truncate bg-gray-50 p-2 rounded border border-gray-100" title={url}>Current: {url && url.startsWith('http') ? 'Active Audio Link' : (url || 'None')}</div>
       
+      <div className="mb-4">
+         <input type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
+         <button onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="w-full bg-weddingAccent/10 text-weddingDark border border-weddingAccent/30 px-3 py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-weddingAccent/20 transition-colors flex justify-center items-center gap-2 disabled:opacity-50">
+            <Upload size={14} /> {isUploading ? 'Uploading to Firebase...' : 'Upload MP3 to Firebase'}
+         </button>
+      </div>
+
+      <div className="relative flex items-center py-2 mb-2">
+         <div className="flex-grow border-t border-gray-200"></div>
+         <span className="flex-shrink-0 mx-2 text-[8px] text-gray-400 uppercase font-bold tracking-widest">OR PASTE URL</span>
+         <div className="flex-grow border-t border-gray-200"></div>
+      </div>
+
       <div className="flex gap-2">
-         <input type="text" value={inputUrl} onChange={e=>setInputUrl(e.target.value)} placeholder="Paste MP3, file name, or GDrive URL here..." className="flex-1 text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:border-weddingAccent" />
+         <input type="text" value={inputUrl} onChange={e=>setInputUrl(e.target.value)} placeholder="Paste MP3, or GDrive URL here..." className="flex-1 text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:border-weddingAccent" />
          <button onClick={handleSetUrl} className="bg-weddingDark text-white px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider hover:bg-weddingAccent transition-colors">Link</button>
       </div>
-      <p className="text-[9px] text-gray-400 mt-2 uppercase tracking-widest leading-relaxed">Supports directly uploaded files, direct .mp3 URLs, or Google Drive Share Links.</p>
+      <p className="text-[9px] text-gray-400 mt-2 uppercase tracking-widest leading-relaxed">Ensure uploaded MP3 files are under 5MB for best performance.</p>
     </div>
   );
 };
@@ -1159,7 +1202,7 @@ export default function App() {
 
                  {adminTab === 'media' && (
                     <div className="animate-in fade-in duration-300">
-                       <AudioManager label="Background Music" url={editForm.backgroundMusicUrl} onChange={val=>setEditForm({...editForm, backgroundMusicUrl: val})} showToast={showToast} />
+                       <AudioManager label="Background Music" url={editForm.backgroundMusicUrl} onChange={val=>setEditForm({...editForm, backgroundMusicUrl: val})} showToast={showToast} user={user} appId={appId} storage={storage} />
                        <PhotoManager label="Our Story Photos" urls={editForm.storyPhotos} onChange={arr=>setEditForm({...editForm, storyPhotos: arr})} showToast={showToast} />
                        <PhotoManager label="Ceremony Venues" urls={editForm.ceremonyPhotos} onChange={arr=>setEditForm({...editForm, ceremonyPhotos: arr})} showToast={showToast} />
                        <PhotoManager label="Reception Venues" urls={editForm.receptionPhotos} onChange={arr=>setEditForm({...editForm, receptionPhotos: arr})} showToast={showToast} />
