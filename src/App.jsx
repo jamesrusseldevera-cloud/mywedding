@@ -38,7 +38,7 @@ const DEFAULT_DETAILS = {
   brideName: "Cassie",
   weddingDate: "April 10, 2026",
   weddingLocation: "Muntinlupa, Philippines",
-  backgroundMusicUrl: "WHEN I MET YOU APO Hiking Society Violin Cover by Justerini.mp3", // Integrated local uploaded track
+  backgroundMusicUrl: "https://artlist.io/royalty-free-music/song/you-are-my-answer/137827", // Artlist URL
   ourStory: "Love is patient, love is kind (1 Corinthians 13:4)—and their love proved to be brave, choosing each other every day in faith. What began as a quiet night at Ooma became a story God was already writing—told through shared meals from Jollibee to Din Tai Fung, sweet evenings at Amano, and journeys to Australia, Vigan, La Union, Baguio, and Thailand. In grand adventures and quiet Sundays at Mass, they discovered that home is not a place but a person, and that with God at the center, their love would not easily be broken. Two years later, they stand certain—ready to begin a forever rooted in faith, devotion, and a love that grows sweeter with time.",
   contactPhone: "+63 912 345 6789",
   contactEmail: "weddings@example.com",
@@ -388,6 +388,7 @@ export default function App() {
   const [newGuestCode, setNewGuestCode] = useState('');
   
   const [isPlaying, setIsPlaying] = useState(false);
+  const [audioError, setAudioError] = useState(false);
   const [currentGbSlide, setCurrentGbSlide] = useState(0);
 
   const audioRef = useRef(null);
@@ -426,35 +427,45 @@ export default function App() {
 
   const displayData = (isAdminAuth && editForm) ? editForm : details;
   const safeAudioUrl = displayData?.backgroundMusicUrl?.trim() || "";
+  
+  const audioSrc = safeAudioUrl;
 
   // --- AUDIO ACTIONS ---
   const handleOpenInvitation = () => {
-    setIsLanding(false);
-    
-    // Play the audio immediately on user click to successfully claim the browser interaction
     if (audioRef.current) {
       audioRef.current.volume = 0.5;
       const playPromise = audioRef.current.play();
       if (playPromise !== undefined) {
          playPromise.then(() => {
              setIsPlaying(true);
+             setAudioError(false);
          }).catch((e) => { 
              console.warn("Autoplay blocked or interrupted.", e); 
              setIsPlaying(false); 
          });
       }
     }
+    
+    // Defer the heavy UI render so the synchronous play task completes cleanly
+    setTimeout(() => {
+       setIsLanding(false);
+    }, 50);
   };
 
-  const toggleAudio = () => {
+  const toggleAudio = async () => {
     if (!audioRef.current) return;
-    if (audioRef.current.paused) { 
-      const playPromise = audioRef.current.play();
-      if (playPromise !== undefined) {
-         playPromise.catch(e => console.warn("Audio playback failed:", e));
-      }
-    } else { 
-      audioRef.current.pause(); 
+    try {
+       if (audioRef.current.paused) { 
+         await audioRef.current.play();
+         setIsPlaying(true);
+         setAudioError(false);
+       } else { 
+         audioRef.current.pause(); 
+         setIsPlaying(false);
+       }
+    } catch (e) {
+       console.warn("Audio playback failed:", e);
+       setIsPlaying(false);
     }
   };
 
@@ -704,15 +715,15 @@ export default function App() {
       <audio 
          ref={audioRef} 
          loop 
+         playsInline
          preload="auto" 
-         {...(safeAudioUrl ? { src: safeAudioUrl } : {})}
-         onPlay={() => setIsPlaying(true)}
+         src={audioSrc}
+         onPlay={() => { setIsPlaying(true); setAudioError(false); }}
          onPause={() => setIsPlaying(false)}
          onError={(e) => { 
-            if (safeAudioUrl) {
-                console.warn("Audio source failed to load.", e); 
-                setIsPlaying(false); 
-            }
+            console.warn("Audio source failed to load:", e); 
+            setIsPlaying(false);
+            if (audioSrc) setAudioError(true);
          }} 
       />
 
@@ -739,10 +750,10 @@ export default function App() {
                 </div>
                 <div className="flex flex-col text-left">
                   <span className="text-[9px] uppercase tracking-widest font-bold text-weddingAccent flex items-center gap-1.5">
-                     {isPlaying ? 'Now Playing' : 'Paused'}
+                     {audioError ? <span className="text-red-500">File Error</span> : (isPlaying ? 'Now Playing' : 'Paused')}
                   </span>
-                  <span className="text-xs font-serif italic text-gray-700 max-w-[160px] truncate" title="When I Met You - Violin Cover">
-                    When I Met You (Cover)
+                  <span className="text-xs font-serif italic text-gray-700 max-w-[160px] truncate" title="Background Music">
+                    {safeAudioUrl.includes('artlist.io') ? 'You Are My Answer' : 'Wedding Music'}
                   </span>
                 </div>
               </div>
