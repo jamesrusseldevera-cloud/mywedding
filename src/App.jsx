@@ -40,7 +40,7 @@ const DEFAULT_DETAILS = {
   brideName: "Cassie",
   weddingDate: "April 10, 2026",
   weddingLocation: "Muntinlupa, Philippines",
-  backgroundMusicUrl: "https://artlist.io/royalty-free-music/song/you-are-my-answer/137827", // Artlist URL
+  backgroundMusicUrl: "https://upload.wikimedia.org/wikipedia/commons/2/22/Canon_in_D_Major_-_Kevin_MacLeod.ogg", // Slow elegant piano/strings (Canon in D)
   ourStory: "Love is patient, love is kind (1 Corinthians 13:4)—and their love proved to be brave, choosing each other every day in faith. What began as a quiet night at Ooma became a story God was already writing—told through shared meals from Jollibee to Din Tai Fung, sweet evenings at Amano, and journeys to Australia, Vigan, La Union, Baguio, and Thailand. In grand adventures and quiet Sundays at Mass, they discovered that home is not a place but a person, and that with God at the center, their love would not easily be broken. Two years later, they stand certain—ready to begin a forever rooted in faith, devotion, and a love that grows sweeter with time.",
   contactPhone: "+63 912 345 6789",
   contactEmail: "weddings@example.com",
@@ -56,6 +56,14 @@ const DEFAULT_DETAILS = {
   receptionMapUrl: "https://maps.app.goo.gl/8aSbQNbNAr31iXPT6",
   dressCodeText: "Filipiniana or Formal Attire. We kindly request our guests to dress elegantly in shades of Sage Green, Pastel Yellow, Beige, or neutral light tones. Please avoid wearing bright neon colors or pure white.",
   giftText: "With all that we have, we’ve been truly blessed. Your presence and prayers are all that we request. But if you desire to give nonetheless, a monetary gift is one we suggest.",
+  
+  // NEW: Two split spaces for gifts
+  giftOption1Title: "Bank Transfer",
+  giftOption1Details: "Bank: BDO\nAccount Name: James & Cassie\nAccount Number: 1234 5678 9000",
+  giftOption2Title: "Digital Wallet",
+  giftOption2Details: "GCash / Maya\nName: James De Vera\nNumber: 0912 345 6789",
+  
+  qrCodeUrls: [], 
   rsvpDeadline: "March 1st, 2026",
   bestMan: "Melvin B. De Vera",
   maidOfHonor: "Sofia Camille C. Pinoy",
@@ -63,7 +71,7 @@ const DEFAULT_DETAILS = {
   ringBearer: "Dean Lukas A. De Vera",
   coinBearer: "Crisanto Joaquin C. De Vera",
 
-  storyPhotos: ["https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&q=80&w=800"],
+  storyPhotos: ["https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80"],
   ceremonyPhotos: ["https://images.unsplash.com/photo-1548625361-ec85cb209210?auto=format&fit=crop&q=80&w=800"],
   receptionPhotos: ["https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&q=80&w=800"],
   dressCodePhotos: [
@@ -107,10 +115,10 @@ const HandpaintedFlower = ({ className }) => (
 );
 
 const LineAccent = () => (
-  <div className="flex items-center justify-center gap-6 my-8 opacity-40 w-full">
-    <div className="w-24 h-px bg-weddingSage shadow-sm"></div>
-    <div className="w-3 h-3 rotate-45 bg-weddingAccent shadow-sm"></div>
-    <div className="w-24 h-px bg-weddingSage shadow-sm"></div>
+  <div className="flex items-center justify-center gap-6 my-6 opacity-40 w-full">
+    <div className="w-20 h-px bg-weddingSage shadow-sm"></div>
+    <div className="w-2 h-2 rotate-45 bg-weddingAccent shadow-sm"></div>
+    <div className="w-20 h-px bg-weddingSage shadow-sm"></div>
   </div>
 );
 
@@ -131,18 +139,18 @@ const AnimatedLeaves = ({ count = 10 }) => (
 const LandingPage = ({ onOpen, groom, bride }) => (
   <div className="fixed inset-0 z-[200] bg-[#faf9f6] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-1000 overflow-hidden">
     <AnimatedLeaves count={15} />
-    <div className="max-w-md w-full border border-weddingSage/30 p-12 rounded-full aspect-[1/1.5] flex flex-col items-center justify-center relative overflow-hidden shadow-2xl bg-white/80 backdrop-blur-sm z-10 scale-90 md:scale-100">
-       <div className="absolute inset-4 border border-weddingSage/10 rounded-full"></div>
-       <div className="z-20 flex flex-col items-center">
-         <p className="text-weddingAccent tracking-[0.4em] uppercase text-[10px] mb-8 font-bold">You are invited to the wedding of</p>
-         <h1 className="text-5xl md:text-6xl font-script text-weddingDark mb-2 break-words max-w-full px-4 leading-normal py-2">{groom}</h1>
-         <span className="text-2xl font-serif italic text-weddingSage mb-2">&</span>
-         <h1 className="text-5xl md:text-6xl font-script text-weddingDark mb-8 break-words max-w-full px-4 leading-normal py-2">{bride}</h1>
-         <button onClick={onOpen} className="mt-6 flex flex-col items-center gap-4 group focus:outline-none">
-           <div className="w-20 h-20 bg-weddingYellow rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 group-active:scale-95 transition-all duration-500">
-             <MailOpen className="text-weddingDark w-8 h-8" />
+    <div className="max-w-md w-full border border-weddingSage/30 p-8 sm:p-12 rounded-[3rem] aspect-[1/1.5] flex flex-col items-center justify-center relative overflow-hidden shadow-2xl bg-white/80 backdrop-blur-sm z-10 scale-95 md:scale-100">
+       <div className="absolute inset-4 border border-weddingSage/10 rounded-[2.5rem]"></div>
+       <div className="z-20 flex flex-col items-center w-full">
+         <p className="text-weddingAccent tracking-[0.3em] sm:tracking-[0.4em] uppercase text-[9px] sm:text-[10px] mb-6 font-bold">You are invited to the wedding of</p>
+         <h1 className="text-4xl sm:text-5xl md:text-6xl font-script text-weddingDark mb-2 break-words max-w-full px-2 leading-tight py-1">{groom}</h1>
+         <span className="text-xl sm:text-2xl font-serif italic text-weddingSage mb-2">&</span>
+         <h1 className="text-4xl sm:text-5xl md:text-6xl font-script text-weddingDark mb-8 break-words max-w-full px-2 leading-tight py-1">{bride}</h1>
+         <button onClick={onOpen} className="mt-4 flex flex-col items-center gap-4 group focus:outline-none">
+           <div className="w-16 h-16 sm:w-20 sm:h-20 bg-weddingYellow rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 group-active:scale-95 transition-all duration-500">
+             <MailOpen className="text-weddingDark w-6 h-6 sm:w-8 sm:h-8" />
            </div>
-           <span className="text-[11px] font-bold uppercase tracking-[0.4em] text-weddingDark animate-pulse">Open Invitation</span>
+           <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.3em] sm:tracking-[0.4em] text-weddingDark animate-pulse">Open Invitation</span>
          </button>
        </div>
     </div>
@@ -170,11 +178,11 @@ const CountdownTimer = ({ targetDate }) => {
   }, [targetDate]);
 
   return (
-    <div className="flex justify-center gap-6 mt-8 backdrop-blur-md bg-white/40 px-8 py-6 rounded-3xl border border-white/60 shadow-sm max-w-lg mx-auto">
+    <div className="flex justify-center gap-4 sm:gap-6 mt-6 backdrop-blur-md bg-white/40 px-6 py-4 rounded-3xl border border-white/60 shadow-sm max-w-lg mx-auto">
       {Object.entries(timeLeft).map(([unit, value]) => (
-        <div key={unit} className="flex flex-col items-center min-w-[60px]">
-          <span className="text-3xl md:text-4xl font-serif text-weddingDark">{String(value).padStart(2, '0')}</span>
-          <span className="text-[10px] uppercase tracking-[0.2em] text-gray-700 font-bold mt-2">{unit}</span>
+        <div key={unit} className="flex flex-col items-center min-w-[50px] sm:min-w-[60px]">
+          <span className="text-2xl sm:text-3xl font-serif text-weddingDark">{String(value).padStart(2, '0')}</span>
+          <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-gray-700 font-bold mt-1">{unit}</span>
         </div>
       ))}
     </div>
@@ -182,31 +190,31 @@ const CountdownTimer = ({ targetDate }) => {
 };
 
 const ImageSlider = ({ photos = [], altText, containerClass, imageClass }) => {
+  const validPhotos = photos.filter(p => p && typeof p === 'string' && p.trim() !== '');
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
-    if (photos.length <= 1) return;
-    const interval = setInterval(() => { setCurrentIndex((prev) => (prev + 1) % photos.length); }, 4500);
+    if (validPhotos.length <= 1) return;
+    const interval = setInterval(() => { setCurrentIndex((prev) => (prev + 1) % validPhotos.length); }, 4500);
     return () => clearInterval(interval);
-  }, [photos.length]);
+  }, [validPhotos.length]);
 
-  if (photos.length === 0) return (
-    <div className={`bg-gray-100/50 flex items-center justify-center ${containerClass}`}>
-      <ImageIcon className="w-8 h-8 opacity-20"/>
+  if (validPhotos.length === 0) return (
+    <div className={`bg-gray-100 flex items-center justify-center ${containerClass}`}>
+      <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80" alt="Fallback" className={`absolute inset-0 w-full h-full object-cover opacity-60 ${imageClass || ''}`} />
     </div>
   );
 
   return (
     <div className={`relative overflow-hidden ${containerClass}`}>
-      {photos.map((url, idx) => (
+      {validPhotos.map((url, idx) => (
         <img key={idx} src={url} alt={`${altText} ${idx + 1}`} 
-             onError={(e) => { e.target.onerror = null; e.target.src = "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80" }} // Robust fallback
+             onError={(e) => { e.target.onerror = null; e.target.src = "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80" }} 
              className={`absolute inset-0 w-full h-full object-cover transition-all duration-[2000ms] ease-in-out ${idx === currentIndex ? 'opacity-100 scale-105 z-10' : 'opacity-0 scale-100 z-0'} ${imageClass || ''}`} />
       ))}
     </div>
   );
 };
-
 
 // ==========================================
 // 4. ADMIN EDITOR COMPONENTS
@@ -456,6 +464,7 @@ export default function App() {
        ceremonyPhotos: toArr(data.ceremonyPhotos || data.ceremonyPhotoUrl, ','),
        receptionPhotos: toArr(data.receptionPhotos || data.receptionPhotoUrl, ','),
        dressCodePhotos: toArr(data.dressCodePhotos || data.dressCodePhotoUrl, ','),
+       qrCodeUrls: toArr(data.qrCodeUrls, ','),
        groomParents: toArr(data.groomParents, '\n'),
        brideParents: toArr(data.brideParents, '\n'),
        entouragePrincipal: toArr(data.entouragePrincipal, '\n'),
@@ -469,9 +478,9 @@ export default function App() {
   };
 
   const displayData = (isAdminAuth && editForm) ? editForm : details;
-  const safeAudioUrl = displayData?.backgroundMusicUrl?.trim() || "";
   
-  const audioSrc = safeAudioUrl;
+  const safeAudioUrl = displayData?.backgroundMusicUrl?.trim() || "https://upload.wikimedia.org/wikipedia/commons/2/22/Canon_in_D_Major_-_Kevin_MacLeod.ogg";
+  const audioSrc = safeAudioUrl.startsWith('http') || safeAudioUrl.startsWith('data:') ? safeAudioUrl : encodeURI(safeAudioUrl);
 
   // --- AUDIO ACTIONS ---
   const handleOpenInvitation = () => {
@@ -796,16 +805,16 @@ export default function App() {
                      {audioError ? <span className="text-red-500">File Error</span> : (isPlaying ? 'Now Playing' : 'Paused')}
                   </span>
                   <span className="text-xs font-serif italic text-gray-700 max-w-[160px] truncate" title="Background Music">
-                    {safeAudioUrl.includes('artlist.io') ? 'You Are My Answer' : 'Wedding Music'}
+                    Elegant Strings
                   </span>
                 </div>
               </div>
             </div>
 
             {/* Navigation */}
-            <nav className={`fixed top-0 left-0 right-0 z-40 py-6 bg-[#faf9f6]/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm transition-all ${isAdminAuth ? 'md:right-[450px]' : ''}`}>
-              <div className="max-w-screen-xl mx-auto px-6 flex justify-center gap-6 md:gap-10 text-[9px] md:text-[10px] uppercase tracking-[0.3em] font-bold text-gray-500 flex-wrap">
-                {['Home', 'Story', 'Entourage', 'Venues', 'Details', 'Guestbook', 'RSVP'].map(t => (
+            <nav className={`fixed top-0 left-0 right-0 z-40 py-5 bg-[#faf9f6]/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm transition-all ${isAdminAuth ? 'md:right-[450px]' : ''}`}>
+              <div className="max-w-screen-xl mx-auto px-4 flex justify-center gap-4 sm:gap-8 md:gap-10 text-[8px] sm:text-[9px] md:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.3em] font-bold text-gray-500 flex-wrap">
+                {['Home', 'Story', 'Entourage', 'Venues', 'Gifts', 'RSVP'].map(t => (
                   <button key={t} onClick={() => document.getElementById(t.toLowerCase()).scrollIntoView({behavior: 'smooth'})} className="hover:text-weddingDark transition-all active:scale-95 border-b-2 border-transparent hover:border-weddingAccent pb-1">{t}</button>
                 ))}
               </div>
@@ -814,34 +823,34 @@ export default function App() {
             <main className="w-full relative z-10 pt-20">
               
               {/* HERO */}
-              <section id="home" className="min-h-screen flex flex-col items-center justify-center text-center px-4 relative overflow-hidden pb-12">
+              <section id="home" className="min-h-[90vh] flex flex-col items-center justify-center text-center px-4 relative overflow-hidden pb-12">
                 <HandpaintedFlower className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] max-w-[900px] text-weddingSage opacity-5 pointer-events-none" />
-                <p className="text-weddingAccent tracking-[0.6em] uppercase text-[12px] mb-8 font-bold animate-pulse">Join us to celebrate</p>
-                <h1 className="text-6xl md:text-8xl lg:text-[10rem] font-script font-bold leading-tight mb-6 text-weddingDark drop-shadow-sm select-none transition-all break-words max-w-full px-4 text-center py-4">
+                <p className="text-weddingAccent tracking-[0.6em] uppercase text-[12px] mb-6 font-bold animate-pulse">Join us to celebrate</p>
+                <h1 className="text-5xl sm:text-6xl md:text-8xl lg:text-[9rem] font-script font-bold leading-none mb-4 text-weddingDark drop-shadow-sm select-none transition-all break-words max-w-full px-4 text-center py-4">
                   {String(displayData.groomName)} <br/>
-                  <span className="text-4xl md:text-7xl font-serif italic text-weddingAccent my-4 block leading-normal">&amp;</span> 
+                  <span className="text-3xl sm:text-4xl md:text-7xl font-serif italic text-weddingAccent my-3 block leading-none">&amp;</span> 
                   {String(displayData.brideName)}
                 </h1>
                 <LineAccent />
-                <p className="text-2xl md:text-4xl tracking-[0.3em] font-light text-gray-800 uppercase mb-4 transition-all">{String(displayData.weddingDate)}</p>
-                <p className="text-[11px] md:text-[13px] tracking-[0.5em] text-gray-400 font-bold uppercase mb-8 transition-all">{String(displayData.weddingLocation)}</p>
+                <p className="text-xl sm:text-2xl md:text-4xl tracking-[0.3em] font-light text-gray-800 uppercase mb-3 transition-all">{String(displayData.weddingDate)}</p>
+                <p className="text-[10px] sm:text-[11px] md:text-[13px] tracking-[0.5em] text-gray-400 font-bold uppercase mb-6 transition-all">{String(displayData.weddingLocation)}</p>
                 <CountdownTimer targetDate={displayData.weddingDate} />
               </section>
 
               {/* STORY */}
-              <section id="story" className="py-20 md:py-24 px-6 max-w-screen-xl mx-auto">
-                <div className="flex flex-col md:flex-row items-center gap-12 relative">
-                  <div className="w-full md:w-5/12 aspect-[4/5] rounded-t-full border-[16px] border-white shadow-2xl relative overflow-hidden z-10 p-1 bg-white">
-                    <ImageSlider photos={displayData.storyPhotos} altText="Story" containerClass="absolute inset-0" imageClass="rounded-t-full" />
-                  </div>
-                  <div className="w-full md:w-7/12 text-center md:text-left z-20">
-                    <div className="bg-white/70 backdrop-blur-xl p-10 md:p-14 rounded-sm border border-white shadow-xl">
-                      <h2 className="text-[12px] font-bold tracking-[0.4em] text-weddingAccent mb-8 uppercase border-b border-weddingSage/30 pb-4 inline-block">The Beginning</h2>
-                      <div className="text-lg md:text-2xl font-serif leading-relaxed text-gray-800 italic text-justify md:text-left">
-                         <span className="text-5xl text-weddingYellow block mb-2 opacity-50 font-serif leading-none select-none">"</span>
+              <section id="story" className="py-16 md:py-20 px-4 max-w-screen-xl mx-auto">
+                <div className="flex flex-col items-center gap-10 relative">
+                  <div className="w-full text-center z-20">
+                    <div className="bg-white/70 backdrop-blur-xl p-8 md:p-12 rounded-2xl border border-white shadow-xl max-w-4xl mx-auto">
+                      <h2 className="text-[11px] font-bold tracking-[0.4em] text-weddingAccent mb-6 uppercase border-b border-weddingSage/30 pb-3 inline-block">The Beginning</h2>
+                      <div className="text-base sm:text-lg md:text-2xl font-serif leading-relaxed text-gray-800 italic text-justify md:text-center">
+                         <span className="text-4xl md:text-5xl text-weddingYellow block mb-2 opacity-50 font-serif leading-none select-none">"</span>
                          {String(displayData.ourStory)}
                       </div>
                     </div>
+                  </div>
+                  <div className="w-full max-w-4xl aspect-[16/10] md:aspect-[21/9] rounded-2xl border-[8px] md:border-[12px] border-white shadow-xl relative overflow-hidden z-10 bg-white mx-auto">
+                    <ImageSlider photos={displayData.storyPhotos} altText="Story" containerClass="absolute inset-0" imageClass="rounded-xl" />
                   </div>
                 </div>
               </section>
@@ -849,109 +858,109 @@ export default function App() {
               {/* ENTOURAGE */}
               <section id="entourage" className="py-16 md:py-20 px-4 bg-white/20 backdrop-blur-sm border-y border-white transition-all">
                 <div className="max-w-screen-lg mx-auto text-center">
-                  <h2 className="text-5xl md:text-7xl font-serif text-weddingDark mb-12 drop-shadow-sm italic">The Entourage</h2>
+                  <h2 className="text-4xl sm:text-5xl md:text-7xl font-serif text-weddingDark mb-10 drop-shadow-sm italic">The Entourage</h2>
                   
                   {/* Parents */}
-                  <div className="mb-12">
-                    <h3 className="text-[11px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-8 border-b-2 border-weddingYellow inline-block pb-2">Beloved Parents</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-center items-start">
+                  <div className="mb-10">
+                    <h3 className="text-[10px] md:text-[11px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-6 border-b-2 border-weddingYellow inline-block pb-2">Beloved Parents</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-center items-start">
                       <div className="flex flex-col items-center md:items-end md:pr-10 md:border-r border-weddingSage/20 overflow-hidden w-full">
-                        <h4 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-3">Parents of the Groom</h4>
-                        {(displayData.groomParents||[]).map((n,i)=><p key={i} className="text-xl md:text-2xl font-serif text-gray-800 break-words w-full">{n}</p>)}
+                        <h4 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2">Parents of the Groom</h4>
+                        {(displayData.groomParents||[]).map((n,i)=><p key={i} className="text-lg md:text-2xl font-serif text-gray-800 break-words w-full">{n}</p>)}
                       </div>
                       <div className="flex flex-col items-center md:items-start md:pl-10 overflow-hidden w-full">
-                        <h4 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-3">Parents of the Bride</h4>
-                        {(displayData.brideParents||[]).map((n,i)=><p key={i} className="text-xl md:text-2xl font-serif text-gray-800 break-words w-full">{n}</p>)}
+                        <h4 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2">Parents of the Bride</h4>
+                        {(displayData.brideParents||[]).map((n,i)=><p key={i} className="text-lg md:text-2xl font-serif text-gray-800 break-words w-full">{n}</p>)}
                       </div>
                     </div>
                   </div>
 
                   {/* Principal Sponsors */}
-                  <div className="mb-12 bg-white/40 p-6 md:p-10 rounded-2xl border border-white shadow-sm overflow-hidden">
-                     <h3 className="text-[11px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-6 inline-block">Principal Sponsors</h3>
+                  <div className="mb-10 bg-white/40 p-6 md:p-8 rounded-2xl border border-white shadow-sm overflow-hidden">
+                     <h3 className="text-[10px] md:text-[11px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-5 inline-block">Principal Sponsors</h3>
                      <div className="flex flex-col items-center gap-3 max-w-4xl mx-auto w-full">
                        {principalPairs.map((pair, i) => (
-                         <div key={i} className="flex items-center justify-between border-b border-weddingSage/10 pb-3 w-full last:border-0 group overflow-hidden">
-                           <div className="flex-1 text-right break-words text-lg md:text-xl font-serif text-gray-800 px-2 md:px-4">{String(pair.male)}</div>
-                           <div className="text-weddingSage opacity-40 italic text-xl font-serif text-center px-1 shrink-0">&amp;</div>
-                           <div className="flex-1 text-left break-words text-lg md:text-xl font-serif text-gray-800 px-2 md:px-4">{String(pair.female)}</div>
+                         <div key={i} className="flex items-center justify-between border-b border-weddingSage/10 pb-2 w-full last:border-0 group overflow-hidden">
+                           <div className="flex-1 text-right break-words text-base md:text-xl font-serif text-gray-800 px-2 md:px-4">{String(pair.male)}</div>
+                           <div className="text-weddingSage opacity-40 italic text-lg md:text-xl font-serif text-center px-1 shrink-0">&amp;</div>
+                           <div className="flex-1 text-left break-words text-base md:text-xl font-serif text-gray-800 px-2 md:px-4">{String(pair.female)}</div>
                          </div>
                        ))}
                      </div>
                   </div>
 
                   {/* Best Man & Maid of Honor */}
-                  <div className="max-w-3xl mx-auto flex flex-col items-center w-full mb-12 bg-white/60 backdrop-blur-md p-8 rounded-xl border border-white/80 shadow-sm overflow-hidden">
+                  <div className="max-w-3xl mx-auto flex flex-col items-center w-full mb-10 bg-white/60 backdrop-blur-md p-6 md:p-8 rounded-xl border border-white/80 shadow-sm overflow-hidden">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full text-center relative">
                       <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-weddingSage/30 -translate-x-1/2"></div>
                       <div className="flex flex-col items-center flex-1 md:pr-6 overflow-hidden">
-                        <h4 className="text-[9px] font-bold text-weddingAccent uppercase tracking-widest mb-3">Best Man</h4>
+                        <h4 className="text-[9px] font-bold text-weddingAccent uppercase tracking-widest mb-2">Best Man</h4>
                         <p className="text-xl md:text-3xl font-serif text-weddingDark break-words w-full leading-snug">{String(displayData.bestMan)}</p>
                       </div>
                       <div className="flex flex-col items-center flex-1 md:pl-6 overflow-hidden">
-                        <h4 className="text-[9px] font-bold text-weddingAccent uppercase tracking-widest mb-3">Maid of Honor</h4>
+                        <h4 className="text-[9px] font-bold text-weddingAccent uppercase tracking-widest mb-2">Maid of Honor</h4>
                         <p className="text-xl md:text-3xl font-serif text-weddingDark break-words w-full leading-snug">{String(displayData.maidOfHonor)}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Groomsmen & Bridesmaids */}
-                  <div className="max-w-4xl mx-auto text-gray-800 flex flex-col items-center w-full mb-12 relative overflow-hidden px-2">
-                     <div className="grid grid-cols-2 gap-x-4 mb-4 pb-3 border-b border-weddingAccent/30 w-full">
-                       <div className="text-right text-[9px] font-bold text-weddingAccent uppercase tracking-widest">Groomsmen</div>
-                       <div className="text-left text-[9px] font-bold text-weddingAccent uppercase tracking-widest">Bridesmaids</div>
+                  <div className="max-w-4xl mx-auto text-gray-800 flex flex-col items-center w-full mb-10 relative overflow-hidden px-2">
+                     <div className="grid grid-cols-2 gap-x-4 mb-3 pb-2 border-b border-weddingAccent/30 w-full">
+                       <div className="text-right text-[8px] sm:text-[9px] font-bold text-weddingAccent uppercase tracking-widest">Groomsmen</div>
+                       <div className="text-left text-[8px] sm:text-[9px] font-bold text-weddingAccent uppercase tracking-widest">Bridesmaids</div>
                      </div>
-                     <div className="absolute left-1/2 top-10 bottom-0 w-px bg-weddingSage/20 -translate-x-1/2"></div>
+                     <div className="absolute left-1/2 top-8 bottom-0 w-px bg-weddingSage/20 -translate-x-1/2"></div>
                      {entouragePartners.map((partner, i) => (
-                       <div key={i} className="grid grid-cols-[1fr_auto_1fr] gap-x-2 mb-3 w-full items-center relative z-10">
-                         <div className="text-right overflow-hidden"><p className="text-lg md:text-xl font-serif leading-snug break-words">{String(partner.groomSide)}</p></div>
+                       <div key={i} className="grid grid-cols-[1fr_auto_1fr] gap-x-2 mb-2 w-full items-center relative z-10">
+                         <div className="text-right overflow-hidden"><p className="text-base md:text-xl font-serif leading-snug break-words">{String(partner.groomSide)}</p></div>
                          <div className="w-px h-full bg-transparent mx-2"></div>
-                         <div className="text-left overflow-hidden"><p className="text-lg md:text-xl font-serif leading-snug break-words">{String(partner.brideSide)}</p></div>
+                         <div className="text-left overflow-hidden"><p className="text-base md:text-xl font-serif leading-snug break-words">{String(partner.brideSide)}</p></div>
                        </div>
                      ))}
                   </div>
 
                   {/* Secondary Sponsors */}
-                  <div className="max-w-5xl mx-auto my-12">
-                     <h3 className="text-[11px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-8 text-center">Secondary Sponsors</h3>
+                  <div className="max-w-5xl mx-auto my-10">
+                     <h3 className="text-[10px] md:text-[11px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-6 text-center">Secondary Sponsors</h3>
                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="text-center md:text-right border-b md:border-b-0 md:border-r border-weddingSage/20 pb-6 md:pb-0 md:pr-6 overflow-hidden">
-                           <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-4">Candle</h4>
-                           {(displayData.candleSponsors||[]).map((n, i) => <p key={i} className="text-lg md:text-xl font-serif mb-2 text-gray-800 break-words w-full leading-snug">{n}</p>)}
+                        <div className="text-center md:text-right border-b md:border-b-0 md:border-r border-weddingSage/20 pb-4 md:pb-0 md:pr-6 overflow-hidden">
+                           <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-3">Candle</h4>
+                           {(displayData.candleSponsors||[]).map((n, i) => <p key={i} className="text-base md:text-xl font-serif mb-1 text-gray-800 break-words w-full leading-snug">{n}</p>)}
                         </div>
-                        <div className="text-center border-b md:border-b-0 border-weddingSage/20 pb-6 md:pb-0 px-4 overflow-hidden">
-                           <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-4">Veil</h4>
-                           {(displayData.veilSponsors||[]).map((n, i) => <p key={i} className="text-lg md:text-xl font-serif mb-2 text-gray-800 break-words w-full leading-snug">{n}</p>)}
+                        <div className="text-center border-b md:border-b-0 border-weddingSage/20 pb-4 md:pb-0 px-4 overflow-hidden">
+                           <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-3">Veil</h4>
+                           {(displayData.veilSponsors||[]).map((n, i) => <p key={i} className="text-base md:text-xl font-serif mb-1 text-gray-800 break-words w-full leading-snug">{n}</p>)}
                         </div>
-                        <div className="text-center md:text-left md:border-l border-weddingSage/20 pt-6 md:pt-0 md:pl-6 overflow-hidden">
-                           <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-4">Cord</h4>
-                           {(displayData.cordSponsors||[]).map((n, i) => <p key={i} className="text-lg md:text-xl font-serif mb-2 text-gray-800 break-words w-full leading-snug">{n}</p>)}
+                        <div className="text-center md:text-left md:border-l border-weddingSage/20 pt-4 md:pt-0 md:pl-6 overflow-hidden">
+                           <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-3">Cord</h4>
+                           {(displayData.cordSponsors||[]).map((n, i) => <p key={i} className="text-base md:text-xl font-serif mb-1 text-gray-800 break-words w-full leading-snug">{n}</p>)}
                         </div>
                      </div>
                   </div>
 
                   {/* Bearers & Flower Girls */}
-                  <div className="max-w-4xl mx-auto mt-12 px-2">
-                     <h3 className="text-[11px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-8 text-center">Little Entourage</h3>
-                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center mb-8">
+                  <div className="max-w-4xl mx-auto mt-10 px-2">
+                     <h3 className="text-[10px] md:text-[11px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-6 text-center">Little Entourage</h3>
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mb-6">
                         <div className="overflow-hidden w-full px-2">
-                           <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-3 border-b pb-2 inline-block px-4">Bible Bearer</h4>
-                           <p className="text-lg md:text-xl font-serif text-weddingDark mt-1 break-words w-full leading-snug">{String(displayData.bibleBearer)}</p>
+                           <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-2 border-b pb-1 inline-block px-4">Bible Bearer</h4>
+                           <p className="text-base md:text-xl font-serif text-weddingDark mt-1 break-words w-full leading-snug">{String(displayData.bibleBearer)}</p>
                         </div>
                         <div className="overflow-hidden w-full px-2">
-                           <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-3 border-b pb-2 inline-block px-4">Coin Bearer</h4>
-                           <p className="text-lg md:text-xl font-serif text-weddingDark mt-1 break-words w-full leading-snug">{String(displayData.coinBearer)}</p>
+                           <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-2 border-b pb-1 inline-block px-4">Coin Bearer</h4>
+                           <p className="text-base md:text-xl font-serif text-weddingDark mt-1 break-words w-full leading-snug">{String(displayData.coinBearer)}</p>
                         </div>
                         <div className="overflow-hidden w-full px-2">
-                           <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-3 border-b pb-2 inline-block px-4">Ring Bearer</h4>
-                           <p className="text-lg md:text-xl font-serif text-weddingDark mt-1 break-words w-full leading-snug">{String(displayData.ringBearer)}</p>
+                           <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-2 border-b pb-1 inline-block px-4">Ring Bearer</h4>
+                           <p className="text-base md:text-xl font-serif text-weddingDark mt-1 break-words w-full leading-snug">{String(displayData.ringBearer)}</p>
                         </div>
                      </div>
-                     <div className="pt-6 text-center max-w-3xl mx-auto">
-                        <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-4 inline-block px-5 py-2 border border-gray-200 rounded-full">Flower Girls</h4>
-                        <div className="flex flex-wrap justify-center gap-4">
+                     <div className="pt-4 text-center max-w-3xl mx-auto">
+                        <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-3 inline-block px-5 py-2 border border-gray-200 rounded-full">Flower Girls</h4>
+                        <div className="flex flex-wrap justify-center gap-3">
                            {(displayData.flowerGirls||[]).map((n, i) => (
-                              <p key={i} className="text-lg md:text-xl font-serif text-weddingDark italic break-words max-w-[200px] leading-snug">{n}</p>
+                              <p key={i} className="text-base md:text-xl font-serif text-weddingDark italic break-words max-w-[200px] leading-snug">{n}</p>
                            ))}
                         </div>
                      </div>
@@ -960,18 +969,18 @@ export default function App() {
               </section>
 
               {/* VENUES */}
-              <section id="venues" className="py-20 md:py-24 px-4 max-w-screen-xl mx-auto transition-all">
-                <div className="grid lg:grid-cols-2 gap-12">
+              <section id="venues" className="py-16 md:py-20 px-4 max-w-screen-xl mx-auto transition-all">
+                <div className="grid lg:grid-cols-2 gap-8 md:gap-12">
                   <div className="bg-white p-2 shadow-2xl relative rounded">
                     <div className="aspect-[16/10] overflow-hidden rounded-sm">
                       <ImageSlider photos={displayData.ceremonyPhotos} altText="Ceremony" containerClass="w-full h-full" />
                     </div>
-                    <div className="p-10 text-center">
-                      <h3 className="text-4xl font-serif text-weddingDark mb-4">The Ceremony</h3>
-                      <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-weddingAccent mb-3">{String(displayData.ceremonyDate)} | {String(displayData.ceremonyTime)}</p>
-                      <p className="text-xl font-serif mb-8 italic text-gray-700">{String(displayData.ceremonyVenue)}</p>
-                      <a href={String(displayData.ceremonyMapUrl)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-8 py-3 bg-weddingDark text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-weddingAccent transition-all shadow-xl">
-                        <MapPin size={16} /> View Location
+                    <div className="p-8 text-center">
+                      <h3 className="text-3xl md:text-4xl font-serif text-weddingDark mb-3">The Ceremony</h3>
+                      <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.3em] text-weddingAccent mb-3">{String(displayData.ceremonyDate)} | {String(displayData.ceremonyTime)}</p>
+                      <p className="text-lg md:text-xl font-serif mb-6 italic text-gray-700">{String(displayData.ceremonyVenue)}</p>
+                      <a href={String(displayData.ceremonyMapUrl)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-6 py-2.5 bg-weddingDark text-white rounded-lg text-[9px] font-bold uppercase tracking-widest hover:bg-weddingAccent transition-all shadow-xl">
+                        <MapPin size={14} /> View Location
                       </a>
                     </div>
                   </div>
@@ -979,12 +988,12 @@ export default function App() {
                     <div className="aspect-[16/10] overflow-hidden rounded-sm">
                       <ImageSlider photos={displayData.receptionPhotos} altText="Reception" containerClass="w-full h-full" />
                     </div>
-                    <div className="p-10 text-center">
-                      <h3 className="text-4xl font-serif text-weddingDark mb-4">The Reception</h3>
-                      <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-weddingAccent mb-3">{String(displayData.receptionTime)}</p>
-                      <p className="text-xl font-serif mb-8 italic text-gray-700">{String(displayData.receptionVenue)}</p>
-                      <a href={String(displayData.receptionMapUrl)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-8 py-3 bg-weddingDark text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-weddingAccent transition-all shadow-xl">
-                        <MapPin size={16} /> View Location
+                    <div className="p-8 text-center">
+                      <h3 className="text-3xl md:text-4xl font-serif text-weddingDark mb-3">The Reception</h3>
+                      <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.3em] text-weddingAccent mb-3">{String(displayData.receptionTime)}</p>
+                      <p className="text-lg md:text-xl font-serif mb-6 italic text-gray-700">{String(displayData.receptionVenue)}</p>
+                      <a href={String(displayData.receptionMapUrl)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-6 py-2.5 bg-weddingDark text-white rounded-lg text-[9px] font-bold uppercase tracking-widest hover:bg-weddingAccent transition-all shadow-xl">
+                        <MapPin size={14} /> View Location
                       </a>
                     </div>
                   </div>
@@ -992,47 +1001,84 @@ export default function App() {
               </section>
 
               {/* DETAILS */}
-              <section id="details" className="py-20 md:py-24 px-4 bg-white/60 border-y border-white transition-all">
-                <div className="max-w-screen-xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+              <section id="details" className="py-16 md:py-20 px-4 bg-white/60 border-y border-white transition-all">
+                <div className="max-w-screen-xl mx-auto grid lg:grid-cols-2 gap-10 md:gap-16 items-center">
                    <div className="text-center md:text-left">
-                      <h2 className="text-[11px] font-bold tracking-[0.4em] text-weddingAccent uppercase mb-4 opacity-80 border-b border-weddingSage/30 pb-3 inline-block">Dress Code &amp; Details</h2>
-                      <h3 className="text-4xl font-serif text-weddingDark mb-6 italic mt-2">Attire</h3>
-                      <p className="text-lg md:text-xl font-serif leading-relaxed text-gray-800 mb-10">{String(displayData.dressCodeText)}</p>
-                      <h3 className="text-4xl font-serif text-weddingDark mb-6 italic mt-2">Gifts</h3>
-                      <p className="text-lg md:text-xl font-serif leading-relaxed text-gray-800">{String(displayData.giftText)}</p>
+                      <h2 className="text-[10px] md:text-[11px] font-bold tracking-[0.4em] text-weddingAccent uppercase mb-4 opacity-80 border-b border-weddingSage/30 pb-2 inline-block">Dress Code &amp; Details</h2>
+                      <h3 className="text-3xl md:text-4xl font-serif text-weddingDark mb-4 italic mt-2">Attire</h3>
+                      <p className="text-base md:text-lg font-serif leading-relaxed text-gray-800">{String(displayData.dressCodeText)}</p>
                    </div>
-                   <div className="aspect-[4/5] bg-white p-2 shadow-2xl overflow-hidden rounded-t-full">
+                   <div className="aspect-[4/5] bg-white p-2 shadow-2xl overflow-hidden rounded-t-full max-w-md mx-auto w-full">
                       <ImageSlider photos={displayData.dressCodePhotos} altText="Dress Code" containerClass="w-full h-full" imageClass="rounded-t-full" />
                    </div>
                 </div>
               </section>
 
+              {/* GIFTS */}
+              <section id="gifts" className="py-16 md:py-20 px-4 relative bg-[#faf9f6]/80 backdrop-blur-sm border-b border-white">
+                <div className="max-w-screen-md mx-auto text-center">
+                  <h2 className="text-[10px] md:text-[11px] font-bold tracking-[0.4em] text-weddingAccent uppercase mb-4 opacity-80 border-b border-weddingSage/30 pb-2 inline-block">Gifts & Registry</h2>
+                  <p className="text-base md:text-lg font-serif leading-relaxed text-gray-800 mb-8">{String(displayData.giftText)}</p>
+
+                  <div className="bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-gray-100 max-w-4xl mx-auto">
+                    <h3 className="text-2xl md:text-3xl font-serif text-weddingDark mb-6 italic">Send Some Love</h3>
+                    
+                    {/* TWO EDITABLE SPACES */}
+                    <div className="grid md:grid-cols-2 gap-4 md:gap-6 mb-8">
+                       {(displayData.giftOption1Title || displayData.giftOption1Details) && (
+                         <div className="bg-[#faf9f6] p-5 rounded-2xl border border-weddingSage/30 shadow-inner text-left">
+                            <h4 className="text-[10px] uppercase font-bold tracking-[0.2em] text-weddingAccent mb-3">{String(displayData.giftOption1Title)}</h4>
+                            <div className="text-gray-700 font-sans text-sm whitespace-pre-line leading-relaxed">{String(displayData.giftOption1Details)}</div>
+                         </div>
+                       )}
+                       {(displayData.giftOption2Title || displayData.giftOption2Details) && (
+                         <div className="bg-[#faf9f6] p-5 rounded-2xl border border-weddingSage/30 shadow-inner text-left">
+                            <h4 className="text-[10px] uppercase font-bold tracking-[0.2em] text-weddingAccent mb-3">{String(displayData.giftOption2Title)}</h4>
+                            <div className="text-gray-700 font-sans text-sm whitespace-pre-line leading-relaxed">{String(displayData.giftOption2Details)}</div>
+                         </div>
+                       )}
+                    </div>
+                    
+                    {/* QR CODES */}
+                    {displayData.qrCodeUrls && displayData.qrCodeUrls.length > 0 && (
+                      <div className="flex flex-wrap justify-center gap-4">
+                        {displayData.qrCodeUrls.map((qr, idx) => (
+                           <div key={idx} className="w-32 h-32 sm:w-40 sm:h-40 bg-white p-2 shadow-lg rounded-2xl border border-gray-100 transition-transform hover:scale-105">
+                             <img src={qr} alt={`QR Code ${idx + 1}`} className="w-full h-full object-contain" />
+                           </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </section>
+
               {/* GUESTBOOK */}
-              <section id="guestbook" className="py-20 md:py-24 px-4 relative bg-white/40 backdrop-blur-md border-b">
+              <section id="guestbook" className="py-16 md:py-20 px-4 relative bg-white/40 backdrop-blur-md border-b">
                 <div className="max-w-screen-xl mx-auto text-center">
-                  <h2 className="text-[11px] font-bold tracking-[0.4em] text-weddingAccent uppercase mb-4 opacity-80">Wishes &amp; Love</h2>
-                  <h3 className="text-4xl md:text-6xl font-serif text-weddingDark mb-16 italic">Guestbook</h3>
+                  <h2 className="text-[10px] md:text-[11px] font-bold tracking-[0.4em] text-weddingAccent uppercase mb-3 opacity-80">Wishes &amp; Love</h2>
+                  <h3 className="text-3xl md:text-5xl font-serif text-weddingDark mb-12 italic">Guestbook</h3>
                   
-                  <div className="relative w-full overflow-hidden min-h-[300px]">
+                  <div className="relative w-full overflow-hidden min-h-[250px] md:min-h-[300px]">
                     {gbSlides.length > 0 ? gbSlides.map((slide, slideIdx) => (
-                      <div key={slideIdx} className={`w-full grid grid-cols-1 md:grid-cols-3 gap-6 transition-all duration-[1000ms] ease-in-out ${slideIdx === currentGbSlide ? 'opacity-100 translate-x-0 relative z-10' : 'opacity-0 translate-x-12 absolute top-0 left-0 pointer-events-none z-0'}`}>
+                      <div key={slideIdx} className={`w-full grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 transition-all duration-[1000ms] ease-in-out ${slideIdx === currentGbSlide ? 'opacity-100 translate-x-0 relative z-10' : 'opacity-0 translate-x-12 absolute top-0 left-0 pointer-events-none z-0'}`}>
                         {slide.map((m) => (
-                          <div key={m.id} className="bg-[#faf9f6]/95 p-8 border border-white shadow-lg rounded flex flex-col justify-between text-left group hover:-translate-y-1 transition-transform duration-300">
-                            <MessageSquareHeart className="w-6 h-6 text-weddingSage/60 mb-6 group-hover:text-weddingAccent transition-colors" />
-                            <p className="text-lg md:text-xl font-serif italic leading-relaxed text-gray-800 mb-8">"{String(m.message)}"</p>
-                            <p className="text-[9px] uppercase tracking-widest font-bold text-gray-500 border-t pt-4">- {String(m.submittedName)}</p>
+                          <div key={m.id} className="bg-[#faf9f6]/95 p-6 md:p-8 border border-white shadow-lg rounded flex flex-col justify-between text-left group hover:-translate-y-1 transition-transform duration-300">
+                            <MessageSquareHeart className="w-5 h-5 md:w-6 md:h-6 text-weddingSage/60 mb-4 md:mb-6 group-hover:text-weddingAccent transition-colors" />
+                            <p className="text-base md:text-lg font-serif italic leading-relaxed text-gray-800 mb-6">"{String(m.message)}"</p>
+                            <p className="text-[8px] md:text-[9px] uppercase tracking-widest font-bold text-gray-500 border-t pt-3">- {String(m.submittedName)}</p>
                           </div>
                         ))}
                       </div>
                     )) : (
-                      <div className="text-center text-gray-400 font-serif italic py-16 text-lg">Be the first to leave a message...</div>
+                      <div className="text-center text-gray-400 font-serif italic py-12 text-base md:text-lg">Be the first to leave a message...</div>
                     )}
                   </div>
                   
                   {gbSlides.length > 1 && (
-                    <div className="flex justify-center gap-3 mt-12">
+                    <div className="flex justify-center gap-2 md:gap-3 mt-8 md:mt-10">
                       {gbSlides.map((_, i) => (
-                        <button key={i} onClick={() => setCurrentGbSlide(i)} className={`h-1.5 transition-all duration-300 rounded-full ${i === currentGbSlide ? 'w-12 bg-weddingAccent shadow-sm' : 'w-3 bg-gray-300'}`}></button>
+                        <button key={i} onClick={() => setCurrentGbSlide(i)} className={`h-1.5 transition-all duration-300 rounded-full ${i === currentGbSlide ? 'w-10 md:w-12 bg-weddingAccent shadow-sm' : 'w-2 md:w-3 bg-gray-300'}`}></button>
                       ))}
                     </div>
                   )}
@@ -1040,50 +1086,50 @@ export default function App() {
               </section>
 
               {/* RSVP */}
-              <section id="rsvp" className="py-24 md:py-32 px-4 bg-[#1f2b22] text-white transition-all">
+              <section id="rsvp" className="py-20 md:py-24 px-4 bg-[#1f2b22] text-white transition-all">
                 <div className="max-w-screen-md mx-auto">
-                  <div className="text-center mb-16">
-                    <h2 className="text-[12px] font-bold tracking-[0.5em] text-weddingYellow uppercase mb-6">RSVP</h2>
-                    <h3 className="text-5xl md:text-7xl font-serif mb-10">Join the Celebration</h3>
-                    <p className="text-weddingYellow font-serif italic text-xl border border-weddingYellow/20 px-10 py-3 inline-block bg-weddingYellow/5 rounded-full">Please respond by {String(displayData.rsvpDeadline)}</p>
+                  <div className="text-center mb-12">
+                    <h2 className="text-[10px] md:text-[12px] font-bold tracking-[0.5em] text-weddingYellow uppercase mb-4">RSVP</h2>
+                    <h3 className="text-4xl md:text-6xl font-serif mb-8">Join the Celebration</h3>
+                    <p className="text-weddingYellow font-serif italic text-lg md:text-xl border border-weddingYellow/20 px-8 py-2 md:py-3 inline-block bg-weddingYellow/5 rounded-full">Please respond by {String(displayData.rsvpDeadline)}</p>
                   </div>
 
                   {submitSuccess ? (
-                    <div className="bg-weddingSage text-weddingDark p-20 rounded-[3rem] text-center shadow-2xl animate-in zoom-in duration-500">
-                      <CheckCircle size={100} className="mx-auto mb-10 text-weddingDark animate-bounce" />
-                      <h4 className="text-5xl font-serif mb-6">Thank You!</h4>
-                      <p className="font-serif italic text-2xl">We can't wait to see you there.</p>
-                      <button onClick={() => setSubmitSuccess(false)} className="mt-12 text-[11px] uppercase font-bold border-b-2 border-weddingDark pb-1">Edit RSVP</button>
+                    <div className="bg-weddingSage text-weddingDark p-12 md:p-20 rounded-[2rem] md:rounded-[3rem] text-center shadow-2xl animate-in zoom-in duration-500">
+                      <CheckCircle size={80} className="mx-auto mb-8 text-weddingDark animate-bounce" />
+                      <h4 className="text-4xl md:text-5xl font-serif mb-4">Thank You!</h4>
+                      <p className="font-serif italic text-xl md:text-2xl">We can't wait to see you there.</p>
+                      <button onClick={() => setSubmitSuccess(false)} className="mt-10 text-[10px] md:text-[11px] uppercase font-bold border-b-2 border-weddingDark pb-1">Edit RSVP</button>
                     </div>
                   ) : (
-                    <form onSubmit={handleRsvpSubmit} className="space-y-10">
-                      <div className="grid md:grid-cols-2 gap-10">
-                        <div className="bg-weddingSage text-weddingDark p-10 rounded-3xl shadow-xl transition-transform focus-within:-translate-y-1">
-                          <label className="block text-[10px] font-bold tracking-widest uppercase mb-4 text-weddingDark/80">Security Code</label>
-                          <input required value={rsvpForm.enteredCode} onChange={e=>setRsvpForm({...rsvpForm, enteredCode: e.target.value})} className="w-full bg-transparent border-b-2 border-weddingDark/20 py-4 focus:outline-none focus:border-weddingDark tracking-widest text-2xl font-serif text-weddingDark placeholder:text-weddingDark/30" placeholder="Enter Code" />
+                    <form onSubmit={handleRsvpSubmit} className="space-y-8 md:space-y-10">
+                      <div className="grid md:grid-cols-2 gap-6 md:gap-10">
+                        <div className="bg-weddingSage text-weddingDark p-8 md:p-10 rounded-3xl shadow-xl transition-transform focus-within:-translate-y-1">
+                          <label className="block text-[9px] md:text-[10px] font-bold tracking-widest uppercase mb-3 text-weddingDark/80">Security Code</label>
+                          <input required value={rsvpForm.enteredCode} onChange={e=>setRsvpForm({...rsvpForm, enteredCode: e.target.value})} className="w-full bg-transparent border-b-2 border-weddingDark/20 py-3 md:py-4 focus:outline-none focus:border-weddingDark tracking-widest text-xl md:text-2xl font-serif text-weddingDark placeholder:text-weddingDark/30" placeholder="Enter Code" />
                         </div>
-                        <div className="bg-weddingSage text-weddingDark p-10 rounded-3xl shadow-xl transition-transform focus-within:-translate-y-1">
-                          <label className="block text-[10px] font-bold tracking-widest uppercase mb-4 text-weddingDark/80">Full Name</label>
-                          <input required value={rsvpForm.name} onChange={e=>setRsvpForm({...rsvpForm, name: e.target.value})} className="w-full bg-transparent border-b-2 border-weddingDark/20 py-4 focus:outline-none focus:border-weddingDark text-3xl font-serif italic text-weddingDark placeholder:text-weddingDark/30" placeholder="Name" />
+                        <div className="bg-weddingSage text-weddingDark p-8 md:p-10 rounded-3xl shadow-xl transition-transform focus-within:-translate-y-1">
+                          <label className="block text-[9px] md:text-[10px] font-bold tracking-widest uppercase mb-3 text-weddingDark/80">Full Name</label>
+                          <input required value={rsvpForm.name} onChange={e=>setRsvpForm({...rsvpForm, name: e.target.value})} className="w-full bg-transparent border-b-2 border-weddingDark/20 py-3 md:py-4 focus:outline-none focus:border-weddingDark text-2xl md:text-3xl font-serif italic text-weddingDark placeholder:text-weddingDark/30" placeholder="Name" />
                         </div>
                       </div>
                       
-                      <div className="flex flex-col md:flex-row gap-6">
+                      <div className="flex flex-col md:flex-row gap-4 md:gap-6">
                         {['yes', 'no'].map(v => (
-                          <label key={v} className={`flex-1 py-10 text-center rounded-3xl border-2 cursor-pointer transition-all ${rsvpForm.attending === v ? 'bg-weddingYellow border-weddingYellow text-weddingDark shadow-2xl scale-105' : 'border-white/10 hover:border-white/30 bg-white/5'}`}>
+                          <label key={v} className={`flex-1 py-8 text-center rounded-3xl border-2 cursor-pointer transition-all ${rsvpForm.attending === v ? 'bg-weddingYellow border-weddingYellow text-weddingDark shadow-2xl scale-105' : 'border-white/10 hover:border-white/30 bg-white/5'}`}>
                             <input type="radio" className="hidden" value={v} checked={rsvpForm.attending === v} onChange={e=>setRsvpForm({...rsvpForm, attending: e.target.value})} />
-                            <span className="text-[12px] font-bold uppercase tracking-widest">{v === 'yes' ? 'Happily Accepting' : 'Regretfully Declining'}</span>
+                            <span className="text-[10px] md:text-[12px] font-bold uppercase tracking-widest">{v === 'yes' ? 'Happily Accepting' : 'Regretfully Declining'}</span>
                           </label>
                         ))}
                       </div>
 
-                      <div className="bg-weddingSage text-weddingDark p-10 rounded-3xl shadow-xl transition-transform focus-within:-translate-y-1">
-                        <label className="block text-[10px] font-bold tracking-widest uppercase mb-6 text-weddingDark/80">Wishes for the Couple</label>
-                        <textarea value={rsvpForm.message} onChange={e=>setRsvpForm({...rsvpForm, message: e.target.value})} className="w-full bg-transparent border-none focus:outline-none min-h-[160px] text-2xl font-serif italic text-weddingDark placeholder:text-weddingDark/40 resize-none" placeholder="Leave a message for our digital guestbook..." />
+                      <div className="bg-weddingSage text-weddingDark p-8 md:p-10 rounded-3xl shadow-xl transition-transform focus-within:-translate-y-1">
+                        <label className="block text-[9px] md:text-[10px] font-bold tracking-widest uppercase mb-4 text-weddingDark/80">Wishes for the Couple</label>
+                        <textarea value={rsvpForm.message} onChange={e=>setRsvpForm({...rsvpForm, message: e.target.value})} className="w-full bg-transparent border-none focus:outline-none min-h-[120px] md:min-h-[160px] text-xl md:text-2xl font-serif italic text-weddingDark placeholder:text-weddingDark/40 resize-none" placeholder="Leave a message for our digital guestbook..." />
                       </div>
 
-                      {submitError && <div className="text-red-300 text-center p-6 bg-red-900/40 rounded-2xl border border-red-500/30 text-xs font-bold uppercase tracking-widest">{String(submitError)}</div>}
-                      <button type="submit" disabled={isSubmitting} className="w-full bg-weddingYellow text-weddingDark py-10 rounded-3xl font-bold uppercase tracking-[0.3em] text-[13px] shadow-2xl hover:bg-white active:scale-[0.98] transition-all disabled:opacity-50">
+                      {submitError && <div className="text-red-300 text-center p-4 md:p-6 bg-red-900/40 rounded-2xl border border-red-500/30 text-[10px] md:text-xs font-bold uppercase tracking-widest">{String(submitError)}</div>}
+                      <button type="submit" disabled={isSubmitting} className="w-full bg-weddingYellow text-weddingDark py-8 md:py-10 rounded-3xl font-bold uppercase tracking-[0.3em] text-[11px] md:text-[13px] shadow-2xl hover:bg-white active:scale-[0.98] transition-all disabled:opacity-50">
                         {isSubmitting ? 'Processing RSVP...' : 'Confirm My Attendance'}
                       </button>
                     </form>
@@ -1092,20 +1138,20 @@ export default function App() {
               </section>
 
               {/* FOOTER & LOGOUT */}
-              <footer className="py-20 text-center bg-[#faf9f6] border-t border-gray-200 relative z-10 transition-all">
-                <p className="font-script text-6xl md:text-[7rem] text-weddingDark mb-6 select-none break-words px-4 leading-normal">{String(displayData.groomName)} &amp; {String(displayData.brideName)}</p>
-                <div className="w-24 h-px bg-weddingSage mx-auto mb-10 opacity-50"></div>
-                <p className="text-[10px] uppercase font-bold tracking-[0.5em] text-gray-500 mb-10">{String(displayData.weddingDate)} • {String(displayData.weddingLocation)}</p>
+              <footer className="py-16 md:py-20 text-center bg-[#faf9f6] border-t border-gray-200 relative z-10 transition-all">
+                <p className="font-script text-5xl sm:text-6xl md:text-[7rem] text-weddingDark mb-4 select-none break-words px-4 leading-normal">{String(displayData.groomName)} &amp; {String(displayData.brideName)}</p>
+                <div className="w-20 h-px bg-weddingSage mx-auto mb-8 opacity-50"></div>
+                <p className="text-[9px] md:text-[10px] uppercase font-bold tracking-[0.5em] text-gray-500 mb-8">{String(displayData.weddingDate)} • {String(displayData.weddingLocation)}</p>
                 
-                <div className="flex flex-col items-center gap-6 mb-12 max-w-xl mx-auto">
-                  <div className="flex flex-col md:flex-row justify-center gap-6 text-[9px] font-bold text-gray-700 uppercase tracking-widest bg-white/60 px-8 py-4 rounded-full border border-gray-200 shadow-sm">
-                     <span className="flex items-center gap-2"><Phone size={14} className="text-weddingSage"/> {String(displayData.contactPhone)}</span>
+                <div className="flex flex-col items-center gap-6 mb-10 max-w-xl mx-auto">
+                  <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-6 text-[8px] md:text-[9px] font-bold text-gray-700 uppercase tracking-widest bg-white/60 px-6 py-3 rounded-full border border-gray-200 shadow-sm">
+                     <span className="flex items-center gap-2"><Phone size={12} className="text-weddingSage"/> {String(displayData.contactPhone)}</span>
                      <span className="hidden md:block text-gray-300">|</span>
-                     <span className="flex items-center gap-2"><Mail size={14} className="text-weddingSage"/> {String(displayData.contactEmail)}</span>
+                     <span className="flex items-center gap-2"><Mail size={12} className="text-weddingSage"/> {String(displayData.contactEmail)}</span>
                   </div>
                 </div>
 
-                {!isAdminAuth && <button onClick={() => setShowAdminLogin(true)} className="text-[9px] uppercase tracking-widest text-gray-300 hover:text-weddingDark transition-colors flex items-center gap-2 mx-auto px-5 py-2.5 border border-gray-100 rounded-full"><Lock size={12}/> Staff Login</button>}
+                {!isAdminAuth && <button onClick={() => setShowAdminLogin(true)} className="text-[8px] md:text-[9px] uppercase tracking-widest text-gray-300 hover:text-weddingDark transition-colors flex items-center gap-2 mx-auto px-4 py-2 border border-gray-100 rounded-full"><Lock size={10}/> Staff Login</button>}
               </footer>
             </main>
           </div>
@@ -1144,9 +1190,9 @@ export default function App() {
               {/* Sidebar Forms Area */}
               <div className="flex-1 overflow-y-auto p-5 pb-32">
                  {adminTab === 'details' && (
-                    <div className="animate-in fade-in duration-300 space-y-8">
+                    <div className="animate-in fade-in duration-300 space-y-6">
                        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                          <h3 className="text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-5 border-b border-gray-100 pb-2">Basic Details</h3>
+                          <h3 className="text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 border-b border-gray-100 pb-2">Basic Details</h3>
                           <TextInput label="Groom's Name" value={editForm.groomName} onChange={val=>setEditForm({...editForm, groomName: val})} />
                           <TextInput label="Bride's Name" value={editForm.brideName} onChange={val=>setEditForm({...editForm, brideName: val})} />
                           <TextInput label="Wedding Date" value={editForm.weddingDate} onChange={val=>setEditForm({...editForm, weddingDate: val})} />
@@ -1156,24 +1202,31 @@ export default function App() {
                           <TextInput label="RSVP Deadline" value={editForm.rsvpDeadline} onChange={val=>setEditForm({...editForm, rsvpDeadline: val})} />
                        </div>
                        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                          <h3 className="text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-5 border-b border-gray-100 pb-2">Ceremony Info</h3>
+                          <h3 className="text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 border-b border-gray-100 pb-2">Ceremony Info</h3>
                           <TextInput label="Date" value={editForm.ceremonyDate} onChange={val=>setEditForm({...editForm, ceremonyDate: val})} />
                           <TextInput label="Time" value={editForm.ceremonyTime} onChange={val=>setEditForm({...editForm, ceremonyTime: val})} />
                           <TextInput label="Venue Name" value={editForm.ceremonyVenue} onChange={val=>setEditForm({...editForm, ceremonyVenue: val})} />
                           <TextInput label="Map URL" value={editForm.ceremonyMapUrl} onChange={val=>setEditForm({...editForm, ceremonyMapUrl: val})} />
                        </div>
                        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                          <h3 className="text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-5 border-b border-gray-100 pb-2">Reception Info</h3>
+                          <h3 className="text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 border-b border-gray-100 pb-2">Reception Info</h3>
                           <TextInput label="Date" value={editForm.receptionDate} onChange={val=>setEditForm({...editForm, receptionDate: val})} />
                           <TextInput label="Time" value={editForm.receptionTime} onChange={val=>setEditForm({...editForm, receptionTime: val})} />
                           <TextInput label="Venue Name" value={editForm.receptionVenue} onChange={val=>setEditForm({...editForm, receptionVenue: val})} />
                           <TextInput label="Map URL" value={editForm.receptionMapUrl} onChange={val=>setEditForm({...editForm, receptionMapUrl: val})} />
                        </div>
                        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                          <h3 className="text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-5 border-b border-gray-100 pb-2">Paragraphs</h3>
+                          <h3 className="text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 border-b border-gray-100 pb-2">Paragraphs</h3>
                           <TextInput label="Our Story" isTextArea value={editForm.ourStory} onChange={val=>setEditForm({...editForm, ourStory: val})} />
                           <TextInput label="Dress Code Guidelines" isTextArea value={editForm.dressCodeText} onChange={val=>setEditForm({...editForm, dressCodeText: val})} />
-                          <TextInput label="Gift / Registry" isTextArea value={editForm.giftText} onChange={val=>setEditForm({...editForm, giftText: val})} />
+                          <TextInput label="Gift Message Intro" isTextArea value={editForm.giftText} onChange={val=>setEditForm({...editForm, giftText: val})} />
+                       </div>
+                       <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                          <h3 className="text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 border-b border-gray-100 pb-2">Gift Registries & Options</h3>
+                          <TextInput label="Gift Option 1 - Title" value={editForm.giftOption1Title} onChange={val=>setEditForm({...editForm, giftOption1Title: val})} />
+                          <TextInput label="Gift Option 1 - Details" isTextArea value={editForm.giftOption1Details} onChange={val=>setEditForm({...editForm, giftOption1Details: val})} />
+                          <TextInput label="Gift Option 2 - Title" value={editForm.giftOption2Title} onChange={val=>setEditForm({...editForm, giftOption2Title: val})} />
+                          <TextInput label="Gift Option 2 - Details" isTextArea value={editForm.giftOption2Details} onChange={val=>setEditForm({...editForm, giftOption2Details: val})} />
                        </div>
                     </div>
                  )}
@@ -1207,6 +1260,7 @@ export default function App() {
                        <PhotoManager label="Ceremony Venues" urls={editForm.ceremonyPhotos} onChange={arr=>setEditForm({...editForm, ceremonyPhotos: arr})} showToast={showToast} />
                        <PhotoManager label="Reception Venues" urls={editForm.receptionPhotos} onChange={arr=>setEditForm({...editForm, receptionPhotos: arr})} showToast={showToast} />
                        <PhotoManager label="Dress Code Inspiration" urls={editForm.dressCodePhotos} onChange={arr=>setEditForm({...editForm, dressCodePhotos: arr})} showToast={showToast} />
+                       <PhotoManager label="QR Codes (GCash, Maya, Bank)" urls={editForm.qrCodeUrls} onChange={arr=>setEditForm({...editForm, qrCodeUrls: arr})} showToast={showToast} />
                     </div>
                  )}
 
