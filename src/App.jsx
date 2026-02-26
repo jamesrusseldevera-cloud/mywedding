@@ -40,7 +40,7 @@ const DEFAULT_DETAILS = {
   brideName: "Cassie",
   weddingDate: "April 10, 2026",
   weddingLocation: "Muntinlupa, Philippines",
-  backgroundMusicUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", // Calm instrumental piano
+  backgroundMusicUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3", // Calm instrumental fallback
   ourStory: "Love is patient, love is kind (1 Corinthians 13:4)—and their love proved to be brave, choosing each other every day in faith. What began as a quiet night at Ooma became a story God was already writing—told through shared meals from Jollibee to Din Tai Fung, sweet evenings at Amano, and journeys to Australia, Vigan, La Union, Baguio, and Thailand. In grand adventures and quiet Sundays at Mass, they discovered that home is not a place but a person, and that with God at the center, their love would not easily be broken. Two years later, they stand certain—ready to begin a forever rooted in faith, devotion, and a love that grows sweeter with time.",
   contactPhone: "+63 912 345 6789",
   contactEmail: "weddings@example.com",
@@ -410,6 +410,7 @@ export default function App() {
   };
 
   const displayData = (isAdminAuth && editForm) ? editForm : details;
+  const safeAudioUrl = displayData?.backgroundMusicUrl?.trim() || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3";
 
   // --- AUDIO ACTIONS ---
   const handleOpenInvitation = () => {
@@ -418,25 +419,39 @@ export default function App() {
       audioRef.current.volume = 0.5;
       audioRef.current.play()
         .then(() => setIsPlaying(true))
-        .catch((e) => { console.log("Autoplay blocked. User must interact.", e); setIsPlaying(false); });
+        .catch((e) => { 
+           console.log("Autoplay blocked. User must interact.", e); 
+           setIsPlaying(false); 
+        });
     }
   };
 
   const toggleAudio = () => {
     if (!audioRef.current) return;
-    if (isPlaying) { audioRef.current.pause(); } else { audioRef.current.play(); }
-    setIsPlaying(!isPlaying);
+    if (isPlaying) { 
+      audioRef.current.pause(); 
+      setIsPlaying(false);
+    } else { 
+      audioRef.current.play()
+        .then(() => setIsPlaying(true))
+        .catch((e) => {
+           console.warn("Audio playback failed:", e);
+           setIsPlaying(false);
+        }); 
+    }
   };
 
   useEffect(() => {
-    if (audioRef.current && displayData.backgroundMusicUrl && !isLanding) {
+    if (audioRef.current && safeAudioUrl && !isLanding) {
       const isCurrentlyPlaying = !audioRef.current.paused;
-      if (audioRef.current.src !== displayData.backgroundMusicUrl) {
-         audioRef.current.src = displayData.backgroundMusicUrl;
-         if (isCurrentlyPlaying) audioRef.current.play().catch(()=>{});
+      if (audioRef.current.src !== safeAudioUrl) {
+         audioRef.current.src = safeAudioUrl;
+         if (isCurrentlyPlaying) {
+             audioRef.current.play().catch(e => console.warn("Playback failed after src change", e));
+         }
       }
     }
-  }, [displayData.backgroundMusicUrl, isLanding]);
+  }, [safeAudioUrl, isLanding]);
 
   // --- STYLES INJECTION ---
   useEffect(() => {
@@ -582,10 +597,25 @@ export default function App() {
     setIsSavingDetails(false);
   };
 
+  // --- AUTO CODE GENERATOR UTILITY ---
+  const generateRandomCode = () => {
+    // Generate a clean, readable 4-character alphanumeric code
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // removed I, O, 1, 0 to avoid confusion
+    let result = '';
+    for (let i = 0; i < 4; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
   const handleAddGuest = async (e) => {
     e.preventDefault();
-    if (!newGuestName || !newGuestCode) return;
-    const newGuest = { id: `local_${Date.now()}`, name: newGuestName, code: String(newGuestCode).trim().toUpperCase(), status: 'Pending', message: '', messageApproved: false, timestamp: Date.now() };
+    if (!newGuestName) return;
+    
+    // Smart Fallback: Automatically generate code if left blank
+    const finalCode = newGuestCode.trim() ? String(newGuestCode).trim().toUpperCase() : generateRandomCode();
+    
+    const newGuest = { id: `local_${Date.now()}`, name: newGuestName, code: finalCode, status: 'Pending', message: '', messageApproved: false, timestamp: Date.now() };
     
     try {
       await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), newGuest);
@@ -624,10 +654,14 @@ export default function App() {
       const rows = event.target.result.split('\n');
       for (let i = 1; i < rows.length; i++) {
         const cols = rows[i].split(',');
-        if (cols.length >= 2) {
-          const name = cols[0].replace(/"/g, '').trim();
-          const code = cols[1].replace(/"/g, '').trim().toUpperCase();
-          if (name && code) { 
+        if (cols.length >= 1) { // Changed to >= 1 to allow names without codes
+          const name = cols[0] ? cols[0].replace(/"/g, '').trim() : '';
+          let code = cols[1] ? cols[1].replace(/"/g, '').trim().toUpperCase() : '';
+          
+          if (name) { 
+             // Bulk Generation: Automatically create code if missing in CSV
+             if (!code) code = generateRandomCode();
+             
              try { await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), { name, code, status: 'Pending', timestamp: Date.now() }); } catch(e){} 
           }
         }
@@ -683,7 +717,18 @@ export default function App() {
         <div className="fixed inset-0 z-0 bg-cover bg-center opacity-50 pointer-events-none" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&q=80')" }}></div>
         <div className="fixed inset-0 z-0 bg-gradient-to-b from-[#faf9f6]/95 via-[#faf9f6]/90 to-[#faf9f6]/95 backdrop-blur-[2px] pointer-events-none"></div>
         <AnimatedLeaves count={12} />
-        <audio ref={audioRef} loop crossOrigin="anonymous" src={displayData.backgroundMusicUrl || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"} />
+        
+        {/* SAFE AUDIO ELEMENT */}
+        <audio 
+           ref={audioRef} 
+           loop 
+           preload="auto" 
+           src={safeAudioUrl} 
+           onError={(e) => { 
+              console.warn("Audio source failed to load.", e); 
+              setIsPlaying(false); 
+           }} 
+        />
 
         {/* Music Control */}
         <button onClick={toggleAudio} className={`fixed left-8 bottom-8 z-50 p-6 rounded-full shadow-2xl transition-all border-2 active:scale-90 ${isPlaying ? 'bg-weddingSage border-weddingSage' : 'bg-weddingYellow border-weddingYellow animate-pulse'}`}>
@@ -805,41 +850,41 @@ export default function App() {
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="text-center md:text-right border-b md:border-b-0 md:border-r border-weddingSage/20 pb-6 md:pb-0 md:pr-6 overflow-hidden">
                        <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-4">Candle</h4>
-                       {(displayData.candleSponsors||[]).map((n, i) => <p key={i} className="text-lg md:text-xl font-serif mb-1 text-gray-800 truncate">{n}</p>)}
+                       {(displayData.candleSponsors||[]).map((n, i) => <p key={i} className="text-lg md:text-xl font-serif mb-1 text-gray-800 truncate w-full">{n}</p>)}
                     </div>
                     <div className="text-center border-b md:border-b-0 border-weddingSage/20 pb-6 md:pb-0 px-4 overflow-hidden">
                        <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-4">Veil</h4>
-                       {(displayData.veilSponsors||[]).map((n, i) => <p key={i} className="text-lg md:text-xl font-serif mb-1 text-gray-800 truncate">{n}</p>)}
+                       {(displayData.veilSponsors||[]).map((n, i) => <p key={i} className="text-lg md:text-xl font-serif mb-1 text-gray-800 truncate w-full">{n}</p>)}
                     </div>
                     <div className="text-center md:text-left md:border-l border-weddingSage/20 pt-6 md:pt-0 md:pl-6 overflow-hidden">
                        <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-4">Cord</h4>
-                       {(displayData.cordSponsors||[]).map((n, i) => <p key={i} className="text-lg md:text-xl font-serif mb-1 text-gray-800 truncate">{n}</p>)}
+                       {(displayData.cordSponsors||[]).map((n, i) => <p key={i} className="text-lg md:text-xl font-serif mb-1 text-gray-800 truncate w-full">{n}</p>)}
                     </div>
                  </div>
               </div>
 
               {/* Bearers & Flower Girls */}
-              <div className="max-w-4xl mx-auto mt-12">
+              <div className="max-w-4xl mx-auto mt-12 px-2">
                  <h3 className="text-[11px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-8 text-center">Little Entourage</h3>
-                 <div className="flex flex-col md:flex-row justify-center items-center md:items-start gap-6 text-center mb-8">
-                    <div className="flex-1 overflow-hidden w-full">
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center mb-8">
+                    <div className="overflow-hidden w-full px-2">
                        <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-3 border-b pb-2 inline-block px-4">Bible Bearer</h4>
-                       <p className="text-lg md:text-2xl font-serif text-weddingDark mt-1 truncate">{String(displayData.bibleBearer)}</p>
+                       <p className="text-lg md:text-2xl font-serif text-weddingDark mt-1 truncate w-full" title={String(displayData.bibleBearer)}>{String(displayData.bibleBearer)}</p>
                     </div>
-                    <div className="flex-1 overflow-hidden w-full">
+                    <div className="overflow-hidden w-full px-2">
                        <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-3 border-b pb-2 inline-block px-4">Coin Bearer</h4>
-                       <p className="text-lg md:text-2xl font-serif text-weddingDark mt-1 truncate">{String(displayData.coinBearer)}</p>
+                       <p className="text-lg md:text-2xl font-serif text-weddingDark mt-1 truncate w-full" title={String(displayData.coinBearer)}>{String(displayData.coinBearer)}</p>
                     </div>
-                    <div className="flex-1 overflow-hidden w-full">
+                    <div className="overflow-hidden w-full px-2">
                        <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-3 border-b pb-2 inline-block px-4">Ring Bearer</h4>
-                       <p className="text-lg md:text-2xl font-serif text-weddingDark mt-1 truncate">{String(displayData.ringBearer)}</p>
+                       <p className="text-lg md:text-2xl font-serif text-weddingDark mt-1 truncate w-full" title={String(displayData.ringBearer)}>{String(displayData.ringBearer)}</p>
                     </div>
                  </div>
                  <div className="pt-6 text-center max-w-3xl mx-auto">
                     <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-4 inline-block px-5 py-2 border border-gray-200 rounded-full">Flower Girls</h4>
                     <div className="flex flex-wrap justify-center gap-4">
                        {(displayData.flowerGirls||[]).map((n, i) => (
-                          <p key={i} className="text-lg md:text-xl font-serif text-weddingDark italic truncate max-w-[200px]">{n}</p>
+                          <p key={i} className="text-lg md:text-xl font-serif text-weddingDark italic truncate max-w-[200px]" title={n}>{n}</p>
                        ))}
                     </div>
                  </div>
@@ -1103,8 +1148,14 @@ export default function App() {
                    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm mb-6">
                      <h3 className="text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-5 border-b border-gray-100 pb-2">Add New Guest</h3>
                      <TextInput label="Guest Name" value={newGuestName} onChange={setNewGuestName} />
-                     <TextInput label="Unique Code (e.g., ABCD)" value={newGuestCode} onChange={setNewGuestCode} />
-                     <button onClick={handleAddGuest} className="w-full bg-weddingDark text-white py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors">Create Code</button>
+                     <div className="mb-5">
+                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Unique Code (Leave blank to auto-generate)</label>
+                       <div className="flex gap-2">
+                         <input type="text" value={newGuestCode} onChange={(e) => setNewGuestCode(e.target.value.toUpperCase())} className="flex-1 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-weddingAccent focus:bg-white transition-colors" placeholder="e.g. ABCD" />
+                         <button type="button" onClick={() => setNewGuestCode(generateRandomCode())} className="px-4 bg-gray-200 text-gray-600 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-gray-300 transition-colors">Generate</button>
+                       </div>
+                     </div>
+                     <button onClick={handleAddGuest} className="w-full bg-weddingDark text-white py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors">Add Guest</button>
                    </div>
                    
                    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
