@@ -10,7 +10,6 @@ import {
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, collection, addDoc, onSnapshot, query, doc, setDoc, updateDoc, deleteDoc, getDocs } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // ==========================================
 // 1. FIREBASE CONFIGURATION
@@ -29,7 +28,6 @@ const firebaseConfig = typeof __firebase_config !== 'undefined'
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'wedding-app-default';
 
 // ==========================================
@@ -242,19 +240,20 @@ const AudioManager = ({ label, url, onChange, showToast }) => {
       
       onChange(finalUrl); 
       setInputUrl(''); 
-      showToast("Music updated!"); 
+      showToast("Music link updated!"); 
     }
   };
 
   return (
     <div className="mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2"><Music size={12} className="inline mr-1"/> {label}</label>
-      <div className="text-xs text-gray-500 mb-3 truncate bg-gray-50 p-2 rounded border border-gray-100" title={url}>Current: {url || 'None'}</div>
+      <div className="text-xs text-gray-500 mb-4 truncate bg-gray-50 p-2 rounded border border-gray-100" title={url}>Current: {url || 'None'}</div>
+      
       <div className="flex gap-2">
-         <input type="text" value={inputUrl} onChange={e=>setInputUrl(e.target.value)} placeholder="Paste MP3 or GDrive URL here..." className="flex-1 text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:border-weddingAccent" />
-         <button onClick={handleSetUrl} className="bg-weddingDark text-white px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider hover:bg-weddingAccent transition-colors">Update</button>
+         <input type="text" value={inputUrl} onChange={e=>setInputUrl(e.target.value)} placeholder="Paste MP3, file name, or GDrive URL here..." className="flex-1 text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:border-weddingAccent" />
+         <button onClick={handleSetUrl} className="bg-weddingDark text-white px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider hover:bg-weddingAccent transition-colors">Link</button>
       </div>
-      <p className="text-[9px] text-gray-400 mt-2 uppercase tracking-widest leading-relaxed">Supports direct .mp3 URLs or Google Drive Share Links.</p>
+      <p className="text-[9px] text-gray-400 mt-2 uppercase tracking-widest leading-relaxed">Supports directly uploaded files, direct .mp3 URLs, or Google Drive Share Links.</p>
     </div>
   );
 };
@@ -706,12 +705,14 @@ export default function App() {
          ref={audioRef} 
          loop 
          preload="auto" 
-         src={safeAudioUrl} 
+         {...(safeAudioUrl ? { src: safeAudioUrl } : {})}
          onPlay={() => setIsPlaying(true)}
          onPause={() => setIsPlaying(false)}
          onError={(e) => { 
-            console.warn("Audio source failed to load.", e); 
-            setIsPlaying(false); 
+            if (safeAudioUrl) {
+                console.warn("Audio source failed to load.", e); 
+                setIsPlaying(false); 
+            }
          }} 
       />
 
