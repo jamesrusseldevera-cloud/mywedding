@@ -40,7 +40,7 @@ const DEFAULT_DETAILS = {
   brideName: "Cassie",
   weddingDate: "April 10, 2026",
   weddingLocation: "Muntinlupa, Philippines",
-  backgroundMusicUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3", // Calm instrumental fallback
+  backgroundMusicUrl: "WHEN I MET YOU APO Hiking Society Violin Cover by Justerini.mp3", // Integrated local uploaded track
   ourStory: "Love is patient, love is kind (1 Corinthians 13:4)—and their love proved to be brave, choosing each other every day in faith. What began as a quiet night at Ooma became a story God was already writing—told through shared meals from Jollibee to Din Tai Fung, sweet evenings at Amano, and journeys to Australia, Vigan, La Union, Baguio, and Thailand. In grand adventures and quiet Sundays at Mass, they discovered that home is not a place but a person, and that with God at the center, their love would not easily be broken. Two years later, they stand certain—ready to begin a forever rooted in faith, devotion, and a love that grows sweeter with time.",
   contactPhone: "+63 912 345 6789",
   contactEmail: "weddings@example.com",
@@ -230,14 +230,20 @@ const AudioManager = ({ label, url, onChange, showToast }) => {
     if (inputUrl.trim()) { 
       let finalUrl = inputUrl.trim();
       
-      // Google Drive Auto-Conversion Logic
+      // Google Drive Auto-Conversion Logic (Docs proxy bypasses strict Drive CORS)
       const gdriveMatch = finalUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
       const idMatch = finalUrl.match(/id=([a-zA-Z0-9_-]+)/);
       
       if (gdriveMatch && gdriveMatch[1]) {
-        finalUrl = `https://drive.google.com/uc?export=download&id=${gdriveMatch[1]}`;
+        finalUrl = `https://docs.google.com/uc?export=download&confirm=t&id=${gdriveMatch[1]}`;
       } else if (idMatch && idMatch[1]) {
-        finalUrl = `https://drive.google.com/uc?export=download&id=${idMatch[1]}`;
+        finalUrl = `https://docs.google.com/uc?export=download&confirm=t&id=${idMatch[1]}`;
+      } else if (finalUrl.includes('spotify.com')) {
+        // Standardize Spotify URLs to clean track URLs
+        const trackMatch = finalUrl.match(/track\/([a-zA-Z0-9]+)/);
+        if (trackMatch) {
+            finalUrl = `https://open.spotify.com/track/${trackMatch[1]}`;
+        }
       }
       
       onChange(finalUrl); 
@@ -251,10 +257,10 @@ const AudioManager = ({ label, url, onChange, showToast }) => {
       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2"><Music size={12} className="inline mr-1"/> {label}</label>
       <div className="text-xs text-gray-500 mb-3 truncate bg-gray-50 p-2 rounded border border-gray-100" title={url}>Current: {url || 'None'}</div>
       <div className="flex gap-2">
-         <input type="text" value={inputUrl} onChange={e=>setInputUrl(e.target.value)} placeholder="Paste MP3 or GDrive URL here..." className="flex-1 text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:border-weddingAccent" />
+         <input type="text" value={inputUrl} onChange={e=>setInputUrl(e.target.value)} placeholder="Paste Spotify, MP3 or GDrive link..." className="flex-1 text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:border-weddingAccent" />
          <button onClick={handleSetUrl} className="bg-weddingDark text-white px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider hover:bg-weddingAccent transition-colors">Update</button>
       </div>
-      <p className="text-[9px] text-gray-400 mt-2 uppercase tracking-widest leading-relaxed">Supports direct .mp3 URLs or Google Drive Share Links (Anyone with link).</p>
+      <p className="text-[9px] text-gray-400 mt-2 uppercase tracking-widest leading-relaxed">Supports local files, direct .mp3, Spotify, or Google Drive Share Links.</p>
     </div>
   );
 };
@@ -426,12 +432,27 @@ export default function App() {
   };
 
   const displayData = (isAdminAuth && editForm) ? editForm : details;
-  const safeAudioUrl = displayData?.backgroundMusicUrl?.trim() || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3";
+  const safeAudioUrl = displayData?.backgroundMusicUrl?.trim() || "";
+  const isSpotify = safeAudioUrl.includes('spotify.com');
+
+  // Helper to generate the correct Spotify Embed URL for autoplay
+  const getSpotifyEmbedUrl = (url) => {
+     if (!url) return '';
+     if (url.includes('/embed/')) {
+         const separator = url.includes('?') ? '&' : '?';
+         return url.includes('autoplay=1') ? url : `${url}${separator}autoplay=1`;
+     }
+     const trackMatch = url.match(/track\/([a-zA-Z0-9]+)/);
+     if (trackMatch) {
+         return `https://open.spotify.com/embed/track/${trackMatch[1]}?utm_source=generator&autoplay=1&theme=0`;
+     }
+     return url;
+  };
 
   // --- AUDIO ACTIONS ---
   const handleOpenInvitation = () => {
     setIsLanding(false);
-    if (audioRef.current) {
+    if (!isSpotify && audioRef.current) {
       audioRef.current.volume = 0.5;
       audioRef.current.play()
         .then(() => setIsPlaying(true))
@@ -443,6 +464,7 @@ export default function App() {
   };
 
   const toggleAudio = () => {
+    if (isSpotify) return; // Spotify is controlled via iframe
     if (!audioRef.current) return;
     if (isPlaying) { 
       audioRef.current.pause(); 
@@ -458,7 +480,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (audioRef.current && safeAudioUrl && !isLanding) {
+    if (!isSpotify && audioRef.current && safeAudioUrl && !isLanding) {
       const isCurrentlyPlaying = !audioRef.current.paused;
       if (audioRef.current.src !== safeAudioUrl) {
          audioRef.current.src = safeAudioUrl;
@@ -467,7 +489,7 @@ export default function App() {
          }
       }
     }
-  }, [safeAudioUrl, isLanding]);
+  }, [safeAudioUrl, isLanding, isSpotify]);
 
   // --- STYLES INJECTION ---
   useEffect(() => {
@@ -556,8 +578,9 @@ export default function App() {
   const handleRsvpSubmit = async (e) => {
     e.preventDefault();
     setSubmitError('');
-    const code = rsvpForm.enteredCode.trim().toUpperCase();
-    const guest = invitees.find(i => String(i.code) === code);
+    const code = rsvpForm.enteredCode.trim().toLowerCase(); // Make matching case-insensitive
+    const guest = invitees.find(i => String(i.code).toLowerCase() === code);
+    
     if (!guest) { setSubmitError("Security code not found. Please check your invitation."); return; }
     setIsSubmitting(true);
     
@@ -613,23 +636,12 @@ export default function App() {
     setIsSavingDetails(false);
   };
 
-  // --- AUTO CODE GENERATOR UTILITY ---
-  const generateRandomCode = () => {
-    // Generate a clean, readable 4-character alphanumeric code
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // removed I, O, 1, 0 to avoid confusion
-    let result = '';
-    for (let i = 0; i < 4; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  };
-
   const handleAddGuest = async (e) => {
     e.preventDefault();
     if (!newGuestName) return;
     
-    // Smart Fallback: Automatically generate code if left blank
-    const finalCode = newGuestCode.trim() ? String(newGuestCode).trim().toUpperCase() : generateRandomCode();
+    // Apply Default Code if left blank
+    const finalCode = newGuestCode.trim() ? String(newGuestCode).trim() : '#JamesFoundHisCassie';
     
     const newGuest = { id: `local_${Date.now()}`, name: newGuestName, code: finalCode, status: 'Pending', message: '', messageApproved: false, timestamp: Date.now() };
     
@@ -670,13 +682,13 @@ export default function App() {
       const rows = event.target.result.split('\n');
       for (let i = 1; i < rows.length; i++) {
         const cols = rows[i].split(',');
-        if (cols.length >= 1) { // Changed to >= 1 to allow names without codes
+        if (cols.length >= 1) {
           const name = cols[0] ? cols[0].replace(/"/g, '').trim() : '';
-          let code = cols[1] ? cols[1].replace(/"/g, '').trim().toUpperCase() : '';
+          let code = cols[1] ? cols[1].replace(/"/g, '').trim() : ''; // Case preserved
           
           if (name) { 
-             // Bulk Generation: Automatically create code if missing in CSV
-             if (!code) code = generateRandomCode();
+             // Bulk Generation Default
+             if (!code) code = '#JamesFoundHisCassie';
              
              try { await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), { name, code, status: 'Pending', timestamp: Date.now() }); } catch(e){} 
           }
@@ -734,22 +746,60 @@ export default function App() {
         <div className="fixed inset-0 z-0 bg-gradient-to-b from-[#faf9f6]/95 via-[#faf9f6]/90 to-[#faf9f6]/95 backdrop-blur-[2px] pointer-events-none"></div>
         <AnimatedLeaves count={12} />
         
-        {/* SAFE AUDIO ELEMENT */}
-        <audio 
-           ref={audioRef} 
-           loop 
-           preload="auto" 
-           src={safeAudioUrl} 
-           onError={(e) => { 
-              console.warn("Audio source failed to load.", e); 
-              setIsPlaying(false); 
-           }} 
-        />
+        {/* AUDIO ELEMENTS */}
+        {!isSpotify && (
+          <>
+            <audio 
+               ref={audioRef} 
+               loop 
+               preload="auto" 
+               src={safeAudioUrl} 
+               onError={(e) => { 
+                  console.warn("Audio source failed to load.", e); 
+                  setIsPlaying(false); 
+               }} 
+            />
+            {/* Elegant Custom Music Control */}
+            {!isLanding && (
+              <div className="fixed left-6 bottom-6 z-50 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+                <div onClick={toggleAudio} className="bg-white/80 backdrop-blur-xl p-3 pr-5 rounded-[16px] shadow-2xl border border-white/50 flex items-center gap-4 transition-all hover:bg-white/95 cursor-pointer group hover:scale-105 active:scale-95">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isPlaying ? 'bg-weddingSage text-white shadow-md' : 'bg-weddingYellow text-weddingDark animate-pulse'}`}>
+                    {isPlaying ? <Music size={16} /> : <Play size={16} className="ml-0.5" />}
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <span className="text-[9px] uppercase tracking-widest font-bold text-weddingAccent flex items-center gap-1.5">
+                       {isPlaying ? 'Now Playing' : 'Paused'}
+                    </span>
+                    <span className="text-xs font-serif italic text-gray-700 max-w-[160px] truncate" title="When I Met You - Violin Cover">
+                      When I Met You (Cover)
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
 
-        {/* Music Control */}
-        <button onClick={toggleAudio} className={`fixed left-8 bottom-8 z-50 p-6 rounded-full shadow-2xl transition-all border-2 active:scale-90 ${isPlaying ? 'bg-weddingSage border-weddingSage' : 'bg-weddingYellow border-weddingYellow animate-pulse'}`}>
-          {isPlaying ? <Music size={24} className="text-weddingDark" /> : <Play size={24} className="text-weddingDark" />}
-        </button>
+        {/* SPOTIFY EMBED (Fallback if user adds a Spotify URL later) */}
+        {isSpotify && !isLanding && (
+          <div className="fixed left-6 bottom-6 z-50 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            <div className="bg-white/80 backdrop-blur-xl p-2 rounded-[16px] shadow-2xl border border-white/50 w-[280px] md:w-[320px] transition-all hover:bg-white/95">
+              <div className="mb-2 px-2 flex justify-between items-center">
+                <span className="text-[9px] uppercase tracking-widest font-bold text-weddingAccent flex items-center gap-1.5"><Music size={10} className="animate-pulse" /> Spotify Music</span>
+              </div>
+              <iframe 
+                style={{ borderRadius: '12px', background: 'transparent' }} 
+                src={getSpotifyEmbedUrl(safeAudioUrl)} 
+                width="100%" 
+                height="80" 
+                frameBorder="0" 
+                allowFullScreen="" 
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+                loading="lazy"
+              ></iframe>
+            </div>
+          </div>
+        )}
 
         {/* Navigation */}
         <nav className={`fixed top-0 left-0 right-0 z-40 py-6 bg-[#faf9f6]/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm transition-all ${isAdminAuth ? 'md:right-[450px]' : ''}`}>
@@ -1009,7 +1059,7 @@ export default function App() {
                   <div className="grid md:grid-cols-2 gap-10">
                     <div className="bg-weddingSage text-weddingDark p-10 rounded-3xl shadow-xl transition-transform focus-within:-translate-y-1">
                       <label className="block text-[10px] font-bold tracking-widest uppercase mb-4 text-weddingDark/80">Security Code</label>
-                      <input required value={rsvpForm.enteredCode} onChange={e=>setRsvpForm({...rsvpForm, enteredCode: e.target.value})} className="w-full bg-transparent border-b-2 border-weddingDark/20 py-4 focus:outline-none focus:border-weddingDark uppercase tracking-[0.8em] text-3xl font-serif text-weddingDark placeholder:text-weddingDark/30" placeholder="----" />
+                      <input required value={rsvpForm.enteredCode} onChange={e=>setRsvpForm({...rsvpForm, enteredCode: e.target.value})} className="w-full bg-transparent border-b-2 border-weddingDark/20 py-4 focus:outline-none focus:border-weddingDark tracking-widest text-2xl font-serif text-weddingDark placeholder:text-weddingDark/30" placeholder="Enter Code" />
                     </div>
                     <div className="bg-weddingSage text-weddingDark p-10 rounded-3xl shadow-xl transition-transform focus-within:-translate-y-1">
                       <label className="block text-[10px] font-bold tracking-widest uppercase mb-4 text-weddingDark/80">Full Name</label>
@@ -1165,10 +1215,9 @@ export default function App() {
                      <h3 className="text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-5 border-b border-gray-100 pb-2">Add New Guest</h3>
                      <TextInput label="Guest Name" value={newGuestName} onChange={setNewGuestName} />
                      <div className="mb-5">
-                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Unique Code (Leave blank to auto-generate)</label>
+                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Unique Code (Leave blank for #JamesFoundHisCassie)</label>
                        <div className="flex gap-2">
-                         <input type="text" value={newGuestCode} onChange={(e) => setNewGuestCode(e.target.value.toUpperCase())} className="flex-1 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-weddingAccent focus:bg-white transition-colors" placeholder="e.g. ABCD" />
-                         <button type="button" onClick={() => setNewGuestCode(generateRandomCode())} className="px-4 bg-gray-200 text-gray-600 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-gray-300 transition-colors">Generate</button>
+                         <input type="text" value={newGuestCode} onChange={(e) => setNewGuestCode(e.target.value)} className="flex-1 p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-weddingAccent focus:bg-white transition-colors" placeholder="#JamesFoundHisCassie" />
                        </div>
                      </div>
                      <button onClick={handleAddGuest} className="w-full bg-weddingDark text-white py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors">Add Guest</button>
