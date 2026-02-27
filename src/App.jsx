@@ -6,7 +6,7 @@ import {
   ChevronLeft, ChevronRight, LayoutGrid, StickyNote, Info, 
   Github, Globe, Terminal, Cloud, AlertCircle, ExternalLink, 
   MapPin, Music, Play, Pause, MailOpen, Camera, GripVertical, Plus,
-  BookHeart, Users, Church, Send, Sparkles
+  BookHeart, Users, Church, Send, Sparkles, Flame, Wind, Infinity as InfinityIcon, BookOpen, Coins, Gem
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
@@ -646,27 +646,59 @@ export default function App() {
     e.preventDefault();
     setSubmitError('');
     const code = rsvpForm.enteredCode.trim().toLowerCase();
-    const guest = invitees.find(i => String(i.code).toLowerCase() === code);
+    const universalCodes = ['#jamesfoundhiscassie', '#cassiechosejames'];
+    const isUniversal = universalCodes.includes(code);
     
-    if (!guest) { setSubmitError("Security code not found. Please check your invitation."); return; }
+    // Find guest by code, or by name if universal code is used
+    let guest = invitees.find(i => String(i.code).toLowerCase() === code);
+    if (!guest && isUniversal) {
+      guest = invitees.find(i => String(i.name).toLowerCase() === rsvpForm.name.trim().toLowerCase());
+    }
+    
     setIsSubmitting(true);
     
-    const updatedGuest = { 
-       status: rsvpForm.attending === 'yes' ? 'Attending' : 'Declined', 
+    const status = rsvpForm.attending === 'yes' ? 'Attending' : 'Declined';
+    const rsvpData = { 
+       status: status, 
        submittedName: rsvpForm.name, 
        message: rsvpForm.message, 
        respondedAt: Date.now(),
        messageApproved: false
     };
+
+    if (!guest && isUniversal) {
+      // Add new guest automatically if using universal code
+      const newGuestData = { 
+        name: rsvpForm.name, 
+        code: rsvpForm.enteredCode, 
+        ...rsvpData,
+        timestamp: Date.now() 
+      };
+      try {
+        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), newGuestData);
+        setSubmitSuccess(true);
+      } catch (err) { 
+        const localGuests = [...invitees, { id: `local_${Date.now()}`, ...newGuestData }];
+        setInvitees(localGuests);
+        localStorage.setItem(`wedding_guests_${appId}`, JSON.stringify(localGuests));
+        setSubmitSuccess(true);
+      }
+      setIsSubmitting(false);
+      return;
+    } else if (!guest) {
+      setSubmitError("Security code not found. Please check your invitation."); 
+      setIsSubmitting(false);
+      return; 
+    }
     
     try {
-      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees', guest.id), updatedGuest);
+      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees', guest.id), rsvpData);
       setSubmitSuccess(true);
     } catch (err) { 
       const localGuests = [...invitees];
       const idx = localGuests.findIndex(g => g.id === guest.id);
       if(idx > -1) {
-         localGuests[idx] = { ...localGuests[idx], ...updatedGuest };
+         localGuests[idx] = { ...localGuests[idx], ...rsvpData };
          setInvitees(localGuests);
          localStorage.setItem(`wedding_guests_${appId}`, JSON.stringify(localGuests));
          setSubmitSuccess(true);
@@ -800,7 +832,6 @@ export default function App() {
       <audio 
          ref={audioRef} 
          loop 
-         crossOrigin="anonymous"
          playsInline
          preload="auto" 
          src={audioSrc}
@@ -897,14 +928,15 @@ export default function App() {
                   
                   {/* Parents */}
                   <div className="mb-8">
-                    <h3 className="text-[10px] md:text-[11px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-4 border-b-2 border-weddingYellow inline-block pb-2">Beloved Parents</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center items-start">
-                      <div className="flex flex-col items-center md:items-end md:pr-8 md:border-r border-weddingSage/20 overflow-hidden w-full">
-                        <h4 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2">Parents of the Groom</h4>
+                    <h3 className="text-[10px] md:text-[11px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-6 border-b-2 border-weddingYellow inline-block pb-2">Beloved Parents</h3>
+                    <div className="flex flex-col md:flex-row justify-center items-center md:items-start gap-8 md:gap-16 text-center w-full">
+                      <div className="flex flex-col items-center flex-1 w-full overflow-hidden">
+                        <h4 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-3 border-b border-weddingSage/30 pb-1">Parents of the Groom</h4>
                         {(displayData.groomParents||[]).map((n,i)=><p key={i} className="text-base md:text-xl font-serif text-gray-800 break-words w-full">{n}</p>)}
                       </div>
-                      <div className="flex flex-col items-center md:items-start md:pl-8 overflow-hidden w-full">
-                        <h4 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2">Parents of the Bride</h4>
+                      <div className="hidden md:block w-px bg-weddingSage/30 self-stretch"></div>
+                      <div className="flex flex-col items-center flex-1 w-full overflow-hidden">
+                        <h4 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-3 border-b border-weddingSage/30 pb-1">Parents of the Bride</h4>
                         {(displayData.brideParents||[]).map((n,i)=><p key={i} className="text-base md:text-xl font-serif text-gray-800 break-words w-full">{n}</p>)}
                       </div>
                     </div>
@@ -959,15 +991,18 @@ export default function App() {
                   <div className="max-w-5xl mx-auto my-8">
                      <h3 className="text-[10px] md:text-[11px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-4 text-center">Secondary Sponsors</h3>
                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="text-center md:text-right border-b md:border-b-0 md:border-r border-weddingSage/20 pb-3 md:pb-0 md:pr-4 overflow-hidden">
+                        <div className="text-center md:text-right border-b md:border-b-0 md:border-r border-weddingSage/20 pb-4 md:pb-0 md:pr-6 overflow-hidden flex flex-col items-center md:items-end">
+                           <Flame size={18} className="text-weddingAccent mb-1.5 opacity-70" />
                            <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-2">Candle</h4>
                            {(displayData.candleSponsors||[]).map((n, i) => <p key={i} className="text-base md:text-lg font-serif mb-1 text-gray-800 break-words w-full leading-snug">{n}</p>)}
                         </div>
-                        <div className="text-center border-b md:border-b-0 border-weddingSage/20 pb-3 md:pb-0 px-4 overflow-hidden">
+                        <div className="text-center border-b md:border-b-0 border-weddingSage/20 pb-4 md:pb-0 px-6 overflow-hidden flex flex-col items-center">
+                           <Wind size={18} className="text-weddingAccent mb-1.5 opacity-70" />
                            <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-2">Veil</h4>
                            {(displayData.veilSponsors||[]).map((n, i) => <p key={i} className="text-base md:text-lg font-serif mb-1 text-gray-800 break-words w-full leading-snug">{n}</p>)}
                         </div>
-                        <div className="text-center md:text-left md:border-l border-weddingSage/20 pt-3 md:pt-0 md:pl-4 overflow-hidden">
+                        <div className="text-center md:text-left md:border-l border-weddingSage/20 pt-4 md:pt-0 md:pl-6 overflow-hidden flex flex-col items-center md:items-start">
+                           <InfinityIcon size={18} className="text-weddingAccent mb-1.5 opacity-70" />
                            <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-2">Cord</h4>
                            {(displayData.cordSponsors||[]).map((n, i) => <p key={i} className="text-base md:text-lg font-serif mb-1 text-gray-800 break-words w-full leading-snug">{n}</p>)}
                         </div>
@@ -976,19 +1011,22 @@ export default function App() {
 
                   {/* Bearers & Flower Girls */}
                   <div className="max-w-4xl mx-auto mt-8 px-2">
-                     <h3 className="text-[10px] md:text-[11px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-4 text-center">Little Entourage</h3>
-                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-center mb-4">
-                        <div className="overflow-hidden w-full px-2">
-                           <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-1 border-b pb-1 inline-block px-4">Bible Bearer</h4>
-                           <p className="text-base md:text-lg font-serif text-weddingDark mt-1 break-words w-full leading-snug">{String(displayData.bibleBearer)}</p>
+                     <h3 className="text-[10px] md:text-[11px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-6 text-center">Little Entourage</h3>
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center mb-6">
+                        <div className="overflow-hidden w-full px-2 flex flex-col items-center">
+                           <BookOpen size={18} className="text-weddingAccent mb-1.5 opacity-70" />
+                           <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-2 border-b border-weddingSage/30 pb-1 inline-block px-4">Bible Bearer</h4>
+                           <p className="text-base md:text-lg font-serif text-weddingDark break-words w-full leading-snug">{String(displayData.bibleBearer)}</p>
                         </div>
-                        <div className="overflow-hidden w-full px-2">
-                           <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-1 border-b pb-1 inline-block px-4">Coin Bearer</h4>
-                           <p className="text-base md:text-lg font-serif text-weddingDark mt-1 break-words w-full leading-snug">{String(displayData.coinBearer)}</p>
+                        <div className="overflow-hidden w-full px-2 flex flex-col items-center">
+                           <Coins size={18} className="text-weddingAccent mb-1.5 opacity-70" />
+                           <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-2 border-b border-weddingSage/30 pb-1 inline-block px-4">Coin Bearer</h4>
+                           <p className="text-base md:text-lg font-serif text-weddingDark break-words w-full leading-snug">{String(displayData.coinBearer)}</p>
                         </div>
-                        <div className="overflow-hidden w-full px-2">
-                           <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-1 border-b pb-1 inline-block px-4">Ring Bearer</h4>
-                           <p className="text-base md:text-lg font-serif text-weddingDark mt-1 break-words w-full leading-snug">{String(displayData.ringBearer)}</p>
+                        <div className="overflow-hidden w-full px-2 flex flex-col items-center">
+                           <Gem size={18} className="text-weddingAccent mb-1.5 opacity-70" />
+                           <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-2 border-b border-weddingSage/30 pb-1 inline-block px-4">Ring Bearer</h4>
+                           <p className="text-base md:text-lg font-serif text-weddingDark break-words w-full leading-snug">{String(displayData.ringBearer)}</p>
                         </div>
                      </div>
                      <div className="pt-3 text-center max-w-4xl mx-auto w-full">
