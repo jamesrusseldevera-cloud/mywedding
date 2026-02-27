@@ -5,7 +5,8 @@ import {
   BarChart, Phone, Mail, Edit2, Check, MessageSquareHeart, 
   ChevronLeft, ChevronRight, LayoutGrid, StickyNote, Info, 
   Github, Globe, Terminal, Cloud, AlertCircle, ExternalLink, 
-  MapPin, Music, Play, Pause, MailOpen, Camera, GripVertical, Plus
+  MapPin, Music, Play, Pause, MailOpen, Camera, GripVertical, Plus,
+  BookHeart, Users, Church, Send, Sparkles
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
@@ -40,7 +41,7 @@ const DEFAULT_DETAILS = {
   brideName: "Cassie",
   weddingDate: "April 10, 2026",
   weddingLocation: "Muntinlupa, Philippines",
-  backgroundMusicUrl: "https://upload.wikimedia.org/wikipedia/commons/1/18/Chopin_-_Nocturne_Op_9_No_2_%28E_Flat_Major%29.ogg", // Working beautiful piano template
+  backgroundMusicUrl: "https://www.mfiles.co.uk/mp3-downloads/debussy-clair-de-lune.mp3", // Highly reliable public domain classical piano MP3
   ourStory: "Love is patient, love is kind (1 Corinthians 13:4)—and their love proved to be brave, choosing each other every day in faith. What began as a quiet night at Ooma became a story God was already writing—told through shared meals from Jollibee to Din Tai Fung, sweet evenings at Amano, and journeys to Australia, Vigan, La Union, Baguio, and Thailand. In grand adventures and quiet Sundays at Mass, they discovered that home is not a place but a person, and that with God at the center, their love would not easily be broken. Two years later, they stand certain—ready to begin a forever rooted in faith, devotion, and a love that grows sweeter with time.",
   contactPhone: "+63 912 345 6789",
   contactEmail: "weddings@example.com",
@@ -123,6 +124,50 @@ const LineAccent = () => (
     <div className="w-20 h-px bg-weddingSage shadow-sm"></div>
     <div className="w-2 h-2 rotate-45 bg-weddingAccent shadow-sm"></div>
     <div className="w-20 h-px bg-weddingSage shadow-sm"></div>
+  </div>
+);
+
+// Elegant Canva-inspired Floral Wreath for section headers
+const WreathIconWrapper = ({ children, isDark = false }) => {
+  const strokeColor = isDark ? "text-weddingYellow" : "text-weddingAccent";
+  return (
+    <div className={`relative flex items-center justify-center mb-6 ${strokeColor}`}>
+      <svg width="70" height="70" viewBox="0 0 100 100" className="absolute animate-[spin_60s_linear_infinite] opacity-60">
+         {/* Subtle dashed inner ring */}
+         <path d="M50 10 A40 40 0 1 1 49.9 10" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="3 4"/>
+         {/* Four delicate leaf accents */}
+         <path d="M50 5 C55 15 65 15 50 25 C35 15 45 15 50 5" fill="none" stroke="currentColor" strokeWidth="1"/>
+         <path d="M50 95 C55 85 65 85 50 75 C35 85 45 85 50 95" fill="none" stroke="currentColor" strokeWidth="1"/>
+         <path d="M5 50 C15 45 15 35 25 50 C15 65 15 55 5 50" fill="none" stroke="currentColor" strokeWidth="1"/>
+         <path d="M95 50 C85 45 85 35 75 50 C85 65 85 55 95 50" fill="none" stroke="currentColor" strokeWidth="1"/>
+         {/* Corner dots */}
+         <circle cx="20" cy="20" r="1.5" fill="currentColor" opacity="0.5"/>
+         <circle cx="80" cy="20" r="1.5" fill="currentColor" opacity="0.5"/>
+         <circle cx="20" cy="80" r="1.5" fill="currentColor" opacity="0.5"/>
+         <circle cx="80" cy="80" r="1.5" fill="currentColor" opacity="0.5"/>
+      </svg>
+      <div className="z-10 bg-[#faf9f6] rounded-full p-2 m-1">
+        {children}
+      </div>
+    </div>
+  );
+};
+
+const SectionHeading = ({ title, subtitle, Icon, isDark = false }) => (
+  <div className="flex flex-col items-center mb-10 md:mb-14 text-center">
+    {Icon && (
+       <WreathIconWrapper isDark={isDark}>
+         <Icon size={26} strokeWidth={1.2} />
+       </WreathIconWrapper>
+    )}
+    {subtitle && (
+      <h2 className={`text-[10px] md:text-[11px] font-bold tracking-[0.4em] uppercase mb-4 opacity-90 border-b pb-2 inline-block ${isDark ? 'text-weddingYellow border-weddingYellow/30' : 'text-weddingAccent border-weddingSage/30'}`}>
+        {subtitle}
+      </h2>
+    )}
+    <h3 className={`text-3xl sm:text-4xl md:text-5xl font-serif italic drop-shadow-sm ${isDark ? 'text-white' : 'text-weddingDark'}`}>
+      {title}
+    </h3>
   </div>
 );
 
@@ -486,7 +531,8 @@ export default function App() {
 
   const displayData = (isAdminAuth && editForm) ? editForm : details;
   
-  const safeAudioUrl = displayData?.backgroundMusicUrl?.trim() || "https://upload.wikimedia.org/wikipedia/commons/1/18/Chopin_-_Nocturne_Op_9_No_2_%28E_Flat_Major%29.ogg";
+  // Fallback to the reliable Piano MP3 if the field is corrupted
+  const safeAudioUrl = displayData?.backgroundMusicUrl?.trim() || "https://www.mfiles.co.uk/mp3-downloads/debussy-clair-de-lune.mp3";
   const audioSrc = safeAudioUrl.startsWith('http') || safeAudioUrl.startsWith('data:') ? safeAudioUrl : encodeURI(safeAudioUrl);
 
   // --- AUDIO ACTIONS ---
@@ -754,6 +800,7 @@ export default function App() {
       <audio 
          ref={audioRef} 
          loop 
+         crossOrigin="anonymous"
          playsInline
          preload="auto" 
          src={audioSrc}
@@ -826,10 +873,10 @@ export default function App() {
 
               {/* STORY */}
               <section id="story" className="py-10 md:py-14 px-4 max-w-screen-xl mx-auto">
+                 <SectionHeading title="Our Story" subtitle="The Beginning" Icon={BookHeart} />
                 <div className="flex flex-col items-center gap-8 relative">
                   <div className="w-full text-center z-20">
                     <div className="bg-white/70 backdrop-blur-xl p-6 md:p-10 rounded-2xl border border-white shadow-xl max-w-4xl mx-auto">
-                      <h2 className="text-[11px] font-bold tracking-[0.4em] text-weddingAccent mb-4 uppercase border-b border-weddingSage/30 pb-2 inline-block">The Beginning</h2>
                       <div className="text-base sm:text-lg md:text-xl font-serif leading-relaxed text-gray-800 italic text-justify md:text-center">
                          <span className="text-4xl md:text-5xl text-weddingYellow block mb-2 opacity-50 font-serif leading-none select-none">"</span>
                          {String(displayData.ourStory)}
@@ -846,7 +893,7 @@ export default function App() {
               {/* ENTOURAGE */}
               <section id="entourage" className="py-10 md:py-14 px-4 bg-white/20 backdrop-blur-sm border-y border-white transition-all">
                 <div className="max-w-screen-lg mx-auto text-center">
-                  <h2 className="text-3xl sm:text-4xl md:text-6xl font-serif text-weddingDark mb-8 drop-shadow-sm italic">The Entourage</h2>
+                  <SectionHeading title="The Entourage" subtitle="Our Loved Ones" Icon={Users} />
                   
                   {/* Parents */}
                   <div className="mb-8">
@@ -959,6 +1006,7 @@ export default function App() {
 
               {/* VENUES */}
               <section id="venues" className="py-10 md:py-14 px-4 max-w-screen-xl mx-auto transition-all">
+                <SectionHeading title="The Venues" subtitle="Where & When" Icon={Church} />
                 <div className="grid lg:grid-cols-2 gap-6 md:gap-10">
                   <div className="bg-white p-2 shadow-2xl relative rounded">
                     <div className="aspect-[16/10] overflow-hidden rounded-sm">
@@ -993,8 +1041,7 @@ export default function App() {
               <section id="details" className="py-10 md:py-14 px-4 bg-white/60 border-y border-white transition-all">
                 <div className="max-w-screen-xl mx-auto grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
                    <div className="text-center md:text-left">
-                      <h2 className="text-[10px] md:text-[11px] font-bold tracking-[0.4em] text-weddingAccent uppercase mb-3 opacity-80 border-b border-weddingSage/30 pb-2 inline-block">Dress Code &amp; Details</h2>
-                      <h3 className="text-2xl md:text-3xl font-serif text-weddingDark mb-3 italic mt-2">Attire</h3>
+                      <SectionHeading title="Attire" subtitle="Dress Code & Details" Icon={Sparkles} />
                       <p className="text-base font-serif leading-relaxed text-gray-800">{String(displayData.dressCodeText)}</p>
                    </div>
                    <div className="aspect-[4/5] bg-white p-2 shadow-2xl overflow-hidden rounded-t-full max-w-sm mx-auto w-full">
@@ -1006,14 +1053,12 @@ export default function App() {
               {/* GIFTS */}
               <section id="gifts" className="py-10 md:py-14 px-4 relative bg-[#faf9f6]/80 backdrop-blur-sm border-b border-white">
                 <div className="max-w-screen-md mx-auto text-center">
-                  <h2 className="text-[10px] md:text-[11px] font-bold tracking-[0.4em] text-weddingAccent uppercase mb-3 opacity-80 border-b border-weddingSage/30 pb-2 inline-block">Gifts & Registry</h2>
+                  <SectionHeading title="Send Some Love" subtitle="Gifts & Registry" Icon={Gift} />
                   <p className="text-base font-serif leading-relaxed text-gray-800 mb-6">{String(displayData.giftText)}</p>
 
                   <div className="bg-white p-5 md:p-8 rounded-3xl shadow-xl border border-gray-100 max-w-4xl mx-auto">
-                    <h3 className="text-xl md:text-2xl font-serif text-weddingDark mb-4 italic">Send Some Love</h3>
-                    
                     {/* TWO EDITABLE SPACES */}
-                    <div className="grid md:grid-cols-2 gap-4 mb-6">
+                    <div className="grid md:grid-cols-2 gap-4 mb-6 mt-4">
                        {(displayData.giftOption1Title || displayData.giftOption1Details) && (
                          <div className="bg-[#faf9f6] p-4 rounded-2xl border border-weddingSage/30 shadow-inner text-left">
                             <h4 className="text-[10px] uppercase font-bold tracking-[0.2em] text-weddingAccent mb-2">{String(displayData.giftOption1Title)}</h4>
@@ -1045,8 +1090,7 @@ export default function App() {
               {/* GUESTBOOK - NEW SCROLLING TIMELINE FORMAT */}
               <section id="guestbook" className="py-10 md:py-14 px-4 relative bg-white/40 backdrop-blur-md border-b">
                 <div className="max-w-screen-md mx-auto text-center">
-                  <h2 className="text-[10px] md:text-[11px] font-bold tracking-[0.4em] text-weddingAccent uppercase mb-2 opacity-80">Wishes &amp; Love</h2>
-                  <h3 className="text-2xl md:text-4xl font-serif text-weddingDark mb-8 italic">Guestbook</h3>
+                  <SectionHeading title="Guestbook" subtitle="Wishes & Love" Icon={MessageSquareHeart} />
                   
                   {displayMessages.length > 0 ? (
                     <div className="relative w-full max-w-2xl mx-auto h-[350px] md:h-[450px] bg-white/50 backdrop-blur-xl border border-white p-4 md:p-6 rounded-[2rem] shadow-inner overflow-y-auto space-y-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
@@ -1071,9 +1115,9 @@ export default function App() {
               {/* RSVP */}
               <section id="rsvp" className="py-14 md:py-16 px-4 bg-[#1f2b22] text-white transition-all">
                 <div className="max-w-screen-md mx-auto">
-                  <div className="text-center mb-10">
-                    <h2 className="text-[10px] md:text-[11px] font-bold tracking-[0.5em] text-weddingYellow uppercase mb-3">RSVP</h2>
-                    <h3 className="text-3xl md:text-5xl font-serif mb-6">Join the Celebration</h3>
+                  
+                  <SectionHeading title="Join the Celebration" subtitle="RSVP" Icon={Send} isDark />
+                  <div className="text-center mb-10 -mt-6">
                     <p className="text-weddingYellow font-serif italic text-base md:text-lg border border-weddingYellow/20 px-6 py-2 inline-block bg-weddingYellow/5 rounded-full">Please respond by {String(displayData.rsvpDeadline)}</p>
                   </div>
 
