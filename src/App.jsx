@@ -188,7 +188,7 @@ const AnimatedLeaves = ({ count = 8 }) => (
 const LandingPage = ({ onOpen, groom, bride }) => (
   <div className="fixed inset-0 z-[200] bg-[#faf9f6] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-1000 overflow-hidden">
     
-    {/* NEW: Elegant Visual Background */}
+    {/* Elegant Visual Background */}
     <div className="absolute inset-0 z-0 pointer-events-none">
       <div className="absolute inset-0 bg-cover bg-center opacity-60 transition-transform duration-[20s] ease-out scale-105" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&q=80')" }}></div>
       <div className="absolute inset-0 bg-gradient-to-t from-[#faf9f6] via-[#faf9f6]/80 to-[#faf9f6]/95 backdrop-blur-[3px]"></div>
@@ -241,6 +241,72 @@ const CountdownTimer = ({ targetDate }) => {
           <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-gray-700 font-bold mt-1">{unit}</span>
         </div>
       ))}
+    </div>
+  );
+};
+
+// Auto-scrolling seamless collage component specifically designed for multi-orientation mixed photos
+const StoryCollage = ({ photos = [] }) => {
+  const scrollRef = useRef(null);
+  const isPaused = useRef(false);
+  const validPhotos = photos.filter(p => p && typeof p === 'string' && p.trim() !== '');
+  
+  // Ensure we have enough photos to create a seamless infinite scrolling loop
+  let displayPhotos = [...validPhotos];
+  if (displayPhotos.length > 0) {
+    while (displayPhotos.length < 6) {
+      displayPhotos = [...displayPhotos, ...validPhotos];
+    }
+    // Duplicate the final set once more so the scroll width perfectly cuts in half
+    displayPhotos = [...displayPhotos, ...displayPhotos];
+  }
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || validPhotos.length === 0) return;
+    
+    let animationFrameId;
+    let scrollPos = 0;
+    
+    const scroll = () => {
+      if (!isPaused.current) {
+        scrollPos += 0.6; // Scroll speed
+        // Reset when we've scrolled exactly halfway (the duplicate array threshold)
+        if (scrollPos >= el.scrollWidth / 2) {
+          scrollPos = 0;
+        }
+        el.scrollLeft = scrollPos;
+      }
+      animationFrameId = requestAnimationFrame(scroll);
+    };
+    
+    animationFrameId = requestAnimationFrame(scroll);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [validPhotos]);
+
+  if (validPhotos.length === 0) return null;
+
+  return (
+    <div className="w-full max-w-6xl bg-[#faf9f6] rounded-[2rem] border-[6px] md:border-[8px] border-white shadow-2xl relative overflow-hidden z-10 mx-auto group">
+       <div 
+         ref={scrollRef}
+         className="flex h-[320px] sm:h-[450px] md:h-[550px] gap-2 sm:gap-3 p-2 sm:p-3 overflow-hidden flex-nowrap"
+         onMouseEnter={() => isPaused.current = true}
+         onMouseLeave={() => isPaused.current = false}
+         onTouchStart={() => isPaused.current = true}
+         onTouchEnd={() => isPaused.current = false}
+       >
+          {displayPhotos.map((url, idx) => (
+             <img 
+                key={idx} 
+                src={url} 
+                alt={`Story Detail ${idx}`} 
+                // w-auto and h-full ensures NO spaces and accommodates both landscape and portrait seamlessly!
+                className="h-full w-auto object-cover rounded-xl shadow-md shrink-0 transition-transform duration-700 hover:scale-[1.02] cursor-pointer"
+                onError={(e) => { e.target.onerror = null; e.target.src = "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80" }} 
+             />
+          ))}
+       </div>
     </div>
   );
 };
@@ -912,7 +978,7 @@ export default function App() {
               {/* STORY */}
               <section id="story" className="py-10 md:py-14 px-4 max-w-screen-xl mx-auto">
                  <SectionHeading title="Our Story" subtitle="The Beginning" Icon={BookHeart} />
-                <div className="flex flex-col items-center gap-8 relative">
+                <div className="flex flex-col items-center gap-10 relative">
                   <div className="w-full text-center z-20">
                     <div className="bg-white/70 backdrop-blur-xl p-6 md:p-10 rounded-2xl border border-white shadow-xl max-w-4xl mx-auto">
                       <div className="text-base sm:text-lg md:text-xl font-serif leading-relaxed text-gray-800 italic text-justify md:text-center">
@@ -921,10 +987,9 @@ export default function App() {
                       </div>
                     </div>
                   </div>
-                  {/* Changed to aspect-square on mobile and aspect-video on desktop. Using object-contain prevents photo cutting! */}
-                  <div className="w-full max-w-4xl aspect-square md:aspect-video rounded-2xl border-[6px] md:border-[8px] border-white shadow-xl relative overflow-hidden z-10 bg-[#faf9f6] mx-auto">
-                    <ImageSlider photos={displayData.storyPhotos} altText="Story" containerClass="absolute inset-0 w-full h-full" imageClass="rounded-xl" fitClass="object-contain" />
-                  </div>
+                  
+                  <StoryCollage photos={displayData.storyPhotos} />
+                  
                 </div>
               </section>
 
