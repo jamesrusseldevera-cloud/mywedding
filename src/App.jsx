@@ -187,6 +187,13 @@ const AnimatedLeaves = ({ count = 8 }) => (
 
 const LandingPage = ({ onOpen, groom, bride }) => (
   <div className="fixed inset-0 z-[200] bg-[#faf9f6] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-1000 overflow-hidden">
+    
+    {/* NEW: Elegant Visual Background */}
+    <div className="absolute inset-0 z-0 pointer-events-none">
+      <div className="absolute inset-0 bg-cover bg-center opacity-60 transition-transform duration-[20s] ease-out scale-105" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&q=80')" }}></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-[#faf9f6] via-[#faf9f6]/80 to-[#faf9f6]/95 backdrop-blur-[3px]"></div>
+    </div>
+
     <AnimatedLeaves count={8} />
     <div className="max-w-md w-full border border-weddingSage/30 p-8 sm:p-12 rounded-[3rem] aspect-[1/1.5] flex flex-col items-center justify-center relative overflow-hidden shadow-2xl bg-white/80 backdrop-blur-sm z-10 scale-95 md:scale-100">
        <div className="absolute inset-4 border border-weddingSage/10 rounded-[2.5rem]"></div>
@@ -238,7 +245,7 @@ const CountdownTimer = ({ targetDate }) => {
   );
 };
 
-const ImageSlider = ({ photos = [], altText, containerClass, imageClass }) => {
+const ImageSlider = ({ photos = [], altText, containerClass, imageClass, fitClass = "object-cover" }) => {
   const validPhotos = photos.filter(p => p && typeof p === 'string' && p.trim() !== '');
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -250,7 +257,7 @@ const ImageSlider = ({ photos = [], altText, containerClass, imageClass }) => {
 
   if (validPhotos.length === 0) return (
     <div className={`bg-gray-100 flex items-center justify-center ${containerClass}`}>
-      <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80" alt="Fallback" className={`absolute inset-0 w-full h-full object-cover opacity-60 ${imageClass || ''}`} />
+      <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80" alt="Fallback" className={`absolute inset-0 w-full h-full opacity-60 ${fitClass} ${imageClass || ''}`} />
     </div>
   );
 
@@ -258,7 +265,7 @@ const ImageSlider = ({ photos = [], altText, containerClass, imageClass }) => {
     <div className={`relative overflow-hidden ${containerClass}`}>
       <img src={validPhotos[0]} alt={altText} 
            onError={(e) => { e.target.onerror = null; e.target.src = "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80" }} 
-           className={`absolute inset-0 w-full h-full object-cover ${imageClass || ''}`} />
+           className={`absolute inset-0 w-full h-full ${fitClass} ${imageClass || ''}`} />
     </div>
   );
 
@@ -267,7 +274,7 @@ const ImageSlider = ({ photos = [], altText, containerClass, imageClass }) => {
       {validPhotos.map((url, idx) => (
         <img key={idx} src={url} alt={`${altText} ${idx + 1}`} 
              onError={(e) => { e.target.onerror = null; e.target.src = "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80" }} 
-             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'} ${imageClass || ''}`} />
+             className={`absolute inset-0 w-full h-full ${fitClass} transition-opacity duration-1000 ease-in-out ${idx === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'} ${imageClass || ''}`} />
       ))}
     </div>
   );
@@ -914,9 +921,9 @@ export default function App() {
                       </div>
                     </div>
                   </div>
-                  {/* Aspect Video provides standard wide framing for perfect horizontal slide transitions */}
-                  <div className="w-full max-w-4xl aspect-video rounded-2xl border-[6px] md:border-[8px] border-white shadow-xl relative overflow-hidden z-10 bg-gray-100 mx-auto">
-                    <ImageSlider photos={displayData.storyPhotos} altText="Story" containerClass="absolute inset-0 w-full h-full" imageClass="rounded-xl" />
+                  {/* Changed to aspect-square on mobile and aspect-video on desktop. Using object-contain prevents photo cutting! */}
+                  <div className="w-full max-w-4xl aspect-square md:aspect-video rounded-2xl border-[6px] md:border-[8px] border-white shadow-xl relative overflow-hidden z-10 bg-[#faf9f6] mx-auto">
+                    <ImageSlider photos={displayData.storyPhotos} altText="Story" containerClass="absolute inset-0 w-full h-full" imageClass="rounded-xl" fitClass="object-contain" />
                   </div>
                 </div>
               </section>
@@ -932,12 +939,12 @@ export default function App() {
                     <div className="flex flex-col md:flex-row justify-center items-center md:items-start gap-8 md:gap-16 text-center w-full">
                       <div className="flex flex-col items-center flex-1 w-full overflow-hidden">
                         <h4 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-3 border-b border-weddingSage/30 pb-1">Parents of the Groom</h4>
-                        {(displayData.groomParents||[]).map((n,i)=><p key={i} className="text-base md:text-xl font-serif text-gray-800 break-words w-full">{n}</p>)}
+                        {(displayData.groomParents||[]).map((n,i)=><p key={i} className="text-lg md:text-2xl font-serif text-weddingDark break-words w-full leading-snug">{n}</p>)}
                       </div>
                       <div className="hidden md:block w-px bg-weddingSage/30 self-stretch"></div>
                       <div className="flex flex-col items-center flex-1 w-full overflow-hidden">
                         <h4 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-3 border-b border-weddingSage/30 pb-1">Parents of the Bride</h4>
-                        {(displayData.brideParents||[]).map((n,i)=><p key={i} className="text-base md:text-xl font-serif text-gray-800 break-words w-full">{n}</p>)}
+                        {(displayData.brideParents||[]).map((n,i)=><p key={i} className="text-lg md:text-2xl font-serif text-weddingDark break-words w-full leading-snug">{n}</p>)}
                       </div>
                     </div>
                   </div>
