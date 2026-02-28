@@ -56,6 +56,7 @@ const DEFAULT_DETAILS = {
   receptionAddress: "Alabang, San Jose",
   receptionMapUrl: "https://maps.app.goo.gl/8aSbQNbNAr31iXPT6",
   dressCodeText: "Filipiniana or Formal Attire. We kindly request our guests to dress elegantly in shades of Sage Green, Pastel Yellow, Beige, or neutral light tones. Please avoid wearing bright neon colors or pure white.",
+  colorPalette: ['#b8c6a7', '#ffee8c', '#f5e2c5', '#F1CEBE', '#e2d5c3', '#d9e2d5'],
   giftText: "With all that we have, we’ve been truly blessed. Your presence and prayers are all that we request. But if you desire to give nonetheless, a monetary gift is one we suggest.",
   
   giftOption1Title: "Bank Transfer",
@@ -245,6 +246,30 @@ const CountdownTimer = ({ targetDate }) => {
   );
 };
 
+const ColorPaletteEditor = ({ colors = [], onChange }) => {
+  const displayColors = [...colors];
+  while(displayColors.length < 6) displayColors.push('#ffffff');
+
+  const updateColor = (idx, val) => {
+     const newColors = [...displayColors];
+     newColors[idx] = val;
+     onChange(newColors);
+  };
+
+  return (
+    <div className="mb-5">
+       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Theme Color Palette</label>
+       <div className="flex gap-2 sm:gap-3">
+         {displayColors.slice(0, 6).map((c, idx) => (
+           <div key={idx} className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-full shadow-sm border border-gray-300 overflow-hidden cursor-pointer hover:scale-110 transition-transform">
+             <input type="color" value={c} onChange={e => updateColor(idx, e.target.value)} className="absolute inset-[-10px] w-20 h-20 cursor-pointer" />
+           </div>
+         ))}
+       </div>
+    </div>
+  )
+};
+
 // Auto-scrolling seamless collage component specifically designed for multi-orientation mixed photos
 const StoryCollage = ({ photos = [] }) => {
   const scrollRef = useRef(null);
@@ -270,7 +295,8 @@ const StoryCollage = ({ photos = [] }) => {
     
     const scroll = () => {
       if (!isPaused.current) {
-        scrollPos += 0.6; // Scroll speed
+        // Reduced scroll speed for a more elegant, cinematic pace
+        scrollPos += 0.3; 
         // Reset when we've scrolled exactly halfway (the duplicate array threshold)
         if (scrollPos >= el.scrollWidth / 2) {
           scrollPos = 0;
@@ -321,6 +347,16 @@ const ImageSlider = ({ photos = [], altText, containerClass, imageClass, fitClas
     return () => clearInterval(interval);
   }, [validPhotos.length]);
 
+  const handleNext = (e) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev + 1) % validPhotos.length);
+  };
+
+  const handlePrev = (e) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev - 1 + validPhotos.length) % validPhotos.length);
+  };
+
   if (validPhotos.length === 0) return (
     <div className={`bg-gray-100 flex items-center justify-center ${containerClass}`}>
       <img src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80" alt="Fallback" className={`absolute inset-0 w-full h-full opacity-60 ${fitClass} ${imageClass || ''}`} />
@@ -336,12 +372,19 @@ const ImageSlider = ({ photos = [], altText, containerClass, imageClass, fitClas
   );
 
   return (
-    <div className={`relative overflow-hidden ${containerClass}`}>
+    <div className={`relative overflow-hidden group ${containerClass}`}>
       {validPhotos.map((url, idx) => (
         <img key={idx} src={url} alt={`${altText} ${idx + 1}`} 
              onError={(e) => { e.target.onerror = null; e.target.src = "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80" }} 
              className={`absolute inset-0 w-full h-full ${fitClass} transition-opacity duration-1000 ease-in-out ${idx === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'} ${imageClass || ''}`} />
       ))}
+      {/* Slider Controls */}
+      <button onClick={handlePrev} className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/60 text-white p-1.5 sm:p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all z-20 hover:scale-110 active:scale-95">
+         <ChevronLeft size={20} className="sm:w-6 sm:h-6" />
+      </button>
+      <button onClick={handleNext} className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/60 text-white p-1.5 sm:p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all z-20 hover:scale-110 active:scale-95">
+         <ChevronRight size={20} className="sm:w-6 sm:h-6" />
+      </button>
     </div>
   );
 };
@@ -582,9 +625,14 @@ export default function App() {
        if (typeof val === 'string' && val.trim() !== '') return val.split(splitChar).map(s=>s.trim()).filter(Boolean);
        return [];
     };
+    
+    let palette = Array.isArray(data.colorPalette) ? data.colorPalette : DEFAULT_DETAILS.colorPalette;
+    if (palette.length === 0) palette = DEFAULT_DETAILS.colorPalette;
+
     return {
        ...DEFAULT_DETAILS,
        ...data,
+       colorPalette: palette,
        storyPhotos: toArr(data.storyPhotos || data.storyPhotoUrl, ','),
        ceremonyPhotos: toArr(data.ceremonyPhotos || data.ceremonyPhotoUrl, ','),
        receptionPhotos: toArr(data.receptionPhotos || data.receptionPhotoUrl, ','),
@@ -949,6 +997,15 @@ export default function App() {
               </div>
             </div>
 
+            {/* Quick RSVP Floating Icon */}
+            <button 
+               onClick={() => document.getElementById('rsvp')?.scrollIntoView({behavior: 'smooth'})}
+               className="fixed bottom-6 right-6 z-50 bg-weddingDark text-weddingYellow p-3 md:p-4 rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all flex items-center gap-2 group border border-weddingYellow/20 animate-in fade-in slide-in-from-bottom-8 duration-1000"
+            >
+               <Send size={18} className="md:w-5 md:h-5" />
+               <span className="hidden md:inline text-[9px] uppercase font-bold tracking-[0.2em] mr-1">RSVP</span>
+            </button>
+
             {/* Navigation */}
             <nav className={`fixed top-0 left-0 right-0 z-40 py-4 bg-[#faf9f6]/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm transition-all ${isAdminAuth ? 'md:right-[450px]' : ''}`}>
               <div className="max-w-screen-xl mx-auto px-4 flex justify-center gap-4 sm:gap-8 md:gap-10 text-[8px] sm:text-[9px] md:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.3em] font-bold text-gray-500 flex-wrap">
@@ -999,15 +1056,15 @@ export default function App() {
                   <SectionHeading title="The Entourage" subtitle="Our Loved Ones" Icon={Users} />
                   
                   {/* Parents */}
-                  <div className="mb-8">
+                  <div className="mb-8 flex flex-col items-center">
                     <h3 className="text-[10px] md:text-[11px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-6 border-b-2 border-weddingYellow inline-block pb-2">Beloved Parents</h3>
-                    <div className="flex flex-col md:flex-row justify-center items-center md:items-start gap-8 md:gap-16 text-center w-full">
-                      <div className="flex flex-col items-center flex-1 w-full overflow-hidden">
+                    <div className="flex flex-col md:flex-row justify-center items-center gap-8 md:gap-12 text-center w-full max-w-3xl mx-auto">
+                      <div className="flex flex-col items-center flex-1 w-full overflow-hidden justify-center h-full">
                         <h4 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-3 border-b border-weddingSage/30 pb-1">Parents of the Groom</h4>
                         {(displayData.groomParents||[]).map((n,i)=><p key={i} className="text-lg md:text-2xl font-serif text-weddingDark break-words w-full leading-snug">{n}</p>)}
                       </div>
-                      <div className="hidden md:block w-px bg-weddingSage/30 self-stretch"></div>
-                      <div className="flex flex-col items-center flex-1 w-full overflow-hidden">
+                      <div className="hidden md:block w-px bg-weddingSage/30 self-stretch min-h-[100px]"></div>
+                      <div className="flex flex-col items-center flex-1 w-full overflow-hidden justify-center h-full">
                         <h4 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-3 border-b border-weddingSage/30 pb-1">Parents of the Bride</h4>
                         {(displayData.brideParents||[]).map((n,i)=><p key={i} className="text-lg md:text-2xl font-serif text-weddingDark break-words w-full leading-snug">{n}</p>)}
                       </div>
@@ -1152,10 +1209,27 @@ export default function App() {
                 <div className="max-w-screen-xl mx-auto grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
                    <div className="text-center md:text-left">
                       <SectionHeading title="Attire" subtitle="Dress Code & Details" Icon={Sparkles} />
-                      <p className="text-base font-serif leading-relaxed text-gray-800">{String(displayData.dressCodeText)}</p>
+                      <p className="text-base font-serif leading-relaxed text-gray-800 mb-8">{String(displayData.dressCodeText)}</p>
+
+                      {/* COLOR PALETTE */}
+                      {displayData.colorPalette && displayData.colorPalette.length > 0 && (
+                        <div className="flex flex-col items-center md:items-start mb-6 md:mb-0">
+                           <h4 className="text-[9px] font-bold tracking-widest uppercase mb-4 text-weddingAccent border-b border-weddingSage/30 pb-1">Color Palette</h4>
+                           <div className="flex gap-3 sm:gap-4 flex-wrap justify-center md:justify-start">
+                              {displayData.colorPalette.slice(0, 6).map((color, idx) => (
+                                <div 
+                                   key={idx} 
+                                   className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-md border-2 border-white transform hover:scale-110 transition-transform cursor-pointer" 
+                                   style={{ backgroundColor: color }} 
+                                   title={`Theme Color ${idx + 1}`} 
+                                />
+                              ))}
+                           </div>
+                        </div>
+                      )}
                    </div>
-                   <div className="aspect-[4/5] bg-white p-2 shadow-2xl overflow-hidden rounded-t-full max-w-sm mx-auto w-full">
-                      <ImageSlider photos={displayData.dressCodePhotos} altText="Dress Code" containerClass="w-full h-full" imageClass="rounded-t-full" />
+                   <div className="aspect-[4/5] bg-white p-2 shadow-2xl overflow-hidden rounded-t-full max-w-sm mx-auto w-full relative">
+                      <ImageSlider photos={displayData.dressCodePhotos} altText="Dress Code" containerClass="w-full h-full rounded-t-full" imageClass="rounded-t-full" />
                    </div>
                 </div>
               </section>
@@ -1242,18 +1316,22 @@ export default function App() {
                     <form onSubmit={handleRsvpSubmit} className="space-y-6 md:space-y-8">
                       <div className="grid md:grid-cols-2 gap-4 md:gap-6">
                         <div className="bg-weddingSage text-weddingDark p-6 md:p-8 rounded-3xl shadow-xl transition-transform focus-within:-translate-y-1">
-                          <label className="block text-[8px] md:text-[9px] font-bold tracking-widest uppercase mb-2 text-weddingDark/80">Security Code</label>
-                          <input required value={rsvpForm.enteredCode} onChange={e=>setRsvpForm({...rsvpForm, enteredCode: e.target.value})} className="w-full bg-transparent border-b-2 border-weddingDark/20 py-2 md:py-3 focus:outline-none focus:border-weddingDark tracking-widest text-lg md:text-xl font-serif text-weddingDark placeholder:text-weddingDark/30" placeholder="Enter Code" />
+                          <label className="block text-[8px] md:text-[9px] font-bold tracking-widest uppercase mb-2 text-weddingDark/80 flex items-center justify-center gap-1.5">
+                             <KeyRound size={12} /> Security Code
+                          </label>
+                          <input required value={rsvpForm.enteredCode} onChange={e=>setRsvpForm({...rsvpForm, enteredCode: e.target.value})} className="w-full bg-transparent border-b-2 border-weddingDark/40 py-2 md:py-3 focus:outline-none focus:border-weddingDark tracking-widest text-lg md:text-xl font-serif text-weddingDark placeholder:text-weddingDark/50 text-center" placeholder="Enter Code" />
                         </div>
                         <div className="bg-weddingSage text-weddingDark p-6 md:p-8 rounded-3xl shadow-xl transition-transform focus-within:-translate-y-1">
-                          <label className="block text-[8px] md:text-[9px] font-bold tracking-widest uppercase mb-2 text-weddingDark/80">Full Name</label>
-                          <input required value={rsvpForm.name} onChange={e=>setRsvpForm({...rsvpForm, name: e.target.value})} className="w-full bg-transparent border-b-2 border-weddingDark/20 py-2 md:py-3 focus:outline-none focus:border-weddingDark text-xl md:text-2xl font-serif italic text-weddingDark placeholder:text-weddingDark/30" placeholder="Name" />
+                          <label className="block text-[8px] md:text-[9px] font-bold tracking-widest uppercase mb-2 text-weddingDark/80 flex items-center justify-center gap-1.5">
+                             <Heart size={12} /> Full Name
+                          </label>
+                          <input required value={rsvpForm.name} onChange={e=>setRsvpForm({...rsvpForm, name: e.target.value})} className="w-full bg-transparent border-b-2 border-weddingDark/40 py-2 md:py-3 focus:outline-none focus:border-weddingDark text-xl md:text-2xl font-serif italic text-weddingDark placeholder:text-weddingDark/50 text-center" placeholder="Your Name" />
                         </div>
                       </div>
                       
                       <div className="flex flex-col md:flex-row gap-3 md:gap-4">
                         {['yes', 'no'].map(v => (
-                          <label key={v} className={`flex-1 py-6 text-center rounded-3xl border-2 cursor-pointer transition-all ${rsvpForm.attending === v ? 'bg-weddingYellow border-weddingYellow text-weddingDark shadow-2xl scale-105' : 'border-white/10 hover:border-white/30 bg-white/5'}`}>
+                          <label key={v} className={`flex-1 py-6 text-center rounded-3xl border-2 cursor-pointer transition-all ${rsvpForm.attending === v ? 'bg-weddingYellow border-weddingYellow text-weddingDark shadow-2xl scale-105' : 'border-white/30 hover:border-white/60 bg-white/10 text-white'}`}>
                             <input type="radio" className="hidden" value={v} checked={rsvpForm.attending === v} onChange={e=>setRsvpForm({...rsvpForm, attending: e.target.value})} />
                             <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest">{v === 'yes' ? 'Happily Accepting' : 'Regretfully Declining'}</span>
                           </label>
@@ -1261,12 +1339,11 @@ export default function App() {
                       </div>
 
                       <div className="bg-weddingSage text-weddingDark p-6 md:p-8 rounded-3xl shadow-xl transition-transform focus-within:-translate-y-1">
-                        <label className="block text-[8px] md:text-[9px] font-bold tracking-widest uppercase mb-2 text-weddingDark/80 flex justify-between items-center">
-                           Wishes for the Couple
-                           <span className="text-weddingDark/50 lowercase tracking-normal italic font-serif text-xs hidden sm:inline">(Messages are reviewed before posting)</span>
+                        <label className="block text-[8px] md:text-[9px] font-bold tracking-widest uppercase mb-2 text-weddingDark/80 flex justify-center items-center gap-2">
+                           <MessageSquareHeart size={12} /> Wishes for the Couple
                         </label>
-                        <textarea value={rsvpForm.message} onChange={e=>setRsvpForm({...rsvpForm, message: e.target.value})} className="w-full bg-transparent border-none focus:outline-none min-h-[100px] md:min-h-[120px] text-lg md:text-xl font-serif italic text-weddingDark placeholder:text-weddingDark/40 resize-none" placeholder="Leave a message for our digital guestbook..." />
-                        <div className="text-weddingDark/50 italic font-serif text-xs mt-2 sm:hidden text-center">(Messages are reviewed before posting)</div>
+                        <textarea value={rsvpForm.message} onChange={e=>setRsvpForm({...rsvpForm, message: e.target.value})} className="w-full bg-transparent border-none focus:outline-none min-h-[100px] md:min-h-[120px] text-lg md:text-xl font-serif italic text-weddingDark placeholder:text-weddingDark/50 resize-none text-center" placeholder="Leave a message for our digital guestbook..." />
+                        <div className="text-weddingDark/50 italic font-serif text-xs mt-2 text-center">(Messages are reviewed before posting)</div>
                       </div>
 
                       {submitError && <div className="text-red-300 text-center p-3 md:p-4 bg-red-900/40 rounded-2xl border border-red-500/30 text-[9px] md:text-[10px] font-bold uppercase tracking-widest">{String(submitError)}</div>}
@@ -1360,6 +1437,7 @@ export default function App() {
                           <h3 className="text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 border-b border-gray-100 pb-2">Paragraphs</h3>
                           <TextInput label="Our Story" isTextArea value={editForm.ourStory} onChange={val=>setEditForm({...editForm, ourStory: val})} />
                           <TextInput label="Dress Code Guidelines" isTextArea value={editForm.dressCodeText} onChange={val=>setEditForm({...editForm, dressCodeText: val})} />
+                          <ColorPaletteEditor colors={editForm.colorPalette} onChange={val=>setEditForm({...editForm, colorPalette: val})} />
                           <TextInput label="Gift Message Intro" isTextArea value={editForm.giftText} onChange={val=>setEditForm({...editForm, giftText: val})} />
                        </div>
                        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
