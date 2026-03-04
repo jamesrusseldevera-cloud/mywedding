@@ -196,7 +196,7 @@ const AnimatedLeaves = ({ count = 8 }) => (
 );
 
 const LandingPage = ({ onOpen, groom, bride, logoUrl, displayData }) => (
-  <div className="fixed inset-0 z-[200] bg-[#faf9f6] flex flex-col items-center justify-center p-4 sm:p-6 text-center animate-in fade-in duration-1000 overflow-hidden" style={{ backgroundColor: displayData.themeBgColor || '#faf9f6' }}>
+  <div className="fixed inset-0 z-[200] bg-[#faf9f6] flex flex-col items-center justify-center p-4 sm:p-6 text-center animate-in fade-in duration-1000 overflow-hidden h-[100dvh]" style={{ backgroundColor: displayData.themeBgColor || '#faf9f6' }}>
     
     {/* Elegant Visual Background */}
     <div className="absolute inset-0 z-0 pointer-events-none transform-gpu">
@@ -216,7 +216,7 @@ const LandingPage = ({ onOpen, groom, bride, logoUrl, displayData }) => (
          <h1 className="text-4xl sm:text-5xl md:text-6xl font-script text-weddingDark mb-1 sm:mb-2 break-words max-w-full px-2 leading-tight py-1">{groom}</h1>
          <span className="text-lg sm:text-xl md:text-2xl font-serif italic text-weddingSage mb-1 sm:mb-2">&</span>
          <h1 className="text-4xl sm:text-5xl md:text-6xl font-script text-weddingDark mb-6 sm:mb-8 break-words max-w-full px-2 leading-tight py-1">{bride}</h1>
-         <button onClick={onOpen} className="mt-2 sm:mt-4 flex flex-col items-center gap-3 sm:gap-4 group focus:outline-none">
+         <button onClick={onOpen} className="mt-2 sm:mt-4 flex flex-col items-center gap-3 sm:gap-4 group focus:outline-none touch-manipulation">
            <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-weddingYellow rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 group-active:scale-95 transition-all duration-500 shrink-0">
              <MailOpen className="text-weddingDark w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8" />
            </div>
@@ -412,11 +412,11 @@ const GuestbookCarousel = ({ messages, handleLike, localLikes }) => {
 
   return (
     <div className="relative w-full max-w-screen-xl mx-auto px-4 sm:px-6 md:px-14">
-      <button onClick={()=>scroll('left')} className="hidden sm:flex absolute left-0 md:left-2 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-100 p-2 md:p-2.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all text-weddingDark hover:bg-weddingSage hover:text-white">
+      <button onClick={()=>scroll('left')} className="hidden sm:flex absolute left-0 md:left-2 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-100 p-2 md:p-2.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all text-weddingDark hover:bg-weddingSage hover:text-white touch-manipulation">
         <ChevronLeft size={20} className="md:w-6 md:h-6"/>
       </button>
       
-      <div ref={scrollRef} className="flex overflow-x-auto gap-4 md:gap-6 snap-x snap-mandatory py-4 sm:py-6 px-1 sm:px-2 no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      <div ref={scrollRef} className="flex overflow-x-auto gap-4 md:gap-6 snap-x snap-mandatory py-4 sm:py-6 px-1 sm:px-2 no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
         {messages.map((m) => {
           const likesCount = localLikes[m.id] !== undefined ? localLikes[m.id] : (m.likes || 0);
           const isLiked = localStorage.getItem(`liked_${m.id}`);
@@ -440,7 +440,7 @@ const GuestbookCarousel = ({ messages, handleLike, localLikes }) => {
         })}
       </div>
 
-      <button onClick={()=>scroll('right')} className="hidden sm:flex absolute right-0 md:right-2 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-100 p-2 md:p-2.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all text-weddingDark hover:bg-weddingSage hover:text-white">
+      <button onClick={()=>scroll('right')} className="hidden sm:flex absolute right-0 md:right-2 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-100 p-2 md:p-2.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all text-weddingDark hover:bg-weddingSage hover:text-white touch-manipulation">
         <ChevronRight size={20} className="md:w-6 md:h-6"/>
       </button>
     </div>
@@ -456,9 +456,9 @@ const TextInput = ({ label, value, onChange, isTextArea = false }) => (
   <div className="mb-5 w-full">
     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">{label}</label>
     {isTextArea ? (
-      <textarea value={value || ''} onChange={(e) => onChange(e.target.value)} rows={4} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-weddingAccent focus:bg-white transition-colors" />
+      <textarea value={value || ''} onChange={(e) => onChange(e.target.value)} rows={4} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[16px] sm:text-sm focus:outline-none focus:border-weddingAccent focus:bg-white transition-colors" />
     ) : (
-      <input type="text" value={value || ''} onChange={(e) => onChange(e.target.value)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-weddingAccent focus:bg-white transition-colors" />
+      <input type="text" value={value || ''} onChange={(e) => onChange(e.target.value)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[16px] sm:text-sm focus:outline-none focus:border-weddingAccent focus:bg-white transition-colors" />
     )}
   </div>
 );
@@ -469,11 +469,11 @@ const SinglePhotoManager = ({ label, url, onChange, placeholder = "Paste image U
      {url && (
         <div className="relative aspect-video sm:aspect-square md:aspect-video mb-4 rounded overflow-hidden border border-gray-200 w-24 sm:w-32 bg-gray-50">
            <img src={url} className="w-full h-full object-contain" alt="Preview" />
-           <button onClick={() => onChange('')} className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full"><X size={10} className="sm:w-3 sm:h-3"/></button>
+           <button onClick={() => onChange('')} className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full touch-manipulation"><X size={10} className="sm:w-3 sm:h-3"/></button>
         </div>
      )}
      <div className="flex gap-2 mb-2 w-full">
-        <input value={url || ''} onChange={e=>onChange(e.target.value)} placeholder={placeholder} className="flex-1 min-w-0 text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:border-weddingAccent" />
+        <input value={url || ''} onChange={e=>onChange(e.target.value)} placeholder={placeholder} className="flex-1 min-w-0 text-[16px] sm:text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:border-weddingAccent" />
      </div>
   </div>
 );
@@ -534,7 +534,7 @@ const AudioManager = ({ label, url, onChange, showToast, user, appId, storage })
       
       <div className="mb-4">
          <input type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
-         <button onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="w-full bg-weddingAccent/10 text-weddingDark border border-weddingAccent/30 px-3 py-2.5 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-wider hover:bg-weddingAccent/20 transition-colors flex justify-center items-center gap-2 disabled:opacity-50">
+         <button onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="w-full bg-weddingAccent/10 text-weddingDark border border-weddingAccent/30 px-3 py-2.5 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-wider hover:bg-weddingAccent/20 transition-colors flex justify-center items-center gap-2 disabled:opacity-50 touch-manipulation">
             <Upload size={14} /> {isUploading ? 'Uploading...' : 'Upload MP3 to Firebase'}
          </button>
       </div>
@@ -546,8 +546,8 @@ const AudioManager = ({ label, url, onChange, showToast, user, appId, storage })
       </div>
 
       <div className="flex gap-2 w-full">
-         <input type="text" value={inputUrl} onChange={e=>setInputUrl(e.target.value)} placeholder="Paste MP3, or GDrive URL here..." className="flex-1 min-w-0 text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:border-weddingAccent" />
-         <button onClick={handleSetUrl} className="bg-weddingDark text-white px-3 py-1.5 rounded text-[9px] sm:text-[10px] font-bold uppercase tracking-wider hover:bg-weddingAccent transition-colors shrink-0">Link</button>
+         <input type="text" value={inputUrl} onChange={e=>setInputUrl(e.target.value)} placeholder="Paste MP3, or GDrive URL here..." className="flex-1 min-w-0 text-[16px] sm:text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:border-weddingAccent" />
+         <button onClick={handleSetUrl} className="bg-weddingDark text-white px-3 py-1.5 rounded text-[9px] sm:text-[10px] font-bold uppercase tracking-wider hover:bg-weddingAccent transition-colors shrink-0 touch-manipulation">Link</button>
       </div>
     </div>
   );
@@ -587,7 +587,7 @@ const PhotoManager = ({ label, urls = [], onChange, showToast }) => {
               <div key={idx} draggable onDragStart={(e)=>handleDragStart(e, idx)} onDragOver={handleDragOver} onDrop={(e)=>handleDrop(e, idx)} className={`relative aspect-square rounded overflow-hidden group border cursor-move transition-all ${draggedIdx === idx ? 'opacity-30 border-dashed border-gray-500' : 'border-gray-200'}`}>
                  <img src={url} className="w-full h-full object-cover" alt="Preview" onError={(e) => { e.target.onerror = null; e.target.src = "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=200&q=80" }} />
                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <button onClick={()=>handleRemove(idx)} className="text-white bg-red-500 p-1.5 rounded-full hover:scale-110 transition-transform"><Trash2 size={12}/></button>
+                    <button onClick={()=>handleRemove(idx)} className="text-white bg-red-500 p-1.5 rounded-full hover:scale-110 transition-transform touch-manipulation"><Trash2 size={12}/></button>
                  </div>
               </div>
            ))}
@@ -595,8 +595,8 @@ const PhotoManager = ({ label, urls = [], onChange, showToast }) => {
         </div>
 
         <div className="flex gap-2 mb-2 w-full">
-           <input value={newUrl} onChange={e=>setNewUrl(e.target.value)} placeholder="Paste image URL..." className="flex-1 min-w-0 text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:border-weddingAccent" />
-           <button onClick={handleAddUrl} className="bg-weddingDark text-white px-3 py-1.5 rounded text-[9px] sm:text-[10px] font-bold uppercase tracking-wider hover:bg-weddingAccent transition-colors flex items-center gap-1 shrink-0"><Plus size={10} className="sm:w-3 sm:h-3"/> Add</button>
+           <input value={newUrl} onChange={e=>setNewUrl(e.target.value)} placeholder="Paste image URL..." className="flex-1 min-w-0 text-[16px] sm:text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:border-weddingAccent" />
+           <button onClick={handleAddUrl} className="bg-weddingDark text-white px-3 py-1.5 rounded text-[9px] sm:text-[10px] font-bold uppercase tracking-wider hover:bg-weddingAccent transition-colors flex items-center gap-1 shrink-0 touch-manipulation"><Plus size={10} className="sm:w-3 sm:h-3"/> Add</button>
         </div>
      </div>
   );
@@ -634,16 +634,16 @@ const ListManager = ({ label, items = [], onChange, isPairs = false, subtitle })
        <div className="space-y-2 mb-3">
          {items.map((item, idx) => (
             <div key={idx} draggable onDragStart={(e)=>handleDragStart(e, idx)} onDragOver={handleDragOver} onDrop={(e)=>handleDrop(e, idx)} className={`flex items-center gap-1.5 sm:gap-2 bg-gray-50 p-1.5 sm:p-2 rounded-lg border transition-all ${draggedIdx === idx ? 'opacity-30 border-dashed border-gray-500 shadow-inner bg-gray-100' : 'border-gray-200 hover:border-gray-300'}`}>
-               <div className="cursor-move text-gray-400 hover:text-weddingDark p-1 shrink-0" title="Drag to reorder"><GripVertical size={12} className="sm:w-3.5 sm:h-3.5"/></div>
+               <div className="cursor-move text-gray-400 hover:text-weddingDark p-1 shrink-0 touch-manipulation" title="Drag to reorder"><GripVertical size={12} className="sm:w-3.5 sm:h-3.5"/></div>
                {isPairs && <div className="text-[7px] sm:text-[9px] font-bold uppercase w-10 sm:w-14 text-weddingAccent tracking-widest shrink-0 truncate">{idx%2===0?'Male:':'Female:'}</div>}
-               <input type="text" value={item} onChange={(e)=>updateItem(e.target.value, idx)} placeholder="Enter name..." className="flex-1 min-w-0 bg-transparent border-b border-transparent focus:border-weddingAccent focus:outline-none text-xs sm:text-sm px-1 py-1 font-serif text-gray-800" />
-               <button onClick={()=>removeItem(idx)} className="text-gray-300 hover:text-red-500 p-1 transition-colors shrink-0"><X size={12} className="sm:w-3.5 sm:h-3.5"/></button>
+               <input type="text" value={item} onChange={(e)=>updateItem(e.target.value, idx)} placeholder="Enter name..." className="flex-1 min-w-0 bg-transparent border-b border-transparent focus:border-weddingAccent focus:outline-none text-[16px] sm:text-sm px-1 py-1 font-serif text-gray-800" />
+               <button onClick={()=>removeItem(idx)} className="text-gray-300 hover:text-red-500 p-1 transition-colors shrink-0 touch-manipulation"><X size={12} className="sm:w-3.5 sm:h-3.5"/></button>
             </div>
          ))}
          {items.length === 0 && <div className="text-[9px] sm:text-[10px] text-gray-400 italic p-3 text-center border border-dashed border-gray-200 rounded-lg">List is empty</div>}
        </div>
        
-       <button onClick={handleAdd} className="w-full py-2 sm:py-2.5 border border-dashed border-weddingAccent/30 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-weddingAccent hover:bg-weddingAccent hover:text-white transition-colors flex justify-center items-center gap-1.5 sm:gap-2">
+       <button onClick={handleAdd} className="w-full py-2 sm:py-2.5 border border-dashed border-weddingAccent/30 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-weddingAccent hover:bg-weddingAccent hover:text-white transition-colors flex justify-center items-center gap-1.5 sm:gap-2 touch-manipulation">
           <UserPlus size={12} className="sm:w-3.5 sm:h-3.5"/> Add Row
        </button>
     </div>
@@ -795,10 +795,10 @@ export default function App() {
     if (!viewportMeta) {
       viewportMeta = document.createElement('meta');
       viewportMeta.name = 'viewport';
-      viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0';
+      viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover';
       document.head.appendChild(viewportMeta);
     } else {
-      viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0';
+      viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover';
     }
 
     const tailwindScript = document.createElement('script');
@@ -828,6 +828,11 @@ export default function App() {
       .no-scrollbar::-webkit-scrollbar { display: none; }
       .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       html, body { overflow-x: hidden; max-width: 100%; }
+      
+      /* iOS Safari safe height fallback */
+      @supports (-webkit-touch-callout: none) {
+        .ios-h-safe { height: -webkit-fill-available; min-height: 100dvh; }
+      }
     `;
     document.head.appendChild(styleSheet);
     const fontLink = document.createElement('link'); fontLink.href = 'https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap'; fontLink.rel = 'stylesheet';
@@ -1124,7 +1129,7 @@ export default function App() {
           displayData={displayData}
         />
       ) : (
-        <div className="h-screen w-full flex overflow-hidden" style={{ fontFamily: "'Montserrat', sans-serif", backgroundColor: displayData.themeBgColor || '#faf9f6' }}>
+        <div className="ios-h-safe h-[100dvh] w-full flex overflow-hidden" style={{ fontFamily: "'Montserrat', sans-serif", backgroundColor: displayData.themeBgColor || '#faf9f6' }}>
           
           {/* ========================================================= */}
           {/* LEFT: LIVE WEBSITE PREVIEW */}
@@ -1191,7 +1196,7 @@ export default function App() {
             <main className="w-full relative z-20 pt-16 overflow-x-hidden">
               
               {/* HERO */}
-              <section id="home" className="min-h-[80vh] flex flex-col items-center justify-center text-center px-4 relative overflow-hidden pb-8 w-full">
+              <section id="home" className="min-h-[80dvh] flex flex-col items-center justify-center text-center px-4 relative overflow-hidden pb-8 w-full">
                 <HandpaintedFlower className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120vw] h-[120vw] sm:w-[90vw] sm:h-[90vw] max-w-[900px] text-weddingSage opacity-20 pointer-events-none" />
                 <p className="text-weddingAccent tracking-[0.3em] sm:tracking-[0.4em] md:tracking-[0.6em] uppercase text-[9px] sm:text-[10px] md:text-[12px] mb-3 sm:mb-4 font-bold animate-pulse">Join us to celebrate</p>
                 <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[9rem] font-script font-bold leading-none mb-1 sm:mb-2 text-weddingDark drop-shadow-sm select-none transition-all break-words w-full max-w-full px-2 text-center py-2">
@@ -1574,7 +1579,7 @@ export default function App() {
           {/* RIGHT: ADMIN LIVE EDITOR SIDEBAR */}
           {/* ========================================================= */}
           {isAdminAuth && editForm && (
-            <div className="w-full md:w-[450px] h-screen bg-gray-100 fixed right-0 top-0 border-l border-gray-300 shadow-2xl z-[500] flex flex-col font-sans animate-in slide-in-from-right duration-300">
+            <div className="ios-h-safe h-[100dvh] w-full md:w-[450px] bg-gray-100 fixed right-0 top-0 border-l border-gray-300 shadow-2xl z-[500] flex flex-col font-sans animate-in slide-in-from-right duration-300">
               
               {/* Sidebar Header */}
               <div className="p-4 sm:p-5 border-b border-gray-200 bg-white flex justify-between items-center shrink-0 shadow-sm z-10">
@@ -1661,7 +1666,7 @@ export default function App() {
                           </div>
 
                           <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Outer Frame / Border Style</label>
-                          <select value={editForm.themeBorder || 'none'} onChange={e => setEditForm({...editForm, themeBorder: e.target.value})} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm mb-6 focus:outline-none focus:border-weddingAccent">
+                          <select value={editForm.themeBorder || 'none'} onChange={e => setEditForm({...editForm, themeBorder: e.target.value})} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[16px] sm:text-sm mb-6 focus:outline-none focus:border-weddingAccent">
                              <option value="none">None</option>
                              <option value="solid">Solid Classic</option>
                              <option value="double">Elegant Double</option>
@@ -1746,7 +1751,7 @@ export default function App() {
                          <div className="mb-4 sm:mb-5 w-full">
                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Unique Code (Leave blank for #JamesFoundHisCassie)</label>
                            <div className="flex gap-2 w-full">
-                             <input type="text" value={newGuestCode} onChange={(e) => setNewGuestCode(e.target.value)} className="flex-1 w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-weddingAccent focus:bg-white transition-colors" placeholder="#JamesFoundHisCassie" />
+                             <input type="text" value={newGuestCode} onChange={(e) => setNewGuestCode(e.target.value)} className="flex-1 w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[16px] sm:text-sm focus:outline-none focus:border-weddingAccent focus:bg-white transition-colors" placeholder="#JamesFoundHisCassie" />
                            </div>
                          </div>
                          <button onClick={handleAddGuest} className="w-full bg-weddingDark text-white py-2.5 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors touch-manipulation">Add Guest</button>
