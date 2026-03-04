@@ -38,7 +38,7 @@ const appId = typeof __app_id !== 'undefined' ? __app_id : 'wedding-app-default'
 // ==========================================
 const DEFAULT_DETAILS = {
   logoUrl: "https://cdn-icons-png.flaticon.com/512/3843/3843028.png",
-  invitationImage: "https://images.unsplash.com/photo-1544531586-fde5298cdd40?auto=format&fit=crop&w=800&q=80",
+  invitationPages: ["https://images.unsplash.com/photo-1544531586-fde5298cdd40?auto=format&fit=crop&w=800&q=80"],
   groomName: "James",
   brideName: "Cassie",
   weddingDate: "April 10, 2026",
@@ -332,40 +332,62 @@ const ImageSlider = ({ photos = [], altText, containerClass, imageClass, fitClas
 };
 
 // --- Interactive Flipbook Component for the Invitation ---
-const FlipInvitation = ({ image, groom, bride }) => {
-  const [isFlipped, setIsFlipped] = useState(false);
-  
+const FlipInvitation = ({ pages = [], groom, bride }) => {
+  const validPages = Array.isArray(pages) ? pages.filter(p => p) : [];
+  const [isOpen, setIsOpen] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const handleClick = () => {
+    if (!isOpen) {
+       setIsOpen(true);
+       setCurrentIndex(0);
+    } else {
+       if (currentIndex < validPages.length - 1) {
+          setCurrentIndex(prev => prev + 1);
+       } else {
+          setIsOpen(false);
+          // Wait for the closing animation before resetting the index
+          setTimeout(() => setCurrentIndex(0), 500); 
+       }
+    }
+  };
+
+  if (validPages.length === 0) return null;
+
   return (
     <div 
-       className="relative w-full max-w-md md:max-w-lg mx-auto aspect-[3/4] cursor-pointer group hover:scale-[1.02] transition-transform duration-500 z-20" 
+       className="relative w-full max-w-[85vw] sm:max-w-md md:max-w-lg mx-auto aspect-[3/4] cursor-pointer group hover:scale-[1.02] transition-transform duration-500 z-20" 
        style={{ perspective: '2000px' }} 
-       onClick={() => setIsFlipped(!isFlipped)}
+       onClick={handleClick}
     >
        <div 
           className="w-full h-full relative transition-transform duration-1000 shadow-2xl rounded-md" 
-          style={{ transformStyle: 'preserve-3d', transform: isFlipped ? 'rotateY(-180deg)' : 'rotateY(0deg)' }}
+          style={{ transformStyle: 'preserve-3d', transform: isOpen ? 'rotateY(-180deg)' : 'rotateY(0deg)' }}
        >
           {/* Front Cover (Closed Book) */}
           <div 
-             className="absolute inset-0 bg-[#faf9f6] flex flex-col items-center justify-center border-[12px] md:border-[16px] border-white p-8 text-center rounded-sm" 
+             className="absolute inset-0 bg-[#faf9f6] flex flex-col items-center justify-center border-[8px] md:border-[16px] border-white p-6 md:p-8 text-center rounded-sm" 
              style={{ backfaceVisibility: 'hidden' }}
           >
              <WreathIconWrapper isDark={false}><MailOpen size={30} /></WreathIconWrapper>
-             <h3 className="font-script text-5xl md:text-6xl text-weddingDark mb-4 leading-tight">
-                {groom} <br/><span className="text-3xl font-serif italic text-weddingAccent">&amp;</span><br/> {bride}
+             <h3 className="font-script text-4xl sm:text-5xl md:text-6xl text-weddingDark mb-4 leading-tight">
+                {groom} <br/><span className="text-2xl sm:text-3xl font-serif italic text-weddingAccent">&amp;</span><br/> {bride}
              </h3>
-             <div className="w-16 h-px bg-weddingSage mx-auto mt-6 mb-4"></div>
-             <p className="text-[9px] uppercase tracking-[0.4em] font-medium text-weddingAccent animate-pulse">Tap to open pages</p>
+             <div className="w-12 md:w-16 h-px bg-weddingSage mx-auto mt-4 md:mt-6 mb-4"></div>
+             <p className="text-[8px] md:text-[9px] uppercase tracking-[0.3em] md:tracking-[0.4em] font-medium text-weddingAccent animate-pulse">Tap to open pages</p>
           </div>
 
-          {/* Inside Page (The Image) */}
+          {/* Inside Page (The Content Images) */}
           <div 
              className="absolute inset-0 bg-white border-[8px] border-white rounded-sm overflow-hidden" 
              style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
           >
-             <img src={image} className="w-full h-full object-contain" alt="Invitation" />
-             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-[8px] uppercase tracking-widest shadow-lg pointer-events-none text-gray-500 font-bold border border-gray-100">
-                Tap to close
+             <img src={validPages[currentIndex]} className="w-full h-full object-contain transition-opacity duration-300" alt={`Invitation Page ${currentIndex + 1}`} />
+             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-[8px] uppercase tracking-widest shadow-lg pointer-events-none text-gray-500 font-bold border border-gray-100 flex items-center gap-2">
+                {currentIndex < validPages.length - 1 ? 'Tap for next page' : 'Tap to close'}
+                {validPages.length > 1 && (
+                   <span className="bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded text-[7px]">{currentIndex + 1}/{validPages.length}</span>
+                )}
              </div>
           </div>
        </div>
@@ -385,25 +407,24 @@ const GuestbookCarousel = ({ messages, handleLike, localLikes }) => {
   };
 
   return (
-    <div className="relative w-full max-w-screen-xl mx-auto px-10 md:px-14">
-      <button onClick={()=>scroll('left')} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-100 p-2.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all text-weddingDark hover:bg-weddingSage hover:text-white">
-        <ChevronLeft size={24}/>
+    <div className="relative w-full max-w-screen-xl mx-auto px-6 md:px-14">
+      <button onClick={()=>scroll('left')} className="absolute left-0 md:left-2 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-100 p-2 md:p-2.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all text-weddingDark hover:bg-weddingSage hover:text-white">
+        <ChevronLeft size={20} className="md:w-6 md:h-6"/>
       </button>
       
-      <div ref={scrollRef} className="flex overflow-x-auto gap-4 md:gap-6 snap-x snap-mandatory py-6 px-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-        <style>{`div::-webkit-scrollbar { display: none; }`}</style>
+      <div ref={scrollRef} className="flex overflow-x-auto gap-4 md:gap-6 snap-x snap-mandatory py-6 px-2 no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         {messages.map((m) => {
           const likesCount = localLikes[m.id] !== undefined ? localLikes[m.id] : (m.likes || 0);
           const isLiked = localStorage.getItem(`liked_${m.id}`);
           
           return (
-            <div key={m.id} className="min-w-[85vw] sm:min-w-[45vw] lg:min-w-[calc(25%-1.125rem)] snap-center bg-white/95 p-6 border border-white shadow-sm rounded-2xl flex flex-col group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative h-64 shrink-0">
-               <MessageSquareHeart className="w-6 h-6 text-weddingSage shrink-0 mb-4" />
-               <div className="flex-1 overflow-y-auto mb-4 pr-2" style={{ scrollbarWidth: 'none' }}>
+            <div key={m.id} className="min-w-[85vw] sm:min-w-[60vw] md:min-w-[45vw] lg:min-w-[calc(33.333%-1rem)] snap-center bg-white/95 p-5 md:p-6 border border-white shadow-sm rounded-2xl flex flex-col group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative h-64 shrink-0">
+               <MessageSquareHeart className="w-5 h-5 md:w-6 md:h-6 text-weddingSage shrink-0 mb-3 md:mb-4" />
+               <div className="flex-1 overflow-y-auto mb-3 md:mb-4 pr-2 no-scrollbar" style={{ scrollbarWidth: 'none' }}>
                   <p className="text-sm md:text-base font-serif italic leading-relaxed text-gray-800">"{String(m.message)}"</p>
                </div>
-               <div className="border-t border-gray-100 pt-4 flex justify-between items-end mt-auto gap-2">
-                  <p className="text-[9px] uppercase tracking-[0.2em] font-bold text-weddingAccent break-words flex-1 leading-snug">- {String(m.submittedName)}</p>
+               <div className="border-t border-gray-100 pt-3 md:pt-4 flex justify-between items-end mt-auto gap-2">
+                  <p className="text-[8px] md:text-[9px] uppercase tracking-[0.2em] font-bold text-weddingAccent break-words flex-1 leading-snug">- {String(m.submittedName)}</p>
                   
                   <button onClick={() => handleLike(m.id, m.likes)} className={`flex items-center gap-1.5 text-[10px] font-bold transition-all px-3 py-1.5 rounded-full shadow-sm shrink-0 ${isLiked ? 'bg-red-50 text-red-500 border border-red-100' : 'bg-gray-50 text-gray-400 border border-gray-100 hover:text-red-500 hover:bg-red-50 hover:border-red-100 hover:scale-105 active:scale-95'}`}>
                      <Heart size={12} className={isLiked ? "fill-current" : ""} /> 
@@ -415,8 +436,8 @@ const GuestbookCarousel = ({ messages, handleLike, localLikes }) => {
         })}
       </div>
 
-      <button onClick={()=>scroll('right')} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-100 p-2.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all text-weddingDark hover:bg-weddingSage hover:text-white">
-        <ChevronRight size={24}/>
+      <button onClick={()=>scroll('right')} className="absolute right-0 md:right-2 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-100 p-2 md:p-2.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all text-weddingDark hover:bg-weddingSage hover:text-white">
+        <ChevronRight size={20} className="md:w-6 md:h-6"/>
       </button>
     </div>
   );
@@ -698,10 +719,16 @@ export default function App() {
     let palette = Array.isArray(data.colorPalette) ? data.colorPalette : DEFAULT_DETAILS.colorPalette;
     if (palette.length === 0) palette = DEFAULT_DETAILS.colorPalette;
 
+    // Migrate from old single invitationImage to an array if needed
+    let invPages = toArr(data.invitationPages, ',');
+    if (invPages.length === 0 && data.invitationImage) invPages = [data.invitationImage];
+    if (invPages.length === 0) invPages = DEFAULT_DETAILS.invitationPages;
+
     return {
        ...DEFAULT_DETAILS,
        ...data,
        colorPalette: palette,
+       invitationPages: invPages,
        storyPhotos: toArr(data.storyPhotos || data.storyPhotoUrl, ','),
        ceremonyPhotos: toArr(data.ceremonyPhotos || data.ceremonyPhotoUrl, ','),
        receptionPhotos: toArr(data.receptionPhotos || data.receptionPhotoUrl, ','),
@@ -781,11 +808,18 @@ export default function App() {
         }
       }
     };
+    const styleSheet = document.createElement("style");
+    styleSheet.innerText = `
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    `;
+    document.head.appendChild(styleSheet);
     const fontLink = document.createElement('link'); fontLink.href = 'https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap'; fontLink.rel = 'stylesheet';
     document.head.appendChild(fontLink);
     return () => {
       if (document.head.contains(tailwindScript)) document.head.removeChild(tailwindScript);
       if (document.head.contains(fontLink)) document.head.removeChild(fontLink);
+      if (document.head.contains(styleSheet)) document.head.removeChild(styleSheet);
     };
   }, []);
 
@@ -964,7 +998,7 @@ export default function App() {
     if (!newGuestName) return;
     
     const finalCode = newGuestCode.trim() ? String(newGuestCode).trim() : '#JamesFoundHisCassie';
-    const newGuest = { id: `local_${Date.now()}`, name: newGuestName, code: finalCode, status: 'Pending', message: '', messageApproved: false, likes: 0, timestamp: Date.now() };
+    const newGuest = { id: `local_${Date.now()}`, name: newGuestName, code: finalCode, status: 'Pending', message: '', messageApproved: false, timestamp: Date.now(), likes: 0 };
     
     try {
       await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), newGuest);
@@ -1009,7 +1043,7 @@ export default function App() {
           
           if (name) { 
              if (!code) code = '#JamesFoundHisCassie';
-             try { await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), { name, code, status: 'Pending', likes: 0, timestamp: Date.now() }); } catch(e){} 
+             try { await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), { name, code, status: 'Pending', timestamp: Date.now(), likes: 0 }); } catch(e){} 
           }
         }
       }
@@ -1129,39 +1163,39 @@ export default function App() {
                <span className="hidden md:inline text-[9px] uppercase font-bold tracking-[0.2em] mr-1">RSVP</span>
             </button>
 
-            {/* Navigation (Classy, Smaller Font) */}
-            <nav className={`fixed top-0 left-0 right-0 z-40 py-4 bg-white/70 backdrop-blur-xl border-b border-gray-200/50 shadow-sm transition-all ${isAdminAuth ? 'md:right-[450px]' : ''}`}>
-              <div className="max-w-screen-xl mx-auto px-4 flex justify-center gap-4 sm:gap-6 md:gap-8 text-[9px] sm:text-[10px] md:text-[11px] uppercase tracking-[0.3em] sm:tracking-[0.4em] font-serif text-gray-600 flex-wrap">
+            {/* Navigation (Classy, Smaller Font, Mobile Scrollable) */}
+            <nav className={`fixed top-0 left-0 right-0 z-40 py-3 md:py-4 bg-white/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm transition-all overflow-x-auto no-scrollbar ${isAdminAuth ? 'md:right-[450px]' : ''}`}>
+              <div className="w-max min-w-full mx-auto px-4 flex justify-center gap-6 md:gap-8 text-[9px] sm:text-[10px] md:text-[11px] uppercase tracking-[0.3em] sm:tracking-[0.4em] font-serif text-gray-600">
                 {['Home', 'Invitation', 'Story', 'Entourage', 'Venues', 'Reminders', 'Gifts', 'RSVP'].map(t => (
-                  <button key={t} onClick={() => document.getElementById(t.toLowerCase()).scrollIntoView({behavior: 'smooth'})} className="hover:text-weddingDark transition-all active:scale-95 border-b-2 border-transparent hover:border-weddingAccent pb-1">{t}</button>
+                  <button key={t} onClick={() => document.getElementById(t.toLowerCase()).scrollIntoView({behavior: 'smooth'})} className="hover:text-weddingDark transition-all active:scale-95 border-b-2 border-transparent hover:border-weddingAccent pb-1 shrink-0">{t}</button>
                 ))}
               </div>
             </nav>
 
-            <main className="w-full relative z-20 pt-16">
+            <main className="w-full relative z-20 pt-16 overflow-x-hidden">
               
               {/* HERO */}
               <section id="home" className="min-h-[80vh] flex flex-col items-center justify-center text-center px-4 relative overflow-hidden pb-8">
-                <HandpaintedFlower className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] max-w-[900px] text-weddingSage opacity-20 pointer-events-none" />
-                <p className="text-weddingAccent tracking-[0.6em] uppercase text-[12px] mb-4 font-bold animate-pulse">Join us to celebrate</p>
-                <h1 className="text-5xl sm:text-6xl md:text-8xl lg:text-[9rem] font-script font-bold leading-none mb-2 text-weddingDark drop-shadow-sm select-none transition-all break-words max-w-full px-4 text-center py-2">
+                <HandpaintedFlower className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] h-[90vw] max-w-[900px] text-weddingSage opacity-20 pointer-events-none" />
+                <p className="text-weddingAccent tracking-[0.4em] sm:tracking-[0.6em] uppercase text-[10px] sm:text-[12px] mb-4 font-bold animate-pulse">Join us to celebrate</p>
+                <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-[9rem] font-script font-bold leading-none mb-2 text-weddingDark drop-shadow-sm select-none transition-all break-words max-w-full px-2 text-center py-2">
                   {String(displayData.groomName)} <br/>
                   <span className="text-3xl sm:text-4xl md:text-7xl font-serif italic text-weddingAccent my-2 block leading-none">&amp;</span> 
                   {String(displayData.brideName)}
                 </h1>
                 <LineAccent />
-                <p className="text-xl sm:text-2xl md:text-4xl tracking-[0.3em] font-light text-gray-800 uppercase mb-2 transition-all">{String(displayData.weddingDate)}</p>
-                <p className="text-[10px] sm:text-[11px] md:text-[13px] tracking-[0.5em] text-gray-400 font-bold uppercase mb-4 transition-all">{String(displayData.weddingLocation)}</p>
+                <p className="text-lg sm:text-2xl md:text-4xl tracking-[0.2em] sm:tracking-[0.3em] font-light text-gray-800 uppercase mb-2 transition-all">{String(displayData.weddingDate)}</p>
+                <p className="text-[9px] sm:text-[11px] md:text-[13px] tracking-[0.3em] sm:tracking-[0.5em] text-gray-400 font-bold uppercase mb-4 transition-all px-4">{String(displayData.weddingLocation)}</p>
                 <CountdownTimer targetDate={displayData.weddingDate} />
               </section>
 
               {/* INVITATION SPACE (Interactive Flipbook Layout) */}
-              {displayData.invitationImage && (
+              {displayData.invitationPages && displayData.invitationPages.length > 0 && (
                 <section id="invitation" className="py-10 md:py-14 px-4 max-w-screen-xl mx-auto flex flex-col items-center relative z-20">
                    <SectionHeading title="The Invitation" subtitle="Formal Request" Icon={MailOpen} />
                    
                    <FlipInvitation 
-                      image={displayData.invitationImage} 
+                      pages={displayData.invitationPages} 
                       groom={String(displayData.groomName)} 
                       bride={String(displayData.brideName)} 
                    />
@@ -1199,28 +1233,28 @@ export default function App() {
                   {/* Parents */}
                   <div className="mb-8 flex flex-col items-center">
                     <h3 className="text-[10px] md:text-[11px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-6 border-b-2 border-weddingYellow inline-block pb-2">Beloved Parents</h3>
-                    <div className="flex flex-col md:flex-row justify-center items-center gap-8 md:gap-12 text-center w-full max-w-3xl mx-auto">
+                    <div className="flex flex-col md:flex-row justify-center items-center gap-6 md:gap-12 text-center w-full max-w-3xl mx-auto">
                       <div className="flex flex-col items-center flex-1 w-full overflow-hidden justify-center h-full">
-                        <h4 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-3 border-b border-weddingSage/30 pb-1">Parents of the Groom</h4>
-                        {(displayData.groomParents||[]).map((n,i)=><p key={i} className="text-lg md:text-2xl font-serif text-weddingDark break-words w-full leading-snug">{n}</p>)}
+                        <h4 className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2 sm:mb-3 border-b border-weddingSage/30 pb-1">Parents of the Groom</h4>
+                        {(displayData.groomParents||[]).map((n,i)=><p key={i} className="text-base sm:text-lg md:text-2xl font-serif text-weddingDark break-words w-full leading-snug">{n}</p>)}
                       </div>
                       <div className="hidden md:block w-px bg-weddingSage/30 self-stretch min-h-[100px]"></div>
-                      <div className="flex flex-col items-center flex-1 w-full overflow-hidden justify-center h-full">
-                        <h4 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-3 border-b border-weddingSage/30 pb-1">Parents of the Bride</h4>
-                        {(displayData.brideParents||[]).map((n,i)=><p key={i} className="text-lg md:text-2xl font-serif text-weddingDark break-words w-full leading-snug">{n}</p>)}
+                      <div className="flex flex-col items-center flex-1 w-full overflow-hidden justify-center h-full mt-4 md:mt-0">
+                        <h4 className="text-[8px] sm:text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2 sm:mb-3 border-b border-weddingSage/30 pb-1">Parents of the Bride</h4>
+                        {(displayData.brideParents||[]).map((n,i)=><p key={i} className="text-base sm:text-lg md:text-2xl font-serif text-weddingDark break-words w-full leading-snug">{n}</p>)}
                       </div>
                     </div>
                   </div>
 
                   {/* Principal Sponsors */}
-                  <div className="mb-8 bg-white/40 p-4 md:p-6 rounded-2xl border border-white shadow-sm overflow-hidden">
+                  <div className="mb-8 bg-white/40 p-3 sm:p-4 md:p-6 rounded-2xl border border-white shadow-sm overflow-hidden">
                      <h3 className="text-[10px] md:text-[11px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-4 inline-block">Principal Sponsors</h3>
                      <div className="flex flex-col items-center gap-2 max-w-4xl mx-auto w-full">
                        {principalPairs.map((pair, i) => (
                          <div key={i} className="flex items-center justify-between border-b border-weddingSage/10 pb-2 w-full last:border-0 group overflow-hidden">
-                           <div className="flex-1 text-right break-words text-base md:text-lg font-serif text-gray-800 px-2 md:px-4">{String(pair.male)}</div>
-                           <div className="text-weddingSage opacity-40 italic text-lg md:text-xl font-serif text-center px-1 shrink-0">&amp;</div>
-                           <div className="flex-1 text-left break-words text-base md:text-lg font-serif text-gray-800 px-2 md:px-4">{String(pair.female)}</div>
+                           <div className="flex-1 text-right break-words text-sm sm:text-base md:text-lg font-serif text-gray-800 px-1 sm:px-2 md:px-4">{String(pair.male)}</div>
+                           <div className="text-weddingSage opacity-40 italic text-base sm:text-lg md:text-xl font-serif text-center px-1 shrink-0">&amp;</div>
+                           <div className="flex-1 text-left break-words text-sm sm:text-base md:text-lg font-serif text-gray-800 px-1 sm:px-2 md:px-4">{String(pair.female)}</div>
                          </div>
                        ))}
                      </div>
@@ -1250,9 +1284,9 @@ export default function App() {
                      <div className="absolute left-1/2 top-6 bottom-0 w-px bg-weddingSage/20 -translate-x-1/2"></div>
                      {entouragePartners.map((partner, i) => (
                        <div key={i} className="grid grid-cols-[1fr_auto_1fr] gap-x-2 mb-1 w-full items-center relative z-10">
-                         <div className="text-right overflow-hidden"><p className="text-base md:text-lg font-serif leading-snug break-words">{String(partner.groomSide)}</p></div>
-                         <div className="w-px h-full bg-transparent mx-2"></div>
-                         <div className="text-left overflow-hidden"><p className="text-base md:text-lg font-serif leading-snug break-words">{String(partner.brideSide)}</p></div>
+                         <div className="text-right overflow-hidden"><p className="text-sm sm:text-base md:text-lg font-serif leading-snug break-words">{String(partner.groomSide)}</p></div>
+                         <div className="w-px h-full bg-transparent mx-1 sm:mx-2"></div>
+                         <div className="text-left overflow-hidden"><p className="text-sm sm:text-base md:text-lg font-serif leading-snug break-words">{String(partner.brideSide)}</p></div>
                        </div>
                      ))}
                   </div>
@@ -1410,15 +1444,15 @@ export default function App() {
 
                   <div className="max-w-4xl mx-auto">
                     {displayData.qrCodeUrls && displayData.qrCodeUrls.length > 0 && (
-                      <div className="flex flex-wrap justify-center gap-8">
+                      <div className="flex flex-wrap justify-center gap-6 md:gap-8">
                         {displayData.qrCodeUrls.map((qr, idx) => (
-                           <div key={idx} className="w-48 h-48 md:w-64 md:h-64 bg-white p-4 shadow-xl rounded-2xl border border-gray-200 transition-transform hover:scale-105 group relative overflow-hidden flex flex-col items-center justify-center">
+                           <div key={idx} className="w-40 h-40 sm:w-48 sm:h-48 md:w-64 md:h-64 bg-white p-3 sm:p-4 shadow-xl rounded-2xl border border-gray-200 transition-transform hover:scale-105 group relative overflow-hidden flex flex-col items-center justify-center">
                              <img src={qr} alt={`QR Code ${idx + 1}`} className="w-full h-full object-contain mb-1 transition-opacity" />
                              
-                             <div className="absolute inset-0 bg-white/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-4">
-                                <span className="font-serif italic text-weddingDark font-bold text-lg">Scan or Save</span>
-                                <button onClick={() => downloadImage(qr, `Wedding_QR_${idx+1}.png`)} className="bg-weddingDark text-white px-5 py-2.5 rounded-full text-[10px] md:text-xs uppercase tracking-widest font-bold flex items-center gap-2 hover:bg-weddingAccent transition-colors shadow-lg active:scale-95">
-                                   <Download size={16}/> Save to Device
+                             <div className="absolute inset-0 bg-white/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3 md:gap-4">
+                                <span className="font-serif italic text-weddingDark font-bold text-sm md:text-lg">Scan or Save</span>
+                                <button onClick={() => downloadImage(qr, `Wedding_QR_${idx+1}.png`)} className="bg-weddingDark text-white px-3 md:px-5 py-2 md:py-2.5 rounded-full text-[8px] md:text-[10px] lg:text-xs uppercase tracking-widest font-bold flex items-center gap-2 hover:bg-weddingAccent transition-colors shadow-lg active:scale-95">
+                                   <Download size={14} className="md:w-4 md:h-4" /> Save
                                 </button>
                              </div>
                            </div>
@@ -1678,7 +1712,7 @@ export default function App() {
                        <AudioManager label="Background Music" url={editForm.backgroundMusicUrl} onChange={val=>setEditForm({...editForm, backgroundMusicUrl: val})} showToast={showToast} user={user} appId={appId} storage={storage} />
                        
                        <SinglePhotoManager label="Landing Page Logo" url={editForm.logoUrl} onChange={val=>setEditForm({...editForm, logoUrl: val})} />
-                       <SinglePhotoManager label="Formal Invitation Image" url={editForm.invitationImage} onChange={val=>setEditForm({...editForm, invitationImage: val})} />
+                       <PhotoManager label="Formal Invitation Pages" urls={editForm.invitationPages} onChange={arr=>setEditForm({...editForm, invitationPages: arr})} showToast={showToast} />
 
                        <PhotoManager label="Our Story Photos" urls={editForm.storyPhotos} onChange={arr=>setEditForm({...editForm, storyPhotos: arr})} showToast={showToast} />
                        <PhotoManager label="Ceremony Venues" urls={editForm.ceremonyPhotos} onChange={arr=>setEditForm({...editForm, ceremonyPhotos: arr})} showToast={showToast} />
