@@ -208,7 +208,7 @@ const LandingPage = ({ onOpen, groom, bride, logoUrl, displayData }) => (
     {displayData.themeCornerBottomRight && <img src={displayData.themeCornerBottomRight} alt="" className="fixed bottom-0 right-0 w-32 sm:w-48 md:w-80 object-contain z-10 pointer-events-none opacity-80 mix-blend-multiply" />}
 
     <AnimatedLeaves count={8} />
-    <div className="w-[90vw] max-w-md border border-weddingSage/30 p-6 sm:p-8 md:p-12 rounded-[2rem] sm:rounded-[3rem] aspect-[1/1.5] sm:aspect-[1/1.5] max-h-[85vh] flex flex-col items-center justify-center relative overflow-hidden shadow-2xl bg-white/80 backdrop-blur-sm z-20">
+    <div className="w-[90%] max-w-md border border-weddingSage/30 p-6 sm:p-8 md:p-12 rounded-[2rem] sm:rounded-[3rem] aspect-[1/1.5] sm:aspect-[1/1.5] max-h-[85vh] flex flex-col items-center justify-center relative overflow-hidden shadow-2xl bg-white/80 backdrop-blur-sm z-20">
        <div className="absolute inset-3 sm:inset-4 border border-weddingSage/10 rounded-[1.5rem] sm:rounded-[2.5rem]"></div>
        <div className="z-20 flex flex-col items-center w-full overflow-y-auto no-scrollbar py-4">
          {logoUrl && <img src={logoUrl} alt="Wedding Logo" className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 mb-4 sm:mb-6 object-contain opacity-80" />}
@@ -248,7 +248,7 @@ const CountdownTimer = ({ targetDate }) => {
   }, [targetDate]);
 
   return (
-    <div className="flex justify-center gap-3 sm:gap-4 md:gap-6 mt-6 backdrop-blur-md bg-white/40 px-4 sm:px-6 py-3 sm:py-4 rounded-3xl border border-white/60 shadow-sm w-full max-w-[90vw] sm:max-w-lg mx-auto relative z-20">
+    <div className="flex justify-center gap-3 sm:gap-4 md:gap-6 mt-6 backdrop-blur-md bg-white/40 px-4 sm:px-6 py-3 sm:py-4 rounded-3xl border border-white/60 shadow-sm w-full max-w-[90%] sm:max-w-lg mx-auto relative z-20">
       {Object.entries(timeLeft).map(([unit, value]) => (
         <div key={unit} className="flex flex-col items-center flex-1 sm:min-w-[60px]">
           <span className="text-xl sm:text-2xl md:text-3xl font-serif text-weddingDark">{String(value).padStart(2, '0')}</span>
@@ -360,7 +360,7 @@ const FlipInvitation = ({ pages = [], groom, bride }) => {
 
   return (
     <div 
-       className="relative w-full max-w-[85vw] sm:max-w-md md:max-w-lg mx-auto aspect-[3/4] cursor-pointer group hover:scale-[1.02] transition-transform duration-500 z-20 touch-manipulation" 
+       className="relative w-full max-w-[85%] sm:max-w-md md:max-w-lg mx-auto aspect-[3/4] cursor-pointer group hover:scale-[1.02] transition-transform duration-500 z-20 touch-manipulation" 
        style={{ perspective: '2000px' }} 
        onClick={handleClick}
     >
@@ -422,7 +422,7 @@ const GuestbookCarousel = ({ messages, handleLike, localLikes }) => {
           const isLiked = localStorage.getItem(`liked_${m.id}`);
           
           return (
-            <div key={m.id} className="w-[85vw] min-w-[85vw] sm:w-[60vw] sm:min-w-[60vw] md:w-[45vw] md:min-w-[45vw] lg:w-[calc(33.333%-1rem)] lg:min-w-[calc(33.333%-1rem)] snap-center bg-white/95 p-4 sm:p-5 md:p-6 border border-white shadow-sm rounded-2xl flex flex-col group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative h-56 sm:h-64 shrink-0">
+            <div key={m.id} className="w-[85%] shrink-0 sm:w-[60%] md:w-[45%] lg:w-[calc(33.333%-1rem)] snap-center bg-white/95 p-4 sm:p-5 md:p-6 border border-white shadow-sm rounded-2xl flex flex-col group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative h-56 sm:h-64">
                <MessageSquareHeart className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-weddingSage shrink-0 mb-2 sm:mb-3 md:mb-4" />
                <div className="flex-1 overflow-y-auto mb-2 sm:mb-3 md:mb-4 pr-1 sm:pr-2 no-scrollbar" style={{ scrollbarWidth: 'none' }}>
                   <p className="text-sm md:text-base font-serif italic leading-relaxed text-gray-800">"{String(m.message)}"</p>
@@ -1197,11 +1197,11 @@ export default function App() {
               
               {/* HERO */}
               <section id="home" className="min-h-[80dvh] flex flex-col items-center justify-center text-center px-4 relative overflow-hidden pb-8 w-full">
-                <HandpaintedFlower className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120vw] h-[120vw] sm:w-[90vw] sm:h-[90vw] max-w-[900px] text-weddingSage opacity-20 pointer-events-none" />
+                <HandpaintedFlower className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] sm:w-[90%] sm:h-[90%] max-w-[900px] text-weddingSage opacity-20 pointer-events-none" />
                 <p className="text-weddingAccent tracking-[0.3em] sm:tracking-[0.4em] md:tracking-[0.6em] uppercase text-[9px] sm:text-[10px] md:text-[12px] mb-3 sm:mb-4 font-bold animate-pulse">Join us to celebrate</p>
-                <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[9rem] font-script font-bold leading-none mb-1 sm:mb-2 text-weddingDark drop-shadow-sm select-none transition-all break-words w-full max-w-full px-2 text-center py-2">
+                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[8rem] font-script font-bold leading-none mb-1 sm:mb-2 text-weddingDark drop-shadow-sm select-none transition-all break-words w-full max-w-full px-2 text-center py-2">
                   {String(displayData.groomName)} <br/>
-                  <span className="text-2xl sm:text-3xl md:text-5xl lg:text-7xl font-serif italic text-weddingAccent my-1 sm:my-2 block leading-none">&amp;</span> 
+                  <span className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-serif italic text-weddingAccent my-1 sm:my-2 block leading-none">&amp;</span> 
                   {String(displayData.brideName)}
                 </h1>
                 <LineAccent />
@@ -1239,7 +1239,7 @@ export default function App() {
                   </div>
                   
                   {/* Interactive Story Slider - Faster 3x Slide & Square format */}
-                  <div className="w-full max-w-[85vw] sm:max-w-md mx-auto aspect-square rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-2xl border-[4px] sm:border-[6px] md:border-[8px] border-white relative z-10 bg-white order-1 lg:order-2">
+                  <div className="w-full max-w-[85%] sm:max-w-md mx-auto aspect-square rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-2xl border-[4px] sm:border-[6px] md:border-[8px] border-white relative z-10 bg-white order-1 lg:order-2">
                      <ImageSlider photos={displayData.storyPhotos} altText="Our Story" containerClass="w-full h-full" fitClass="object-cover" slideInterval={1500} />
                   </div>
                   
@@ -1423,7 +1423,7 @@ export default function App() {
                         </div>
                       )}
                    </div>
-                   <div className="aspect-[4/5] bg-white p-1.5 sm:p-2 shadow-xl sm:shadow-2xl overflow-hidden rounded-t-[4rem] sm:rounded-t-full max-w-[85vw] sm:max-w-sm mx-auto w-full relative mt-4 lg:mt-0">
+                   <div className="aspect-[4/5] bg-white p-1.5 sm:p-2 shadow-xl sm:shadow-2xl overflow-hidden rounded-t-[4rem] sm:rounded-t-full max-w-[85%] sm:max-w-sm mx-auto w-full relative mt-4 lg:mt-0">
                       <ImageSlider photos={displayData.dressCodePhotos} altText="Dress Code" containerClass="w-full h-full rounded-t-[3.5rem] sm:rounded-t-full" imageClass="rounded-t-[3.5rem] sm:rounded-t-full" />
                    </div>
                 </div>
@@ -1467,7 +1467,7 @@ export default function App() {
                     {displayData.qrCodeUrls && displayData.qrCodeUrls.length > 0 && (
                       <div className="flex flex-wrap justify-center gap-4 sm:gap-6 md:gap-8 w-full">
                         {displayData.qrCodeUrls.map((qr, idx) => (
-                           <div key={idx} className="w-[40vw] h-[40vw] max-w-[160px] max-h-[160px] sm:w-48 sm:h-48 md:w-64 md:h-64 bg-white p-2.5 sm:p-3 md:p-4 shadow-xl rounded-xl sm:rounded-2xl border border-gray-200 transition-transform lg:hover:scale-105 group relative overflow-hidden flex flex-col items-center justify-center shrink-0">
+                           <div key={idx} className="w-[40%] aspect-square max-w-[160px] max-h-[160px] sm:w-48 sm:h-48 md:w-64 md:h-64 bg-white p-2.5 sm:p-3 md:p-4 shadow-xl rounded-xl sm:rounded-2xl border border-gray-200 transition-transform lg:hover:scale-105 group relative overflow-hidden flex flex-col items-center justify-center shrink-0">
                              <img src={qr} alt={`QR Code ${idx + 1}`} className="w-full h-full object-contain mb-1 transition-opacity" />
                              
                              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 sm:gap-3 md:gap-4 touch-manipulation">
