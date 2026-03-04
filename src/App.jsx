@@ -37,15 +37,16 @@ const appId = typeof __app_id !== 'undefined' ? __app_id : 'wedding-app-default'
 // 2. CONSTANTS & DEFAULTS
 // ==========================================
 const DEFAULT_DETAILS = {
+  logoUrl: "https://cdn-icons-png.flaticon.com/512/3843/3843028.png",
+  invitationImage: "https://images.unsplash.com/photo-1544531586-fde5298cdd40?auto=format&fit=crop&w=800&q=80",
   groomName: "James",
   brideName: "Cassie",
-  coupleLogoUrl: "",
-  backgroundImageUrl: "https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&q=80",
-  websiteBorderUrl: "", 
   weddingDate: "April 10, 2026",
   weddingLocation: "Muntinlupa, Philippines",
-  backgroundMusicUrl: "https://www.mfiles.co.uk/mp3-downloads/debussy-clair-de-lune.mp3",
+  backgroundMusicUrl: "https://www.mfiles.co.uk/mp3-downloads/debussy-clair-de-lune.mp3", 
   ourStory: "Love is patient, love is kind (1 Corinthians 13:4)—and their love proved to be brave, choosing each other every day in faith. What began as a quiet night at Ooma became a story God was already writing—told through shared meals from Jollibee to Din Tai Fung, sweet evenings at Amano, and journeys to Australia, Vigan, La Union, Baguio, and Thailand. In grand adventures and quiet Sundays at Mass, they discovered that home is not a place but a person, and that with God at the center, their love would not easily be broken. Two years later, they stand certain—ready to begin a forever rooted in faith, devotion, and a love that grows sweeter with time.",
+  unpluggedText: "We invite you to be truly present with us during our nuptial mass. Please turn off your phones and cameras, and allow our brilliant photographer to capture the moments. We promise to share the beautiful photos with you afterwards!",
+  remindersText: "• Please arrive 30 minutes before the ceremony begins.\n• Parking is available at the venue.\n• Don't forget to RSVP by the deadline to secure your seat.",
   contactPhone: "+63 912 345 6789",
   contactEmail: "weddings@example.com",
   ceremonyDate: "Friday, April 10th, 2026",
@@ -62,14 +63,8 @@ const DEFAULT_DETAILS = {
   colorPalette: ['#b8c6a7', '#ffee8c', '#f5e2c5', '#F1CEBE', '#e2d5c3', '#d9e2d5'],
   giftText: "With all that we have, we’ve been truly blessed. Your presence and prayers are all that we request. But if you desire to give nonetheless, a monetary gift is one we suggest.",
   
-  giftOption1Title: "Bank Transfer",
-  giftOption1Details: "Bank: BDO\nAccount Name: James & Cassie\nAccount Number: 1234 5678 9000",
-  giftOption2Title: "Digital Wallet",
-  giftOption2Details: "GCash / Maya\nName: James De Vera\nNumber: 0912 345 6789",
-  
   qrCodeUrls: [
-    "https://placehold.co/400x400/f5f5f5/8B9B7A?text=GCash+QR",
-    "https://placehold.co/400x400/f5f5f5/8B9B7A?text=Bank+Transfer+QR"
+    "https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg"
   ], 
   rsvpDeadline: "March 1st, 2026",
   bestMan: "Melvin B. De Vera",
@@ -88,9 +83,6 @@ const DEFAULT_DETAILS = {
   dressCodePhotos: [
     "https://images.unsplash.com/photo-1566737236500-c8ac43014a67?auto=format&fit=crop&q=80&w=800",
     "https://images.unsplash.com/photo-1516726855505-e5ed699fd49d?auto=format&fit=crop&q=80&w=800"
-  ],
-  guestbookPhotos: [
-    "https://images.unsplash.com/photo-1606800052052-a08af7148866?auto=format&fit=crop&q=80&w=800"
   ],
   groomParents: ["Manuel P. De Vera (+)", "Atty. Anthony Luigi B. De Vera", "& Lilia B. De Vera"],
   brideParents: ["Roberto M. Pinoy", "& Maria Rosario C. Pinoy"],
@@ -191,33 +183,24 @@ const AnimatedLeaves = ({ count = 8 }) => (
   </div>
 );
 
-const LandingPage = ({ onOpen, groom, bride, backgroundImageUrl, websiteBorderUrl, coupleLogoUrl }) => (
+const LandingPage = ({ onOpen, groom, bride, logoUrl }) => (
   <div className="fixed inset-0 z-[200] bg-[#faf9f6] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-1000 overflow-hidden">
+    
+    {/* Elegant Visual Background */}
     <div className="absolute inset-0 z-0 pointer-events-none">
-      <div className="absolute inset-0 bg-cover bg-center opacity-60 transition-transform duration-[20s] ease-out scale-105" style={{ backgroundImage: `url('${backgroundImageUrl}')` }}></div>
+      <div className="absolute inset-0 bg-cover bg-center opacity-60 transition-transform duration-[20s] ease-out scale-105" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&q=80')" }}></div>
       <div className="absolute inset-0 bg-gradient-to-t from-[#faf9f6] via-[#faf9f6]/80 to-[#faf9f6]/95 backdrop-blur-[3px]"></div>
     </div>
-    
-    {websiteBorderUrl && (
-      <div className="absolute inset-0 z-[50] pointer-events-none opacity-90" style={{ backgroundImage: `url('${websiteBorderUrl}')`, backgroundSize: '100% 100%', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}></div>
-    )}
 
     <AnimatedLeaves count={8} />
     <div className="max-w-md w-full border border-weddingSage/30 p-8 sm:p-12 rounded-[3rem] aspect-[1/1.5] flex flex-col items-center justify-center relative overflow-hidden shadow-2xl bg-white/80 backdrop-blur-sm z-10 scale-95 md:scale-100">
        <div className="absolute inset-4 border border-weddingSage/10 rounded-[2.5rem]"></div>
        <div className="z-20 flex flex-col items-center w-full">
+         {logoUrl && <img src={logoUrl} alt="Wedding Logo" className="w-16 h-16 sm:w-20 sm:h-20 mb-6 object-contain opacity-80" />}
          <p className="text-weddingAccent tracking-[0.3em] sm:tracking-[0.4em] uppercase text-[9px] sm:text-[10px] mb-6 font-bold">You are invited to the wedding of</p>
-         
-         {coupleLogoUrl ? (
-            <img src={coupleLogoUrl} alt="Couple Logo" className="w-48 h-48 md:w-56 md:h-56 object-contain mb-8 filter drop-shadow-md" />
-         ) : (
-            <>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-script text-weddingDark mb-2 break-words max-w-full px-2 leading-tight py-1">{groom}</h1>
-              <span className="text-xl sm:text-2xl font-serif italic text-weddingSage mb-2">&</span>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-script text-weddingDark mb-8 break-words max-w-full px-2 leading-tight py-1">{bride}</h1>
-            </>
-         )}
-
+         <h1 className="text-4xl sm:text-5xl md:text-6xl font-script text-weddingDark mb-2 break-words max-w-full px-2 leading-tight py-1">{groom}</h1>
+         <span className="text-xl sm:text-2xl font-serif italic text-weddingSage mb-2">&</span>
+         <h1 className="text-4xl sm:text-5xl md:text-6xl font-script text-weddingDark mb-8 break-words max-w-full px-2 leading-tight py-1">{bride}</h1>
          <button onClick={onOpen} className="mt-4 flex flex-col items-center gap-4 group focus:outline-none">
            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-weddingYellow rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 group-active:scale-95 transition-all duration-500">
              <MailOpen className="text-weddingDark w-6 h-6 sm:w-8 sm:h-8" />
@@ -285,93 +268,6 @@ const ColorPaletteEditor = ({ colors = [], onChange }) => {
   )
 };
 
-const StoryCollage = ({ photos = [] }) => {
-  const scrollRef = useRef(null);
-  const isPaused = useRef(false);
-  const validPhotos = photos.filter(p => p && typeof p === 'string' && p.trim() !== '');
-  
-  let displayPhotos = [...validPhotos];
-  if (displayPhotos.length > 0) {
-    while (displayPhotos.length < 6) {
-      displayPhotos = [...displayPhotos, ...validPhotos];
-    }
-    displayPhotos = [...displayPhotos, ...displayPhotos];
-  }
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el || validPhotos.length === 0) return;
-    
-    let animationFrameId;
-    const speed = 2.5; // Significantly faster auto-scroll
-    
-    const scroll = () => {
-      if (!isPaused.current) {
-        el.scrollLeft += speed;
-        // Seamless loop reset
-        if (el.scrollLeft >= el.scrollWidth / 2) {
-          el.scrollLeft -= el.scrollWidth / 2;
-        }
-      }
-      animationFrameId = requestAnimationFrame(scroll);
-    };
-    
-    animationFrameId = requestAnimationFrame(scroll);
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [validPhotos]);
-
-  const handleNext = (e) => {
-    e.preventDefault(); e.stopPropagation();
-    if (scrollRef.current) scrollRef.current.scrollBy({ left: 350, behavior: 'smooth' });
-  };
-
-  const handlePrev = (e) => {
-    e.preventDefault(); e.stopPropagation();
-    if (scrollRef.current) scrollRef.current.scrollBy({ left: -350, behavior: 'smooth' });
-  };
-
-  if (validPhotos.length === 0) return null;
-
-  return (
-    <div className="w-full max-w-6xl bg-[#faf9f6] rounded-[2rem] border-[6px] md:border-[8px] border-white shadow-2xl relative overflow-hidden z-10 mx-auto group">
-       <button 
-         onClick={handlePrev} 
-         onMouseEnter={() => isPaused.current = true}
-         onMouseLeave={() => isPaused.current = false}
-         className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 md:p-3 rounded-full opacity-0 group-hover:opacity-100 transition-all z-20 shadow-md"
-       >
-         <ChevronLeft size={24}/>
-       </button>
-       <button 
-         onClick={handleNext} 
-         onMouseEnter={() => isPaused.current = true}
-         onMouseLeave={() => isPaused.current = false}
-         className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 md:p-3 rounded-full opacity-0 group-hover:opacity-100 transition-all z-20 shadow-md"
-       >
-         <ChevronRight size={24}/>
-       </button>
-       <div 
-         ref={scrollRef}
-         className="flex h-[320px] sm:h-[450px] md:h-[550px] gap-2 sm:gap-3 p-2 sm:p-3 overflow-hidden flex-nowrap scroll-smooth"
-         onMouseEnter={() => isPaused.current = true}
-         onMouseLeave={() => isPaused.current = false}
-         onTouchStart={() => isPaused.current = true}
-         onTouchEnd={() => isPaused.current = false}
-       >
-          {displayPhotos.map((url, idx) => (
-             <img 
-                key={idx} 
-                src={url} 
-                alt={`Story Detail ${idx}`} 
-                className="h-full w-auto object-cover rounded-xl shadow-md shrink-0 transition-transform duration-700 hover:scale-[1.02] cursor-pointer"
-                onError={(e) => { e.target.onerror = null; e.target.src = "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80" }} 
-             />
-          ))}
-       </div>
-    </div>
-  );
-};
-
 const ImageSlider = ({ photos = [], altText, containerClass, imageClass, fitClass = "object-cover" }) => {
   const validPhotos = photos.filter(p => p && typeof p === 'string' && p.trim() !== '');
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -382,8 +278,15 @@ const ImageSlider = ({ photos = [], altText, containerClass, imageClass, fitClas
     return () => clearInterval(interval);
   }, [validPhotos.length]);
 
-  const handleNext = (e) => { e.stopPropagation(); setCurrentIndex((prev) => (prev + 1) % validPhotos.length); };
-  const handlePrev = (e) => { e.stopPropagation(); setCurrentIndex((prev) => (prev - 1 + validPhotos.length) % validPhotos.length); };
+  const handleNext = (e) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev + 1) % validPhotos.length);
+  };
+
+  const handlePrev = (e) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev - 1 + validPhotos.length) % validPhotos.length);
+  };
 
   if (validPhotos.length === 0) return (
     <div className={`bg-gray-100 flex items-center justify-center ${containerClass}`}>
@@ -406,6 +309,7 @@ const ImageSlider = ({ photos = [], altText, containerClass, imageClass, fitClas
              onError={(e) => { e.target.onerror = null; e.target.src = "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80" }} 
              className={`absolute inset-0 w-full h-full ${fitClass} transition-opacity duration-1000 ease-in-out ${idx === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'} ${imageClass || ''}`} />
       ))}
+      {/* Slider Controls */}
       <button onClick={handlePrev} className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/60 text-white p-1.5 sm:p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all z-20 hover:scale-110 active:scale-95">
          <ChevronLeft size={20} className="sm:w-6 sm:h-6" />
       </button>
@@ -431,34 +335,20 @@ const TextInput = ({ label, value, onChange, isTextArea = false }) => (
   </div>
 );
 
-const SinglePhotoManager = ({ label, url, onChange, showToast }) => {
-  const [newUrl, setNewUrl] = useState('');
-  
-  const handleSet = () => {
-    if(newUrl.trim()) { onChange(newUrl.trim()); setNewUrl(''); showToast("Updated!"); }
-  }
-
-  return (
-    <div className="mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3"><ImageIcon size={12} className="inline mr-1"/> {label}</label>
-      
-      {url && (
-         <div className="relative aspect-video rounded overflow-hidden group border border-gray-200 mb-3 w-full max-w-[200px] bg-gray-50 flex items-center justify-center">
+const SinglePhotoManager = ({ label, url, onChange }) => (
+  <div className="mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3"><ImageIcon size={12} className="inline mr-1"/> {label}</label>
+     {url && (
+        <div className="relative aspect-video sm:aspect-square md:aspect-video mb-4 rounded overflow-hidden border border-gray-200 w-32 bg-gray-50">
            <img src={url} className="w-full h-full object-contain" alt="Preview" />
-           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <button onClick={()=>onChange('')} className="text-white bg-red-500 p-1.5 rounded-full hover:scale-110 transition-transform"><Trash2 size={12}/></button>
-           </div>
-         </div>
-      )}
-      {!url && <div className="text-xs text-gray-400 mb-3 italic">None set. Using text/default fallback.</div>}
-
-      <div className="flex gap-2 mb-2">
-         <input value={newUrl} onChange={e=>setNewUrl(e.target.value)} placeholder="Paste image URL here..." className="flex-1 text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:border-weddingAccent" />
-         <button onClick={handleSet} className="bg-weddingDark text-white px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider hover:bg-weddingAccent transition-colors flex items-center gap-1"><Check size={12}/> Set</button>
-      </div>
-    </div>
-  );
-};
+           <button onClick={() => onChange('')} className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full"><X size={12}/></button>
+        </div>
+     )}
+     <div className="flex gap-2 mb-2">
+        <input value={url || ''} onChange={e=>onChange(e.target.value)} placeholder="Paste image URL here..." className="flex-1 text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:border-weddingAccent" />
+     </div>
+  </div>
+);
 
 const AudioManager = ({ label, url, onChange, showToast, user, appId, storage }) => {
   const [inputUrl, setInputUrl] = useState('');
@@ -468,23 +358,36 @@ const AudioManager = ({ label, url, onChange, showToast, user, appId, storage })
   const handleSetUrl = () => {
     if (inputUrl.trim()) { 
       let finalUrl = inputUrl.trim();
+      
       const gdriveMatch = finalUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
       const idMatch = finalUrl.match(/id=([a-zA-Z0-9_-]+)/);
-      if (gdriveMatch && gdriveMatch[1]) { finalUrl = `https://docs.google.com/uc?export=download&confirm=t&id=${gdriveMatch[1]}`; } 
-      else if (idMatch && idMatch[1]) { finalUrl = `https://docs.google.com/uc?export=download&confirm=t&id=${idMatch[1]}`; }
-      onChange(finalUrl); setInputUrl(''); showToast("Music link updated!"); 
+      
+      if (gdriveMatch && gdriveMatch[1]) {
+        finalUrl = `https://docs.google.com/uc?export=download&confirm=t&id=${gdriveMatch[1]}`;
+      } else if (idMatch && idMatch[1]) {
+        finalUrl = `https://docs.google.com/uc?export=download&confirm=t&id=${idMatch[1]}`;
+      }
+      
+      onChange(finalUrl); 
+      setInputUrl(''); 
+      showToast("Music link updated!"); 
     }
   };
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (!user) { showToast("Authentication required to upload."); return; }
+    if (!user) {
+      showToast("Authentication required to upload.");
+      return;
+    }
+
     setIsUploading(true);
     try {
       const storageRef = ref(storage, `artifacts/${appId}/users/${user.uid}/uploads/audio_${Date.now()}.mp3`);
       await uploadBytes(storageRef, file);
       const downloadUrl = await getDownloadURL(storageRef);
+      
       onChange(downloadUrl);
       showToast("Audio successfully uploaded & linked!");
     } catch (error) {
@@ -500,17 +403,20 @@ const AudioManager = ({ label, url, onChange, showToast, user, appId, storage })
     <div className="mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2"><Music size={12} className="inline mr-1"/> {label}</label>
       <div className="text-xs text-gray-500 mb-4 truncate bg-gray-50 p-2 rounded border border-gray-100" title={url}>Current: {url && url.startsWith('http') ? 'Active Audio Link' : (url || 'None')}</div>
+      
       <div className="mb-4">
          <input type="file" accept="audio/*" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
          <button onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="w-full bg-weddingAccent/10 text-weddingDark border border-weddingAccent/30 px-3 py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-weddingAccent/20 transition-colors flex justify-center items-center gap-2 disabled:opacity-50">
             <Upload size={14} /> {isUploading ? 'Uploading to Firebase...' : 'Upload MP3 to Firebase'}
          </button>
       </div>
+
       <div className="relative flex items-center py-2 mb-2">
          <div className="flex-grow border-t border-gray-200"></div>
          <span className="flex-shrink-0 mx-2 text-[8px] text-gray-400 uppercase font-bold tracking-widest">OR PASTE URL</span>
          <div className="flex-grow border-t border-gray-200"></div>
       </div>
+
       <div className="flex gap-2">
          <input type="text" value={inputUrl} onChange={e=>setInputUrl(e.target.value)} placeholder="Paste MP3, or GDrive URL here..." className="flex-1 text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:border-weddingAccent" />
          <button onClick={handleSetUrl} className="bg-weddingDark text-white px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider hover:bg-weddingAccent transition-colors">Link</button>
@@ -672,15 +578,11 @@ export default function App() {
     return {
        ...DEFAULT_DETAILS,
        ...data,
-       backgroundImageUrl: data.backgroundImageUrl || DEFAULT_DETAILS.backgroundImageUrl,
-       websiteBorderUrl: data.websiteBorderUrl || DEFAULT_DETAILS.websiteBorderUrl,
-       coupleLogoUrl: data.coupleLogoUrl || DEFAULT_DETAILS.coupleLogoUrl,
        colorPalette: palette,
        storyPhotos: toArr(data.storyPhotos || data.storyPhotoUrl, ','),
        ceremonyPhotos: toArr(data.ceremonyPhotos || data.ceremonyPhotoUrl, ','),
        receptionPhotos: toArr(data.receptionPhotos || data.receptionPhotoUrl, ','),
        dressCodePhotos: toArr(data.dressCodePhotos || data.dressCodePhotoUrl, ','),
-       guestbookPhotos: toArr(data.guestbookPhotos || data.guestbookPhotoUrl, ','),
        qrCodeUrls: toArr(data.qrCodeUrls, ','),
        groomParents: toArr(data.groomParents, '\n'),
        brideParents: toArr(data.brideParents, '\n'),
@@ -696,13 +598,26 @@ export default function App() {
 
   const displayData = (isAdminAuth && editForm) ? editForm : details;
   
+  // Fallback to the reliable Piano MP3 if the field is corrupted
   const safeAudioUrl = displayData?.backgroundMusicUrl?.trim() || "https://www.mfiles.co.uk/mp3-downloads/debussy-clair-de-lune.mp3";
   const audioSrc = safeAudioUrl.startsWith('http') || safeAudioUrl.startsWith('data:') ? safeAudioUrl : encodeURI(safeAudioUrl);
 
-  const handleOpenInvitation = () => { setIsLanding(false); };
+  // --- AUDIO ACTIONS ---
+  const handleOpenInvitation = async () => {
+    setIsLanding(false);
+    // Auto-play the audio when the guest opens the invitation
+    if (audioRef.current) {
+       try {
+          await audioRef.current.play();
+          setIsPlaying(true);
+          setAudioError(false);
+       } catch (e) {
+          console.warn("Autoplay was blocked or failed:", e);
+       }
+    }
+  };
 
-  const toggleAudio = async (e) => {
-    e.stopPropagation(); e.preventDefault();
+  const toggleAudio = async () => {
     if (!audioRef.current) return;
     try {
        if (audioRef.current.paused) { 
@@ -713,12 +628,13 @@ export default function App() {
          audioRef.current.pause(); 
          setIsPlaying(false);
        }
-    } catch (err) {
-       console.warn("Audio playback failed:", err);
+    } catch (e) {
+       console.warn("Audio playback failed:", e);
        setIsPlaying(false);
     }
   };
 
+  // --- STYLES INJECTION ---
   useEffect(() => {
     const tailwindScript = document.createElement('script');
     tailwindScript.src = 'https://cdn.tailwindcss.com';
@@ -750,6 +666,7 @@ export default function App() {
     };
   }, []);
 
+  // --- FIREBASE SYNC & LOCAL STORAGE FALLBACK ---
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -765,6 +682,7 @@ export default function App() {
   useEffect(() => {
     if (!user) return;
     
+    // Load local storage first as an immediate fallback
     const localData = localStorage.getItem(`wedding_config_${appId}`);
     if (localData) {
        const normalizedLocal = normalizeData(JSON.parse(localData));
@@ -799,6 +717,7 @@ export default function App() {
     return () => { unsubConfig(); unsubGuests(); };
   }, [user]);
 
+  // --- RSVP HANDLER ---
   const handleRsvpSubmit = async (e) => {
     e.preventDefault();
     setSubmitError('');
@@ -806,16 +725,31 @@ export default function App() {
     const universalCodes = ['#jamesfoundhiscassie', '#cassiechosejames'];
     const isUniversal = universalCodes.includes(code);
     
+    // Find guest by code, or by name if universal code is used
     let guest = invitees.find(i => String(i.code).toLowerCase() === code);
-    if (!guest && isUniversal) { guest = invitees.find(i => String(i.name).toLowerCase() === rsvpForm.name.trim().toLowerCase()); }
+    if (!guest && isUniversal) {
+      guest = invitees.find(i => String(i.name).toLowerCase() === rsvpForm.name.trim().toLowerCase());
+    }
     
     setIsSubmitting(true);
     
     const status = rsvpForm.attending === 'yes' ? 'Attending' : 'Declined';
-    const rsvpData = { status: status, submittedName: rsvpForm.name, message: rsvpForm.message, respondedAt: Date.now(), messageApproved: false };
+    const rsvpData = { 
+       status: status, 
+       submittedName: rsvpForm.name, 
+       message: rsvpForm.message, 
+       respondedAt: Date.now(),
+       messageApproved: false
+    };
 
     if (!guest && isUniversal) {
-      const newGuestData = { name: rsvpForm.name, code: rsvpForm.enteredCode, ...rsvpData, timestamp: Date.now() };
+      // Add new guest automatically if using universal code
+      const newGuestData = { 
+        name: rsvpForm.name, 
+        code: rsvpForm.enteredCode, 
+        ...rsvpData,
+        timestamp: Date.now() 
+      };
       try {
         await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), newGuestData);
         setSubmitSuccess(true);
@@ -851,6 +785,7 @@ export default function App() {
     setIsSubmitting(false);
   };
 
+  // --- ADMIN ACTIONS ---
   const handleAdminLogin = (e) => {
     e.preventDefault();
     if (adminPassword === ADMIN_PASSWORD) {
@@ -882,8 +817,10 @@ export default function App() {
   const handleAddGuest = async (e) => {
     e.preventDefault();
     if (!newGuestName) return;
+    
     const finalCode = newGuestCode.trim() ? String(newGuestCode).trim() : '#JamesFoundHisCassie';
     const newGuest = { id: `local_${Date.now()}`, name: newGuestName, code: finalCode, status: 'Pending', message: '', messageApproved: false, timestamp: Date.now() };
+    
     try {
       await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), newGuest);
       showToast("Guest added successfully");
@@ -924,6 +861,7 @@ export default function App() {
         if (cols.length >= 1) {
           const name = cols[0] ? cols[0].replace(/"/g, '').trim() : '';
           let code = cols[1] ? cols[1].replace(/"/g, '').trim() : '';
+          
           if (name) { 
              if (!code) code = '#JamesFoundHisCassie';
              try { await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), { name, code, status: 'Pending', timestamp: Date.now() }); } catch(e){} 
@@ -960,8 +898,13 @@ export default function App() {
   const dbApprovedMessages = invitees.filter(i => i.message && i.messageApproved && i.submittedName);
   const displayMessages = dbApprovedMessages.length > 0 ? dbApprovedMessages : SAMPLE_MESSAGES;
 
+  // ==========================================
+  // RENDER LOGIC
+  // ==========================================
+
   return (
     <>
+      {/* ALWAYS MOUNTED AUDIO TO PRESERVE CLICK GESTURE */}
       <audio 
          ref={audioRef} 
          loop 
@@ -982,23 +925,22 @@ export default function App() {
           onOpen={handleOpenInvitation} 
           groom={String(displayData.groomName)} 
           bride={String(displayData.brideName)} 
-          coupleLogoUrl={displayData.coupleLogoUrl}
-          backgroundImageUrl={displayData.backgroundImageUrl}
-          websiteBorderUrl={displayData.websiteBorderUrl}
+          logoUrl={displayData.logoUrl}
         />
       ) : (
         <div className="h-screen w-full flex overflow-hidden bg-[#faf9f6]" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+          
+          {/* ========================================================= */}
+          {/* LEFT: LIVE WEBSITE PREVIEW */}
+          {/* ========================================================= */}
           <div className={`flex-1 relative h-full overflow-y-auto transition-all duration-300 text-weddingDark selection:bg-weddingYellow/40 shadow-[inset_0_0_50px_rgba(0,0,0,0.05)]`}>
             
-            <div className="fixed inset-0 z-0 bg-cover bg-center opacity-50 pointer-events-none" style={{ backgroundImage: `url('${displayData.backgroundImageUrl}')` }}></div>
+            {/* Background Layers */}
+            <div className="fixed inset-0 z-0 bg-cover bg-center opacity-50 pointer-events-none" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&q=80')" }}></div>
             <div className="fixed inset-0 z-0 bg-gradient-to-b from-[#faf9f6]/95 via-[#faf9f6]/90 to-[#faf9f6]/95 backdrop-blur-[2px] pointer-events-none"></div>
-            
-            {displayData.websiteBorderUrl && (
-               <div className="fixed inset-0 z-[45] pointer-events-none opacity-90" style={{ backgroundImage: `url('${displayData.websiteBorderUrl}')`, backgroundSize: '100% 100%', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}></div>
-            )}
-
             <AnimatedLeaves count={8} />
             
+            {/* Elegant Custom Music Control */}
             <div className="fixed left-6 bottom-6 z-50 animate-in fade-in slide-in-from-bottom-8 duration-1000">
               <div onClick={toggleAudio} className="bg-white/80 backdrop-blur-xl p-3 pr-5 rounded-[16px] shadow-2xl border border-white/50 flex items-center gap-4 transition-all hover:bg-white/95 cursor-pointer group hover:scale-105 active:scale-95">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isPlaying ? 'bg-weddingSage text-white shadow-md' : 'bg-weddingYellow text-weddingDark animate-pulse'}`}>
@@ -1015,6 +957,7 @@ export default function App() {
               </div>
             </div>
 
+            {/* Quick RSVP Floating Icon */}
             <button 
                onClick={() => document.getElementById('rsvp')?.scrollIntoView({behavior: 'smooth'})}
                className="fixed bottom-6 right-6 z-50 bg-weddingDark text-weddingYellow p-3 md:p-4 rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all flex items-center gap-2 group border border-weddingYellow/20 animate-in fade-in slide-in-from-bottom-8 duration-1000"
@@ -1023,9 +966,10 @@ export default function App() {
                <span className="hidden md:inline text-[9px] uppercase font-bold tracking-[0.2em] mr-1">RSVP</span>
             </button>
 
-            <nav className={`fixed top-0 left-0 right-0 z-[60] py-4 bg-[#faf9f6]/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm transition-all ${isAdminAuth ? 'md:right-[450px]' : ''}`}>
-              <div className="max-w-screen-xl mx-auto px-4 flex justify-center gap-4 sm:gap-8 md:gap-10 text-[8px] sm:text-[9px] md:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.3em] font-bold text-gray-500 flex-wrap">
-                {['Home', 'Story', 'Entourage', 'Venues', 'Gifts', 'RSVP'].map(t => (
+            {/* Navigation */}
+            <nav className={`fixed top-0 left-0 right-0 z-40 py-4 bg-[#faf9f6]/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm transition-all ${isAdminAuth ? 'md:right-[450px]' : ''}`}>
+              <div className="max-w-screen-xl mx-auto px-4 flex justify-center gap-4 sm:gap-6 md:gap-8 text-[8px] sm:text-[9px] md:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.3em] font-bold text-gray-500 flex-wrap">
+                {['Home', 'Invitation', 'Story', 'Entourage', 'Venues', 'Reminders', 'Gifts', 'RSVP'].map(t => (
                   <button key={t} onClick={() => document.getElementById(t.toLowerCase()).scrollIntoView({behavior: 'smooth'})} className="hover:text-weddingDark transition-all active:scale-95 border-b-2 border-transparent hover:border-weddingAccent pb-1">{t}</button>
                 ))}
               </div>
@@ -1033,26 +977,30 @@ export default function App() {
 
             <main className="w-full relative z-10 pt-16">
               
+              {/* HERO */}
               <section id="home" className="min-h-[80vh] flex flex-col items-center justify-center text-center px-4 relative overflow-hidden pb-8">
                 <HandpaintedFlower className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] max-w-[900px] text-weddingSage opacity-20 pointer-events-none" />
-                <p className="text-weddingAccent tracking-[0.6em] uppercase text-[12px] mb-6 font-bold animate-pulse">Join us to celebrate</p>
-                
-                {displayData.coupleLogoUrl ? (
-                   <img src={displayData.coupleLogoUrl} alt="Couple Logo" className="w-64 h-64 md:w-80 md:h-80 object-contain mb-8 filter drop-shadow-md animate-in zoom-in duration-1000" />
-                ) : (
-                   <h1 className="text-5xl sm:text-6xl md:text-8xl lg:text-[9rem] font-script font-bold leading-none mb-2 text-weddingDark drop-shadow-sm select-none transition-all break-words max-w-full px-4 text-center py-2">
-                     {String(displayData.groomName)} <br/>
-                     <span className="text-3xl sm:text-4xl md:text-7xl font-serif italic text-weddingAccent my-2 block leading-none">&</span> 
-                     {String(displayData.brideName)}
-                   </h1>
-                )}
-
+                <p className="text-weddingAccent tracking-[0.6em] uppercase text-[12px] mb-4 font-bold animate-pulse">Join us to celebrate</p>
+                <h1 className="text-5xl sm:text-6xl md:text-8xl lg:text-[9rem] font-script font-bold leading-none mb-2 text-weddingDark drop-shadow-sm select-none transition-all break-words max-w-full px-4 text-center py-2">
+                  {String(displayData.groomName)} <br/>
+                  <span className="text-3xl sm:text-4xl md:text-7xl font-serif italic text-weddingAccent my-2 block leading-none">&amp;</span> 
+                  {String(displayData.brideName)}
+                </h1>
                 <LineAccent />
-                <p className="text-xl sm:text-2xl md:text-4xl tracking-[0.3em] font-light text-gray-800 uppercase mb-2 transition-all mt-4">{String(displayData.weddingDate)}</p>
+                <p className="text-xl sm:text-2xl md:text-4xl tracking-[0.3em] font-light text-gray-800 uppercase mb-2 transition-all">{String(displayData.weddingDate)}</p>
                 <p className="text-[10px] sm:text-[11px] md:text-[13px] tracking-[0.5em] text-gray-400 font-bold uppercase mb-4 transition-all">{String(displayData.weddingLocation)}</p>
                 <CountdownTimer targetDate={displayData.weddingDate} />
               </section>
 
+              {/* INVITATION SPACE */}
+              {displayData.invitationImage && (
+                <section id="invitation" className="py-10 md:py-14 px-4 max-w-screen-xl mx-auto flex flex-col items-center">
+                   <SectionHeading title="The Invitation" subtitle="Formal Request" Icon={MailOpen} />
+                   <img src={displayData.invitationImage} alt="Formal Invitation" className="max-w-full md:max-w-2xl shadow-2xl rounded-sm border-[12px] border-white object-contain" />
+                </section>
+              )}
+
+              {/* STORY */}
               <section id="story" className="py-10 md:py-14 px-4 max-w-screen-xl mx-auto">
                  <SectionHeading title="Our Story" subtitle="The Beginning" Icon={BookHeart} />
                 <div className="flex flex-col items-center gap-10 relative">
@@ -1064,56 +1012,66 @@ export default function App() {
                       </div>
                     </div>
                   </div>
-                  <StoryCollage photos={displayData.storyPhotos} />
+                  
+                  {/* Revised Interactive Story Slider */}
+                  <div className="w-full max-w-5xl mx-auto aspect-[16/10] md:aspect-[21/9] rounded-[2rem] overflow-hidden shadow-2xl border-[6px] md:border-[8px] border-white relative z-10 bg-white">
+                     <ImageSlider photos={displayData.storyPhotos} altText="Our Story" containerClass="w-full h-full" fitClass="object-cover" />
+                  </div>
+                  
                 </div>
               </section>
 
+              {/* ENTOURAGE */}
               <section id="entourage" className="py-10 md:py-14 px-4 bg-white/20 backdrop-blur-sm border-y border-white transition-all">
                 <div className="max-w-screen-lg mx-auto text-center">
                   <SectionHeading title="The Entourage" subtitle="Our Loved Ones" Icon={Users} />
                   
+                  {/* Parents */}
                   <div className="mb-8 flex flex-col items-center">
                     <h3 className="text-[10px] md:text-[11px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-6 border-b-2 border-weddingYellow inline-block pb-2">Beloved Parents</h3>
                     <div className="flex flex-col md:flex-row justify-center items-center gap-8 md:gap-12 text-center w-full max-w-3xl mx-auto">
                       <div className="flex flex-col items-center flex-1 w-full overflow-hidden justify-center h-full">
                         <h4 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-3 border-b border-weddingSage/30 pb-1">Parents of the Groom</h4>
-                        {(displayData.groomParents||[]).map((n,i)=><p key={i} className="text-base md:text-xl font-serif text-weddingDark truncate whitespace-nowrap w-full leading-snug px-2">{n}</p>)}
+                        {(displayData.groomParents||[]).map((n,i)=><p key={i} className="text-lg md:text-2xl font-serif text-weddingDark break-words w-full leading-snug">{n}</p>)}
                       </div>
                       <div className="hidden md:block w-px bg-weddingSage/30 self-stretch min-h-[100px]"></div>
                       <div className="flex flex-col items-center flex-1 w-full overflow-hidden justify-center h-full">
                         <h4 className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-3 border-b border-weddingSage/30 pb-1">Parents of the Bride</h4>
-                        {(displayData.brideParents||[]).map((n,i)=><p key={i} className="text-base md:text-xl font-serif text-weddingDark truncate whitespace-nowrap w-full leading-snug px-2">{n}</p>)}
+                        {(displayData.brideParents||[]).map((n,i)=><p key={i} className="text-lg md:text-2xl font-serif text-weddingDark break-words w-full leading-snug">{n}</p>)}
                       </div>
                     </div>
                   </div>
 
+                  {/* Principal Sponsors */}
                   <div className="mb-8 bg-white/40 p-4 md:p-6 rounded-2xl border border-white shadow-sm overflow-hidden">
                      <h3 className="text-[10px] md:text-[11px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-4 inline-block">Principal Sponsors</h3>
                      <div className="flex flex-col items-center gap-2 max-w-4xl mx-auto w-full">
                        {principalPairs.map((pair, i) => (
                          <div key={i} className="flex items-center justify-between border-b border-weddingSage/10 pb-2 w-full last:border-0 group overflow-hidden">
-                           <div className="flex-1 text-right truncate whitespace-nowrap text-sm md:text-lg font-serif text-gray-800 px-2 md:px-4">{String(pair.male)}</div>
-                           <div className="text-weddingSage opacity-40 italic text-lg md:text-xl font-serif text-center px-1 shrink-0">&</div>
-                           <div className="flex-1 text-left truncate whitespace-nowrap text-sm md:text-lg font-serif text-gray-800 px-2 md:px-4">{String(pair.female)}</div>
+                           <div className="flex-1 text-right break-words text-base md:text-lg font-serif text-gray-800 px-2 md:px-4">{String(pair.male)}</div>
+                           <div className="text-weddingSage opacity-40 italic text-lg md:text-xl font-serif text-center px-1 shrink-0">&amp;</div>
+                           <div className="flex-1 text-left break-words text-base md:text-lg font-serif text-gray-800 px-2 md:px-4">{String(pair.female)}</div>
                          </div>
                        ))}
                      </div>
                   </div>
 
+                  {/* Best Man & Maid of Honor */}
                   <div className="max-w-3xl mx-auto flex flex-col items-center w-full mb-8 bg-white/60 backdrop-blur-md p-4 md:p-6 rounded-xl border border-white/80 shadow-sm overflow-hidden">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full text-center relative">
                       <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-weddingSage/30 -translate-x-1/2"></div>
                       <div className="flex flex-col items-center flex-1 md:pr-4 overflow-hidden">
                         <h4 className="text-[9px] font-bold text-weddingAccent uppercase tracking-widest mb-1">Best Man</h4>
-                        <p className="text-lg md:text-2xl font-serif text-weddingDark truncate whitespace-nowrap w-full leading-snug">{String(displayData.bestMan)}</p>
+                        <p className="text-lg md:text-2xl font-serif text-weddingDark break-words w-full leading-snug">{String(displayData.bestMan)}</p>
                       </div>
                       <div className="flex flex-col items-center flex-1 md:pl-4 overflow-hidden">
                         <h4 className="text-[9px] font-bold text-weddingAccent uppercase tracking-widest mb-1">Maid of Honor</h4>
-                        <p className="text-lg md:text-2xl font-serif text-weddingDark truncate whitespace-nowrap w-full leading-snug">{String(displayData.maidOfHonor)}</p>
+                        <p className="text-lg md:text-2xl font-serif text-weddingDark break-words w-full leading-snug">{String(displayData.maidOfHonor)}</p>
                       </div>
                     </div>
                   </div>
 
+                  {/* Groomsmen & Bridesmaids */}
                   <div className="max-w-4xl mx-auto text-gray-800 flex flex-col items-center w-full mb-8 relative overflow-hidden px-2">
                      <div className="grid grid-cols-2 gap-x-4 mb-2 pb-2 border-b border-weddingAccent/30 w-full">
                        <div className="text-right text-[8px] sm:text-[9px] font-bold text-weddingAccent uppercase tracking-widest">Groomsmen</div>
@@ -1121,59 +1079,61 @@ export default function App() {
                      </div>
                      <div className="absolute left-1/2 top-6 bottom-0 w-px bg-weddingSage/20 -translate-x-1/2"></div>
                      {entouragePartners.map((partner, i) => (
-                       <div key={i} className="flex items-center justify-between mb-1 w-full relative z-10 px-2 md:px-4 gap-2">
-                         <div className="flex-1 text-right overflow-hidden"><p className="text-sm md:text-lg font-serif leading-snug truncate whitespace-nowrap">{String(partner.groomSide)}</p></div>
-                         <div className="w-px h-full bg-transparent mx-1 shrink-0"></div>
-                         <div className="flex-1 text-left overflow-hidden"><p className="text-sm md:text-lg font-serif leading-snug truncate whitespace-nowrap">{String(partner.brideSide)}</p></div>
+                       <div key={i} className="grid grid-cols-[1fr_auto_1fr] gap-x-2 mb-1 w-full items-center relative z-10">
+                         <div className="text-right overflow-hidden"><p className="text-base md:text-lg font-serif leading-snug break-words">{String(partner.groomSide)}</p></div>
+                         <div className="w-px h-full bg-transparent mx-2"></div>
+                         <div className="text-left overflow-hidden"><p className="text-base md:text-lg font-serif leading-snug break-words">{String(partner.brideSide)}</p></div>
                        </div>
                      ))}
                   </div>
 
+                  {/* Secondary Sponsors */}
                   <div className="max-w-5xl mx-auto my-8">
                      <h3 className="text-[10px] md:text-[11px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-4 text-center">Secondary Sponsors</h3>
                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="text-center md:text-right border-b md:border-b-0 md:border-r border-weddingSage/20 pb-4 md:pb-0 md:pr-6 overflow-hidden flex flex-col items-center md:items-end">
                            <Flame size={18} className="text-weddingAccent mb-1.5 opacity-70" />
                            <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-2">Candle</h4>
-                           {(displayData.candleSponsors||[]).map((n, i) => <p key={i} className="text-sm md:text-lg font-serif mb-1 text-gray-800 truncate whitespace-nowrap w-full leading-snug">{n}</p>)}
+                           {(displayData.candleSponsors||[]).map((n, i) => <p key={i} className="text-base md:text-lg font-serif mb-1 text-gray-800 break-words w-full leading-snug">{n}</p>)}
                         </div>
                         <div className="text-center border-b md:border-b-0 border-weddingSage/20 pb-4 md:pb-0 px-6 overflow-hidden flex flex-col items-center">
                            <Wind size={18} className="text-weddingAccent mb-1.5 opacity-70" />
                            <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-2">Veil</h4>
-                           {(displayData.veilSponsors||[]).map((n, i) => <p key={i} className="text-sm md:text-lg font-serif mb-1 text-gray-800 truncate whitespace-nowrap w-full leading-snug">{n}</p>)}
+                           {(displayData.veilSponsors||[]).map((n, i) => <p key={i} className="text-base md:text-lg font-serif mb-1 text-gray-800 break-words w-full leading-snug">{n}</p>)}
                         </div>
                         <div className="text-center md:text-left md:border-l border-weddingSage/20 pt-4 md:pt-0 md:pl-6 overflow-hidden flex flex-col items-center md:items-start">
                            <InfinityIcon size={18} className="text-weddingAccent mb-1.5 opacity-70" />
                            <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-2">Cord</h4>
-                           {(displayData.cordSponsors||[]).map((n, i) => <p key={i} className="text-sm md:text-lg font-serif mb-1 text-gray-800 truncate whitespace-nowrap w-full leading-snug">{n}</p>)}
+                           {(displayData.cordSponsors||[]).map((n, i) => <p key={i} className="text-base md:text-lg font-serif mb-1 text-gray-800 break-words w-full leading-snug">{n}</p>)}
                         </div>
                      </div>
                   </div>
 
+                  {/* Bearers & Flower Girls */}
                   <div className="max-w-4xl mx-auto mt-8 px-2">
                      <h3 className="text-[10px] md:text-[11px] font-bold text-weddingAccent tracking-[0.4em] uppercase mb-6 text-center">Little Entourage</h3>
                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center mb-6">
                         <div className="overflow-hidden w-full px-2 flex flex-col items-center">
                            <BookOpen size={18} className="text-weddingAccent mb-1.5 opacity-70" />
                            <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-2 border-b border-weddingSage/30 pb-1 inline-block px-4">Bible Bearer</h4>
-                           <p className="text-base md:text-lg font-serif text-weddingDark truncate whitespace-nowrap w-full leading-snug">{String(displayData.bibleBearer)}</p>
+                           <p className="text-base md:text-lg font-serif text-weddingDark break-words w-full leading-snug">{String(displayData.bibleBearer)}</p>
                         </div>
                         <div className="overflow-hidden w-full px-2 flex flex-col items-center">
                            <Coins size={18} className="text-weddingAccent mb-1.5 opacity-70" />
                            <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-2 border-b border-weddingSage/30 pb-1 inline-block px-4">Coin Bearer</h4>
-                           <p className="text-base md:text-lg font-serif text-weddingDark truncate whitespace-nowrap w-full leading-snug">{String(displayData.coinBearer)}</p>
+                           <p className="text-base md:text-lg font-serif text-weddingDark break-words w-full leading-snug">{String(displayData.coinBearer)}</p>
                         </div>
                         <div className="overflow-hidden w-full px-2 flex flex-col items-center">
                            <Gem size={18} className="text-weddingAccent mb-1.5 opacity-70" />
                            <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-2 border-b border-weddingSage/30 pb-1 inline-block px-4">Ring Bearer</h4>
-                           <p className="text-base md:text-lg font-serif text-weddingDark truncate whitespace-nowrap w-full leading-snug">{String(displayData.ringBearer)}</p>
+                           <p className="text-base md:text-lg font-serif text-weddingDark break-words w-full leading-snug">{String(displayData.ringBearer)}</p>
                         </div>
                      </div>
                      <div className="pt-3 text-center max-w-4xl mx-auto w-full">
                         <h4 className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-4 inline-block px-5 py-1.5 border border-gray-200 rounded-full">Flower Girls</h4>
                         <div className="flex flex-wrap justify-center gap-4 md:gap-8 px-4 w-full">
                            {(displayData.flowerGirls||[]).map((n, i) => (
-                              <p key={i} className="text-sm md:text-lg font-serif text-weddingDark italic truncate whitespace-nowrap leading-snug text-center max-w-full">{n}</p>
+                              <p key={i} className="text-base md:text-lg font-serif text-weddingDark italic break-words leading-snug text-center">{n}</p>
                            ))}
                         </div>
                      </div>
@@ -1181,6 +1141,7 @@ export default function App() {
                 </div>
               </section>
 
+              {/* VENUES */}
               <section id="venues" className="py-10 md:py-14 px-4 max-w-screen-xl mx-auto transition-all">
                 <SectionHeading title="The Venues" subtitle="Where & When" Icon={Church} />
                 <div className="grid lg:grid-cols-2 gap-6 md:gap-10">
@@ -1213,12 +1174,14 @@ export default function App() {
                 </div>
               </section>
 
-              <section id="details" className="py-10 md:py-14 px-4 bg-white/60 border-y border-white transition-all">
+              {/* DETAILS & ATTIRE */}
+              <section id="details" className="py-10 md:py-14 px-4 bg-white/60 border-t border-white transition-all">
                 <div className="max-w-screen-xl mx-auto grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
                    <div className="text-center md:text-left">
                       <SectionHeading title="Attire" subtitle="Dress Code & Details" Icon={Sparkles} />
                       <p className="text-base font-serif leading-relaxed text-gray-800 mb-8">{String(displayData.dressCodeText)}</p>
 
+                      {/* COLOR PALETTE */}
                       {displayData.colorPalette && displayData.colorPalette.length > 0 && (
                         <div className="flex flex-col items-center md:items-start mb-6 md:mb-0">
                            <h4 className="text-[9px] font-bold tracking-widest uppercase mb-4 text-weddingAccent border-b border-weddingSage/30 pb-1">Color Palette</h4>
@@ -1241,35 +1204,47 @@ export default function App() {
                 </div>
               </section>
 
-              <section id="gifts" className="py-10 md:py-14 px-4 relative bg-[#faf9f6]/80 backdrop-blur-sm border-b border-white">
+              {/* REMINDERS & UNPLUGGED CEREMONY */}
+              <section id="reminders" className="py-10 md:py-14 px-4 bg-[#faf9f6]/80 backdrop-blur-sm border-y border-white">
+                 <div className="max-w-screen-md mx-auto text-center">
+                    <SectionHeading title="Important Details" subtitle="Please Note" Icon={Info} />
+                    <div className="grid md:grid-cols-2 gap-6 md:gap-8 text-left">
+                       
+                       <div className="bg-white p-6 md:p-8 rounded-3xl shadow-lg border border-gray-100 flex flex-col">
+                          <h4 className="text-[10px] md:text-xs font-bold tracking-widest uppercase mb-4 text-weddingAccent flex items-center gap-2">
+                             <Camera size={16}/> Unplugged Ceremony
+                          </h4>
+                          <p className="font-sans text-sm text-gray-700 leading-relaxed whitespace-pre-line flex-1">
+                             {String(displayData.unpluggedText)}
+                          </p>
+                       </div>
+                       
+                       <div className="bg-white p-6 md:p-8 rounded-3xl shadow-lg border border-gray-100 flex flex-col">
+                          <h4 className="text-[10px] md:text-xs font-bold tracking-widest uppercase mb-4 text-weddingAccent flex items-center gap-2">
+                             <StickyNote size={16}/> Reminders
+                          </h4>
+                          <p className="font-sans text-sm text-gray-700 leading-relaxed whitespace-pre-line flex-1">
+                             {String(displayData.remindersText)}
+                          </p>
+                       </div>
+
+                    </div>
+                 </div>
+              </section>
+
+              {/* GIFTS */}
+              <section id="gifts" className="py-10 md:py-14 px-4 relative bg-[#faf9f6] border-b border-white">
                 <div className="max-w-screen-md mx-auto text-center">
                   <SectionHeading title="Send Some Love" subtitle="Gifts & Registry" Icon={Gift} />
-                  <p className="text-base font-serif leading-relaxed text-gray-800 mb-6">{String(displayData.giftText)}</p>
+                  <p className="text-base font-serif leading-relaxed text-gray-800 mb-8 max-w-2xl mx-auto">{String(displayData.giftText)}</p>
 
-                  <div className="bg-white p-5 md:p-8 rounded-3xl shadow-xl border border-gray-100 max-w-4xl mx-auto">
-                    <div className="grid md:grid-cols-2 gap-4 mt-4">
-                       {(displayData.giftOption1Title || displayData.giftOption1Details) && (
-                         <div className="bg-[#faf9f6] p-4 rounded-2xl border border-weddingSage/30 shadow-inner text-left">
-                            <h4 className="text-[10px] uppercase font-bold tracking-[0.2em] text-weddingAccent mb-2">{String(displayData.giftOption1Title)}</h4>
-                            <div className="text-gray-700 font-sans text-sm whitespace-pre-line leading-relaxed">{String(displayData.giftOption1Details)}</div>
-                         </div>
-                       )}
-                       {(displayData.giftOption2Title || displayData.giftOption2Details) && (
-                         <div className="bg-[#faf9f6] p-4 rounded-2xl border border-weddingSage/30 shadow-inner text-left">
-                            <h4 className="text-[10px] uppercase font-bold tracking-[0.2em] text-weddingAccent mb-2">{String(displayData.giftOption2Title)}</h4>
-                            <div className="text-gray-700 font-sans text-sm whitespace-pre-line leading-relaxed">{String(displayData.giftOption2Details)}</div>
-                         </div>
-                       )}
-                    </div>
-                    
+                  <div className="max-w-4xl mx-auto">
+                    {/* QR CODES */}
                     {displayData.qrCodeUrls && displayData.qrCodeUrls.length > 0 && (
-                      <div className="grid md:grid-cols-2 gap-4 mt-6">
+                      <div className="flex flex-wrap justify-center gap-6">
                         {displayData.qrCodeUrls.map((qr, idx) => (
-                           <div key={idx} className="bg-[#faf9f6] p-6 rounded-2xl border border-weddingSage/30 shadow-inner flex flex-col items-center justify-center">
-                              <h4 className="text-[10px] uppercase font-bold tracking-[0.2em] text-weddingAccent mb-4">Scan QR Code</h4>
-                              <div className="w-40 h-40 sm:w-48 sm:h-48 bg-white p-2 shadow-md rounded-xl border border-gray-100 transition-transform hover:scale-105">
-                                 <img src={qr} alt={`QR Code ${idx + 1}`} className="w-full h-full object-contain" />
-                              </div>
+                           <div key={idx} className="w-32 h-32 md:w-40 md:h-40 bg-white p-3 shadow-xl rounded-2xl border border-gray-200 transition-transform hover:scale-105">
+                             <img src={qr} alt={`QR Code ${idx + 1}`} className="w-full h-full object-contain" />
                            </div>
                         ))}
                       </div>
@@ -1278,17 +1253,9 @@ export default function App() {
                 </div>
               </section>
 
-              <section id="guestbook" className="py-10 md:py-14 px-4 relative border-b border-white overflow-hidden">
-                {displayData.guestbookPhotos && displayData.guestbookPhotos.length > 0 ? (
-                   <div className="absolute inset-0 z-0">
-                     <img src={displayData.guestbookPhotos[0]} className="w-full h-full object-cover opacity-20" alt="Guestbook Background" />
-                     <div className="absolute inset-0 bg-white/60 backdrop-blur-sm"></div>
-                   </div>
-                ) : (
-                   <div className="absolute inset-0 z-0 bg-white/40 backdrop-blur-md"></div>
-                )}
-                
-                <div className="max-w-screen-md mx-auto text-center relative z-10">
+              {/* GUESTBOOK - SCROLLING TIMELINE FORMAT */}
+              <section id="guestbook" className="py-10 md:py-14 px-4 relative bg-white/40 backdrop-blur-md border-b">
+                <div className="max-w-screen-md mx-auto text-center">
                   <SectionHeading title="Guestbook" subtitle="Wishes & Love" Icon={MessageSquareHeart} />
                   
                   {displayMessages.length > 0 ? (
@@ -1311,7 +1278,8 @@ export default function App() {
                 </div>
               </section>
 
-              <section id="rsvp" className="py-14 md:py-16 px-4 bg-[#1f2b22] text-white transition-all relative z-10">
+              {/* RSVP */}
+              <section id="rsvp" className="py-14 md:py-16 px-4 bg-[#1f2b22] text-white transition-all">
                 <div className="max-w-screen-md mx-auto">
                   
                   <SectionHeading title="Join the Celebration" subtitle="RSVP" Icon={Send} isDark />
@@ -1345,14 +1313,10 @@ export default function App() {
                       
                       <div className="flex flex-col md:flex-row gap-3 md:gap-4">
                         {['yes', 'no'].map(v => (
-                          <button 
-                            key={v}
-                            type="button"
-                            onClick={() => setRsvpForm({...rsvpForm, attending: v})}
-                            className={`flex-1 py-6 text-center rounded-3xl border-2 cursor-pointer transition-all ${rsvpForm.attending === v ? 'bg-weddingYellow border-weddingYellow text-weddingDark shadow-2xl scale-105' : 'border-white/30 hover:border-white/60 bg-white/10 text-white'}`}
-                          >
+                          <label key={v} className={`flex-1 py-6 text-center rounded-3xl border-2 cursor-pointer transition-all ${rsvpForm.attending === v ? 'bg-weddingYellow border-weddingYellow text-weddingDark shadow-2xl scale-105' : 'border-white/30 hover:border-white/60 bg-white/10 text-white'}`}>
+                            <input type="radio" className="hidden" value={v} checked={rsvpForm.attending === v} onChange={e=>setRsvpForm({...rsvpForm, attending: e.target.value})} />
                             <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest">{v === 'yes' ? 'Happily Accepting' : 'Regretfully Declining'}</span>
-                          </button>
+                          </label>
                         ))}
                       </div>
 
@@ -1373,13 +1337,9 @@ export default function App() {
                 </div>
               </section>
 
+              {/* FOOTER & LOGOUT */}
               <footer className="py-12 md:py-16 text-center bg-[#faf9f6] border-t border-gray-200 relative z-10 transition-all">
-                {displayData.coupleLogoUrl ? (
-                   <img src={displayData.coupleLogoUrl} alt="Couple Logo" className="w-32 h-32 md:w-40 md:h-40 object-contain mx-auto mb-6 filter drop-shadow-sm opacity-80" />
-                ) : (
-                   <p className="font-script text-4xl sm:text-5xl md:text-6xl text-weddingDark mb-3 select-none break-words px-4 leading-normal">{String(displayData.groomName)} & {String(displayData.brideName)}</p>
-                )}
-                
+                <p className="font-script text-4xl sm:text-5xl md:text-6xl text-weddingDark mb-3 select-none break-words px-4 leading-normal">{String(displayData.groomName)} &amp; {String(displayData.brideName)}</p>
                 <div className="w-16 h-px bg-weddingSage mx-auto mb-6 opacity-50"></div>
                 <p className="text-[8px] md:text-[9px] uppercase font-bold tracking-[0.5em] text-gray-500 mb-6">{String(displayData.weddingDate)} • {String(displayData.weddingLocation)}</p>
                 
@@ -1396,9 +1356,13 @@ export default function App() {
             </main>
           </div>
 
+          {/* ========================================================= */}
+          {/* RIGHT: ADMIN LIVE EDITOR SIDEBAR */}
+          {/* ========================================================= */}
           {isAdminAuth && editForm && (
             <div className="w-full md:w-[450px] h-screen bg-gray-100 fixed right-0 top-0 border-l border-gray-300 shadow-2xl z-[500] flex flex-col font-sans animate-in slide-in-from-right duration-300">
               
+              {/* Sidebar Header */}
               <div className="p-5 border-b border-gray-200 bg-white flex justify-between items-center shrink-0 shadow-sm z-10">
                  <div>
                    <h2 className="font-serif italic text-2xl text-weddingDark font-bold flex items-center gap-2">
@@ -1414,6 +1378,7 @@ export default function App() {
                  </div>
               </div>
 
+              {/* Sidebar Tabs */}
               <div className="flex bg-white border-b border-gray-200 shrink-0 text-[10px] font-bold uppercase tracking-widest">
                 {['details', 'entourage', 'media', 'guests'].map(tab => (
                    <button key={tab} onClick={()=>setAdminTab(tab)} className={`flex-1 py-4 text-center border-b-2 transition-colors ${adminTab === tab ? 'border-weddingDark text-weddingDark bg-gray-50/50' : 'border-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}>
@@ -1422,6 +1387,7 @@ export default function App() {
                 ))}
               </div>
 
+              {/* Sidebar Forms Area */}
               <div className="flex-1 overflow-y-auto p-5 pb-32">
                  {adminTab === 'details' && (
                     <div className="animate-in fade-in duration-300 space-y-6">
@@ -1450,18 +1416,13 @@ export default function App() {
                           <TextInput label="Map URL" value={editForm.receptionMapUrl} onChange={val=>setEditForm({...editForm, receptionMapUrl: val})} />
                        </div>
                        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                          <h3 className="text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 border-b border-gray-100 pb-2">Paragraphs</h3>
+                          <h3 className="text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 border-b border-gray-100 pb-2">Reminders & Content</h3>
                           <TextInput label="Our Story" isTextArea value={editForm.ourStory} onChange={val=>setEditForm({...editForm, ourStory: val})} />
                           <TextInput label="Dress Code Guidelines" isTextArea value={editForm.dressCodeText} onChange={val=>setEditForm({...editForm, dressCodeText: val})} />
                           <ColorPaletteEditor colors={editForm.colorPalette} onChange={val=>setEditForm({...editForm, colorPalette: val})} />
+                          <TextInput label="Unplugged Ceremony" isTextArea value={editForm.unpluggedText} onChange={val=>setEditForm({...editForm, unpluggedText: val})} />
+                          <TextInput label="Important Reminders" isTextArea value={editForm.remindersText} onChange={val=>setEditForm({...editForm, remindersText: val})} />
                           <TextInput label="Gift Message Intro" isTextArea value={editForm.giftText} onChange={val=>setEditForm({...editForm, giftText: val})} />
-                       </div>
-                       <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                          <h3 className="text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 border-b border-gray-100 pb-2">Gift Registries & Options</h3>
-                          <TextInput label="Gift Option 1 - Title" value={editForm.giftOption1Title} onChange={val=>setEditForm({...editForm, giftOption1Title: val})} />
-                          <TextInput label="Gift Option 1 - Details" isTextArea value={editForm.giftOption1Details} onChange={val=>setEditForm({...editForm, giftOption1Details: val})} />
-                          <TextInput label="Gift Option 2 - Title" value={editForm.giftOption2Title} onChange={val=>setEditForm({...editForm, giftOption2Title: val})} />
-                          <TextInput label="Gift Option 2 - Details" isTextArea value={editForm.giftOption2Details} onChange={val=>setEditForm({...editForm, giftOption2Details: val})} />
                        </div>
                     </div>
                  )}
@@ -1490,17 +1451,16 @@ export default function App() {
 
                  {adminTab === 'media' && (
                     <div className="animate-in fade-in duration-300">
-                       <SinglePhotoManager label="Couple's Custom Logo (Optional)" url={editForm.coupleLogoUrl} onChange={val=>setEditForm({...editForm, coupleLogoUrl: val})} showToast={showToast} />
-                       <SinglePhotoManager label="Website Background Image" url={editForm.backgroundImageUrl} onChange={val=>setEditForm({...editForm, backgroundImageUrl: val})} showToast={showToast} />
-                       <SinglePhotoManager label="Website Decorative Border Overlay (PNG)" url={editForm.websiteBorderUrl} onChange={val=>setEditForm({...editForm, websiteBorderUrl: val})} showToast={showToast} />
-                       
                        <AudioManager label="Background Music" url={editForm.backgroundMusicUrl} onChange={val=>setEditForm({...editForm, backgroundMusicUrl: val})} showToast={showToast} user={user} appId={appId} storage={storage} />
+                       
+                       <SinglePhotoManager label="Landing Page Logo" url={editForm.logoUrl} onChange={val=>setEditForm({...editForm, logoUrl: val})} />
+                       <SinglePhotoManager label="Formal Invitation Image" url={editForm.invitationImage} onChange={val=>setEditForm({...editForm, invitationImage: val})} />
+
                        <PhotoManager label="Our Story Photos" urls={editForm.storyPhotos} onChange={arr=>setEditForm({...editForm, storyPhotos: arr})} showToast={showToast} />
                        <PhotoManager label="Ceremony Venues" urls={editForm.ceremonyPhotos} onChange={arr=>setEditForm({...editForm, ceremonyPhotos: arr})} showToast={showToast} />
                        <PhotoManager label="Reception Venues" urls={editForm.receptionPhotos} onChange={arr=>setEditForm({...editForm, receptionPhotos: arr})} showToast={showToast} />
                        <PhotoManager label="Dress Code Inspiration" urls={editForm.dressCodePhotos} onChange={arr=>setEditForm({...editForm, dressCodePhotos: arr})} showToast={showToast} />
                        <PhotoManager label="QR Codes (GCash, Maya, Bank)" urls={editForm.qrCodeUrls} onChange={arr=>setEditForm({...editForm, qrCodeUrls: arr})} showToast={showToast} />
-                       <PhotoManager label="Guestbook Background (1st is used)" urls={editForm.guestbookPhotos} onChange={arr=>setEditForm({...editForm, guestbookPhotos: arr})} showToast={showToast} />
                     </div>
                  )}
 
@@ -1552,6 +1512,7 @@ export default function App() {
             </div>
           )}
 
+          {/* ADMIN LOGIN MODAL */}
           {showAdminLogin && (
             <div className="fixed inset-0 z-[1000] bg-[#faf9f6]/95 backdrop-blur-md flex items-center justify-center p-6 text-weddingDark">
               <div className="max-w-sm w-full text-center animate-in zoom-in duration-300">
