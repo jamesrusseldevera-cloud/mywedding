@@ -6,7 +6,7 @@ import {
   ChevronLeft, ChevronRight, LayoutGrid, StickyNote, Info, 
   Github, Globe, Terminal, Cloud, AlertCircle, ExternalLink, 
   MapPin, Music, Play, Pause, MailOpen, Camera, GripVertical, Plus,
-  BookHeart, Users, Church, Send, Sparkles, Flame, Wind, Infinity as InfinityIcon, BookOpen, Coins, Gem
+  BookHeart, Users, Church, Send, Sparkles, Flame, Wind, Infinity as InfinityIcon, BookOpen, Coins, Gem, Palette
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
@@ -97,13 +97,21 @@ const DEFAULT_DETAILS = {
   cordSponsors: ["Carnation Flores", "Kristina C. Pinoy"],
   groomsmen: ["Christian Robert C. Pinoy", "John Paolo B. De Vera", "Mark Lester B. Biala", "Justin Servito", "John Lester Selga", "Jan Gabriel Pinoy", "Lester Luis Ramirez", "Ron Carlo C. Biala"],
   bridesmaids: ["Angela Cherish C. Pinoy", "Kristel Ann B. De Vera", "Mylene B. De Vera", "Bea Michaela B. De Vera", "Carmela Ella", "Natasha Coreos", "Kaye Marie Abelo", "Princess Jelian B. Almonte"],
-  flowerGirls: ["Amara Faith A. De Vera", "Marthina D. Hernandez", "Amare Faith Fresnoza", "Maree Margaret S. Dela Peña"]
+  flowerGirls: ["Amara Faith A. De Vera", "Marthina D. Hernandez", "Amare Faith Fresnoza", "Maree Margaret S. Dela Peña"],
+
+  // Custom Themes & Overlays 
+  themeBgColor: "#faf9f6",
+  themeBorder: "none",
+  themeBorderColor: "#ceb878",
+  themeTextureUrl: "", // Admin can apply watercolor overlays
+  themeCornerTopLeft: "", 
+  themeCornerBottomRight: ""
 };
 
 const SAMPLE_MESSAGES = [
-  { id: 's1', message: "Wishing you a lifetime of love, laughter, and endless happiness. We cannot wait to witness your beautiful day!", submittedName: "The Smith Family" },
-  { id: 's2', message: "So incredibly happy for you both! Cheers to the beautiful couple and the amazing journey ahead.", submittedName: "Aunt Sarah & Uncle Mike" },
-  { id: 's3', message: "May your love continue to grow stronger with each passing day. See you at the wedding!", submittedName: "Cousin Mark" },
+  { id: 's1', message: "Wishing you a lifetime of love, laughter, and endless happiness. We cannot wait to witness your beautiful day!", submittedName: "The Smith Family", likes: 12 },
+  { id: 's2', message: "So incredibly happy for you both! Cheers to the beautiful couple and the amazing journey ahead.", submittedName: "Aunt Sarah & Uncle Mike", likes: 8 },
+  { id: 's3', message: "May your love continue to grow stronger with each passing day. See you at the wedding!", submittedName: "Cousin Mark", likes: 4 },
 ];
 
 // ==========================================
@@ -174,7 +182,7 @@ const AnimatedLeaves = ({ count = 8 }) => (
     {[...Array(count)].map((_, i) => (
       <div 
         key={i} 
-        className={`absolute opacity-30 animate-float drop-shadow-md ${i % 2 === 0 ? 'text-weddingYellow' : 'text-weddingAccent'}`}
+        className={`absolute opacity-30 animate-float drop-shadow-md transform-gpu ${i % 2 === 0 ? 'text-weddingYellow' : 'text-weddingAccent'}`}
         style={{ left: `${Math.random() * 100}%`, top: `-10%`, animationDuration: `${10 + Math.random() * 15}s`, animationDelay: `${Math.random() * 5}s`, transform: `scale(${0.8 + Math.random() * 1.5})` }}
       >
         <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22C12 22 20 18 20 12C20 6 12 2 12 2C12 2 4 6 4 12C4 18 12 22 12 22Z" /></svg>
@@ -183,17 +191,20 @@ const AnimatedLeaves = ({ count = 8 }) => (
   </div>
 );
 
-const LandingPage = ({ onOpen, groom, bride, logoUrl }) => (
-  <div className="fixed inset-0 z-[200] bg-[#faf9f6] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-1000 overflow-hidden">
+const LandingPage = ({ onOpen, groom, bride, logoUrl, displayData }) => (
+  <div className="fixed inset-0 z-[200] bg-[#faf9f6] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-1000 overflow-hidden" style={{ backgroundColor: displayData.themeBgColor || '#faf9f6' }}>
     
     {/* Elegant Visual Background */}
-    <div className="absolute inset-0 z-0 pointer-events-none">
-      <div className="absolute inset-0 bg-cover bg-center opacity-60 transition-transform duration-[20s] ease-out scale-105" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&q=80')" }}></div>
-      <div className="absolute inset-0 bg-gradient-to-t from-[#faf9f6] via-[#faf9f6]/80 to-[#faf9f6]/95 backdrop-blur-[3px]"></div>
+    <div className="absolute inset-0 z-0 pointer-events-none transform-gpu">
+      <div className="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-multiply transition-transform duration-[20s] ease-out scale-105" style={{ backgroundImage: `url('${displayData.themeTextureUrl || "https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&q=80"}')` }}></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-color)] via-[var(--bg-color)]/80 to-[var(--bg-color)]/95" style={{ '--bg-color': displayData.themeBgColor || '#faf9f6' }}></div>
     </div>
 
+    {displayData.themeCornerTopLeft && <img src={displayData.themeCornerTopLeft} alt="" className="fixed top-0 left-0 w-48 md:w-80 object-contain z-10 pointer-events-none opacity-80 mix-blend-multiply" />}
+    {displayData.themeCornerBottomRight && <img src={displayData.themeCornerBottomRight} alt="" className="fixed bottom-0 right-0 w-48 md:w-80 object-contain z-10 pointer-events-none opacity-80 mix-blend-multiply" />}
+
     <AnimatedLeaves count={8} />
-    <div className="max-w-md w-full border border-weddingSage/30 p-8 sm:p-12 rounded-[3rem] aspect-[1/1.5] flex flex-col items-center justify-center relative overflow-hidden shadow-2xl bg-white/80 backdrop-blur-sm z-10 scale-95 md:scale-100">
+    <div className="max-w-md w-full border border-weddingSage/30 p-8 sm:p-12 rounded-[3rem] aspect-[1/1.5] flex flex-col items-center justify-center relative overflow-hidden shadow-2xl bg-white/80 backdrop-blur-sm z-20 scale-95 md:scale-100">
        <div className="absolute inset-4 border border-weddingSage/10 rounded-[2.5rem]"></div>
        <div className="z-20 flex flex-col items-center w-full">
          {logoUrl && <img src={logoUrl} alt="Wedding Logo" className="w-16 h-16 sm:w-20 sm:h-20 mb-6 object-contain opacity-80" />}
@@ -233,7 +244,7 @@ const CountdownTimer = ({ targetDate }) => {
   }, [targetDate]);
 
   return (
-    <div className="flex justify-center gap-4 sm:gap-6 mt-6 backdrop-blur-md bg-white/40 px-6 py-4 rounded-3xl border border-white/60 shadow-sm max-w-lg mx-auto">
+    <div className="flex justify-center gap-4 sm:gap-6 mt-6 backdrop-blur-md bg-white/40 px-6 py-4 rounded-3xl border border-white/60 shadow-sm max-w-lg mx-auto relative z-20">
       {Object.entries(timeLeft).map(([unit, value]) => (
         <div key={unit} className="flex flex-col items-center min-w-[50px] sm:min-w-[60px]">
           <span className="text-2xl sm:text-3xl font-serif text-weddingDark">{String(value).padStart(2, '0')}</span>
@@ -268,15 +279,15 @@ const ColorPaletteEditor = ({ colors = [], onChange }) => {
   )
 };
 
-const ImageSlider = ({ photos = [], altText, containerClass, imageClass, fitClass = "object-cover" }) => {
+const ImageSlider = ({ photos = [], altText, containerClass, imageClass, fitClass = "object-cover", slideInterval = 4500 }) => {
   const validPhotos = photos.filter(p => p && typeof p === 'string' && p.trim() !== '');
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     if (validPhotos.length <= 1) return;
-    const interval = setInterval(() => { setCurrentIndex((prev) => (prev + 1) % validPhotos.length); }, 4500);
+    const interval = setInterval(() => { setCurrentIndex((prev) => (prev + 1) % validPhotos.length); }, slideInterval);
     return () => clearInterval(interval);
-  }, [validPhotos.length]);
+  }, [validPhotos.length, slideInterval]);
 
   const handleNext = (e) => {
     e.stopPropagation();
@@ -307,7 +318,7 @@ const ImageSlider = ({ photos = [], altText, containerClass, imageClass, fitClas
       {validPhotos.map((url, idx) => (
         <img key={idx} src={url} alt={`${altText} ${idx + 1}`} 
              onError={(e) => { e.target.onerror = null; e.target.src = "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80" }} 
-             className={`absolute inset-0 w-full h-full ${fitClass} transition-opacity duration-1000 ease-in-out ${idx === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'} ${imageClass || ''}`} />
+             className={`absolute inset-0 w-full h-full ${fitClass} transition-opacity duration-[1500ms] ease-in-out ${idx === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'} ${imageClass || ''}`} />
       ))}
       {/* Slider Controls */}
       <button onClick={handlePrev} className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/60 text-white p-1.5 sm:p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all z-20 hover:scale-110 active:scale-95">
@@ -319,6 +330,98 @@ const ImageSlider = ({ photos = [], altText, containerClass, imageClass, fitClas
     </div>
   );
 };
+
+// --- Interactive Flipbook Component for the Invitation ---
+const FlipInvitation = ({ image, groom, bride }) => {
+  const [isFlipped, setIsFlipped] = useState(false);
+  
+  return (
+    <div 
+       className="relative w-full max-w-md md:max-w-lg mx-auto aspect-[3/4] cursor-pointer group hover:scale-[1.02] transition-transform duration-500 z-20" 
+       style={{ perspective: '2000px' }} 
+       onClick={() => setIsFlipped(!isFlipped)}
+    >
+       <div 
+          className="w-full h-full relative transition-transform duration-1000 shadow-2xl rounded-md" 
+          style={{ transformStyle: 'preserve-3d', transform: isFlipped ? 'rotateY(-180deg)' : 'rotateY(0deg)' }}
+       >
+          {/* Front Cover (Closed Book) */}
+          <div 
+             className="absolute inset-0 bg-[#faf9f6] flex flex-col items-center justify-center border-[12px] md:border-[16px] border-white p-8 text-center rounded-sm" 
+             style={{ backfaceVisibility: 'hidden' }}
+          >
+             <WreathIconWrapper isDark={false}><MailOpen size={30} /></WreathIconWrapper>
+             <h3 className="font-script text-5xl md:text-6xl text-weddingDark mb-4 leading-tight">
+                {groom} <br/><span className="text-3xl font-serif italic text-weddingAccent">&amp;</span><br/> {bride}
+             </h3>
+             <div className="w-16 h-px bg-weddingSage mx-auto mt-6 mb-4"></div>
+             <p className="text-[9px] uppercase tracking-[0.4em] font-medium text-weddingAccent animate-pulse">Tap to open pages</p>
+          </div>
+
+          {/* Inside Page (The Image) */}
+          <div 
+             className="absolute inset-0 bg-white border-[8px] border-white rounded-sm overflow-hidden" 
+             style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+          >
+             <img src={image} className="w-full h-full object-contain" alt="Invitation" />
+             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-[8px] uppercase tracking-widest shadow-lg pointer-events-none text-gray-500 font-bold border border-gray-100">
+                Tap to close
+             </div>
+          </div>
+       </div>
+    </div>
+  );
+};
+
+// --- Horizontal Scroll Guestbook Carousel Component ---
+const GuestbookCarousel = ({ messages, handleLike, localLikes }) => {
+  const scrollRef = useRef(null);
+  
+  const scroll = (direction) => {
+    if(scrollRef.current) {
+      const { clientWidth } = scrollRef.current;
+      scrollRef.current.scrollBy({ left: direction === 'left' ? -clientWidth : clientWidth, behavior: 'smooth' });
+    }
+  };
+
+  return (
+    <div className="relative w-full max-w-screen-xl mx-auto px-10 md:px-14">
+      <button onClick={()=>scroll('left')} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-100 p-2.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all text-weddingDark hover:bg-weddingSage hover:text-white">
+        <ChevronLeft size={24}/>
+      </button>
+      
+      <div ref={scrollRef} className="flex overflow-x-auto gap-4 md:gap-6 snap-x snap-mandatory py-6 px-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <style>{`div::-webkit-scrollbar { display: none; }`}</style>
+        {messages.map((m) => {
+          const likesCount = localLikes[m.id] !== undefined ? localLikes[m.id] : (m.likes || 0);
+          const isLiked = localStorage.getItem(`liked_${m.id}`);
+          
+          return (
+            <div key={m.id} className="min-w-[85vw] sm:min-w-[45vw] lg:min-w-[calc(25%-1.125rem)] snap-center bg-white/95 p-6 border border-white shadow-sm rounded-2xl flex flex-col group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative h-64 shrink-0">
+               <MessageSquareHeart className="w-6 h-6 text-weddingSage shrink-0 mb-4" />
+               <div className="flex-1 overflow-y-auto mb-4 pr-2" style={{ scrollbarWidth: 'none' }}>
+                  <p className="text-sm md:text-base font-serif italic leading-relaxed text-gray-800">"{String(m.message)}"</p>
+               </div>
+               <div className="border-t border-gray-100 pt-4 flex justify-between items-end mt-auto gap-2">
+                  <p className="text-[9px] uppercase tracking-[0.2em] font-bold text-weddingAccent break-words flex-1 leading-snug">- {String(m.submittedName)}</p>
+                  
+                  <button onClick={() => handleLike(m.id, m.likes)} className={`flex items-center gap-1.5 text-[10px] font-bold transition-all px-3 py-1.5 rounded-full shadow-sm shrink-0 ${isLiked ? 'bg-red-50 text-red-500 border border-red-100' : 'bg-gray-50 text-gray-400 border border-gray-100 hover:text-red-500 hover:bg-red-50 hover:border-red-100 hover:scale-105 active:scale-95'}`}>
+                     <Heart size={12} className={isLiked ? "fill-current" : ""} /> 
+                     <span>{likesCount}</span>
+                  </button>
+               </div>
+            </div>
+          )
+        })}
+      </div>
+
+      <button onClick={()=>scroll('right')} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-100 p-2.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all text-weddingDark hover:bg-weddingSage hover:text-white">
+        <ChevronRight size={24}/>
+      </button>
+    </div>
+  );
+};
+
 
 // ==========================================
 // 4. ADMIN EDITOR COMPONENTS
@@ -335,7 +438,7 @@ const TextInput = ({ label, value, onChange, isTextArea = false }) => (
   </div>
 );
 
-const SinglePhotoManager = ({ label, url, onChange }) => (
+const SinglePhotoManager = ({ label, url, onChange, placeholder = "Paste image URL here..." }) => (
   <div className="mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3"><ImageIcon size={12} className="inline mr-1"/> {label}</label>
      {url && (
@@ -345,7 +448,7 @@ const SinglePhotoManager = ({ label, url, onChange }) => (
         </div>
      )}
      <div className="flex gap-2 mb-2">
-        <input value={url || ''} onChange={e=>onChange(e.target.value)} placeholder="Paste image URL here..." className="flex-1 text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:border-weddingAccent" />
+        <input value={url || ''} onChange={e=>onChange(e.target.value)} placeholder={placeholder} className="flex-1 text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:border-weddingAccent" />
      </div>
   </div>
 );
@@ -542,6 +645,8 @@ export default function App() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState('');
   
+  const [localLikes, setLocalLikes] = useState({}); // Optimistic UI local likes
+  
   // Admin UI States
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
@@ -563,6 +668,24 @@ export default function App() {
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 3500);
+  };
+
+  const downloadImage = async (url, filename) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename || 'QR_Code.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    } catch (e) {
+      console.warn("Could not fetch image for download, opening in new tab instead.", e);
+      window.open(url, '_blank');
+    }
   };
 
   const normalizeData = (data) => {
@@ -658,7 +781,7 @@ export default function App() {
         }
       }
     };
-    const fontLink = document.createElement('link'); fontLink.href = 'https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;600;700&display=swap'; fontLink.rel = 'stylesheet';
+    const fontLink = document.createElement('link'); fontLink.href = 'https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap'; fontLink.rel = 'stylesheet';
     document.head.appendChild(fontLink);
     return () => {
       if (document.head.contains(tailwindScript)) document.head.removeChild(tailwindScript);
@@ -747,6 +870,7 @@ export default function App() {
       const newGuestData = { 
         name: rsvpForm.name, 
         code: rsvpForm.enteredCode, 
+        likes: 0,
         ...rsvpData,
         timestamp: Date.now() 
       };
@@ -785,6 +909,27 @@ export default function App() {
     setIsSubmitting(false);
   };
 
+  // --- GUESTBOOK LIKES HANDLER ---
+  const handleLikeMessage = async (id, currentLikes) => {
+    const likedKey = `liked_${id}`;
+    if (localStorage.getItem(likedKey)) return; // Prevent multiple likes
+
+    // Optimistic UI update
+    setLocalLikes(prev => ({ ...prev, [id]: (currentLikes || 0) + 1 }));
+    localStorage.setItem(likedKey, 'true');
+
+    // Skip database sync for sample messages
+    if (String(id).startsWith('s')) return;
+
+    try {
+       await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees', id), {
+          likes: (currentLikes || 0) + 1
+       });
+    } catch(e) {
+       console.warn("Could not sync like to DB, but local state was updated.");
+    }
+  };
+
   // --- ADMIN ACTIONS ---
   const handleAdminLogin = (e) => {
     e.preventDefault();
@@ -819,7 +964,7 @@ export default function App() {
     if (!newGuestName) return;
     
     const finalCode = newGuestCode.trim() ? String(newGuestCode).trim() : '#JamesFoundHisCassie';
-    const newGuest = { id: `local_${Date.now()}`, name: newGuestName, code: finalCode, status: 'Pending', message: '', messageApproved: false, timestamp: Date.now() };
+    const newGuest = { id: `local_${Date.now()}`, name: newGuestName, code: finalCode, status: 'Pending', message: '', messageApproved: false, likes: 0, timestamp: Date.now() };
     
     try {
       await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), newGuest);
@@ -864,7 +1009,7 @@ export default function App() {
           
           if (name) { 
              if (!code) code = '#JamesFoundHisCassie';
-             try { await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), { name, code, status: 'Pending', timestamp: Date.now() }); } catch(e){} 
+             try { await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), { name, code, status: 'Pending', likes: 0, timestamp: Date.now() }); } catch(e){} 
           }
         }
       }
@@ -926,18 +1071,36 @@ export default function App() {
           groom={String(displayData.groomName)} 
           bride={String(displayData.brideName)} 
           logoUrl={displayData.logoUrl}
+          displayData={displayData}
         />
       ) : (
-        <div className="h-screen w-full flex overflow-hidden bg-[#faf9f6]" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+        <div className="h-screen w-full flex overflow-hidden" style={{ fontFamily: "'Montserrat', sans-serif", backgroundColor: displayData.themeBgColor || '#faf9f6' }}>
           
           {/* ========================================================= */}
           {/* LEFT: LIVE WEBSITE PREVIEW */}
           {/* ========================================================= */}
-          <div className={`flex-1 relative h-full overflow-y-auto transition-all duration-300 text-weddingDark selection:bg-weddingYellow/40 shadow-[inset_0_0_50px_rgba(0,0,0,0.05)]`}>
+          <div className={`flex-1 relative h-full overflow-y-auto transition-all duration-300 text-weddingDark selection:bg-weddingYellow/40 scroll-smooth shadow-[inset_0_0_50px_rgba(0,0,0,0.05)]`}>
             
+            {/* Global Design Border (Admin Editable) */}
+            {displayData.themeBorder && displayData.themeBorder !== 'none' && (
+               <div className="fixed inset-0 z-50 pointer-events-none" style={{ border: `12px ${displayData.themeBorder} ${displayData.themeBorderColor || '#ceb878'}` }}></div>
+            )}
+
             {/* Background Layers */}
-            <div className="fixed inset-0 z-0 bg-cover bg-center opacity-50 pointer-events-none" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&q=80')" }}></div>
-            <div className="fixed inset-0 z-0 bg-gradient-to-b from-[#faf9f6]/95 via-[#faf9f6]/90 to-[#faf9f6]/95 backdrop-blur-[2px] pointer-events-none"></div>
+            <div className="fixed inset-0 z-0 pointer-events-none transform-gpu">
+                {displayData.themeTextureUrl && (
+                  <div className="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-multiply" style={{ backgroundImage: `url('${displayData.themeTextureUrl}')` }}></div>
+                )}
+                {!displayData.themeTextureUrl && (
+                  <div className="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-multiply" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&q=80')" }}></div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-b from-[var(--bg-color)]/95 via-[var(--bg-color)]/90 to-[var(--bg-color)]/95" style={{ '--bg-color': displayData.themeBgColor || '#faf9f6' }}></div>
+            </div>
+
+            {/* Corner Decorative Assets */}
+            {displayData.themeCornerTopLeft && <img src={displayData.themeCornerTopLeft} alt="" className="fixed top-0 left-0 w-48 md:w-80 object-contain z-10 pointer-events-none opacity-80 mix-blend-multiply" />}
+            {displayData.themeCornerBottomRight && <img src={displayData.themeCornerBottomRight} alt="" className="fixed bottom-0 right-0 w-48 md:w-80 object-contain z-10 pointer-events-none opacity-80 mix-blend-multiply" />}
+
             <AnimatedLeaves count={8} />
             
             {/* Elegant Custom Music Control */}
@@ -966,16 +1129,16 @@ export default function App() {
                <span className="hidden md:inline text-[9px] uppercase font-bold tracking-[0.2em] mr-1">RSVP</span>
             </button>
 
-            {/* Navigation */}
-            <nav className={`fixed top-0 left-0 right-0 z-40 py-4 bg-[#faf9f6]/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm transition-all ${isAdminAuth ? 'md:right-[450px]' : ''}`}>
-              <div className="max-w-screen-xl mx-auto px-4 flex justify-center gap-4 sm:gap-6 md:gap-8 text-[8px] sm:text-[9px] md:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.3em] font-bold text-gray-500 flex-wrap">
+            {/* Navigation (Classy, Smaller Font) */}
+            <nav className={`fixed top-0 left-0 right-0 z-40 py-4 bg-white/70 backdrop-blur-xl border-b border-gray-200/50 shadow-sm transition-all ${isAdminAuth ? 'md:right-[450px]' : ''}`}>
+              <div className="max-w-screen-xl mx-auto px-4 flex justify-center gap-4 sm:gap-6 md:gap-8 text-[9px] sm:text-[10px] md:text-[11px] uppercase tracking-[0.3em] sm:tracking-[0.4em] font-serif text-gray-600 flex-wrap">
                 {['Home', 'Invitation', 'Story', 'Entourage', 'Venues', 'Reminders', 'Gifts', 'RSVP'].map(t => (
                   <button key={t} onClick={() => document.getElementById(t.toLowerCase()).scrollIntoView({behavior: 'smooth'})} className="hover:text-weddingDark transition-all active:scale-95 border-b-2 border-transparent hover:border-weddingAccent pb-1">{t}</button>
                 ))}
               </div>
             </nav>
 
-            <main className="w-full relative z-10 pt-16">
+            <main className="w-full relative z-20 pt-16">
               
               {/* HERO */}
               <section id="home" className="min-h-[80vh] flex flex-col items-center justify-center text-center px-4 relative overflow-hidden pb-8">
@@ -992,37 +1155,44 @@ export default function App() {
                 <CountdownTimer targetDate={displayData.weddingDate} />
               </section>
 
-              {/* INVITATION SPACE */}
+              {/* INVITATION SPACE (Interactive Flipbook Layout) */}
               {displayData.invitationImage && (
-                <section id="invitation" className="py-10 md:py-14 px-4 max-w-screen-xl mx-auto flex flex-col items-center">
+                <section id="invitation" className="py-10 md:py-14 px-4 max-w-screen-xl mx-auto flex flex-col items-center relative z-20">
                    <SectionHeading title="The Invitation" subtitle="Formal Request" Icon={MailOpen} />
-                   <img src={displayData.invitationImage} alt="Formal Invitation" className="max-w-full md:max-w-2xl shadow-2xl rounded-sm border-[12px] border-white object-contain" />
+                   
+                   <FlipInvitation 
+                      image={displayData.invitationImage} 
+                      groom={String(displayData.groomName)} 
+                      bride={String(displayData.brideName)} 
+                   />
                 </section>
               )}
 
               {/* STORY */}
-              <section id="story" className="py-10 md:py-14 px-4 max-w-screen-xl mx-auto">
+              <section id="story" className="py-10 md:py-14 px-4 max-w-screen-xl mx-auto relative z-20">
                  <SectionHeading title="Our Story" subtitle="The Beginning" Icon={BookHeart} />
-                <div className="flex flex-col items-center gap-10 relative">
-                  <div className="w-full text-center z-20">
-                    <div className="bg-white/70 backdrop-blur-xl p-6 md:p-10 rounded-2xl border border-white shadow-xl max-w-4xl mx-auto">
-                      <div className="text-base sm:text-lg md:text-xl font-serif leading-relaxed text-gray-800 italic text-justify md:text-center">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center relative">
+                  
+                  {/* Story Text */}
+                  <div className="w-full z-20 order-2 lg:order-1">
+                    <div className="bg-white/70 backdrop-blur-xl p-6 md:p-10 rounded-2xl border border-white shadow-xl">
+                      <div className="text-base sm:text-lg font-serif leading-relaxed text-gray-800 italic text-justify">
                          <span className="text-4xl md:text-5xl text-weddingYellow block mb-2 opacity-50 font-serif leading-none select-none">"</span>
                          {String(displayData.ourStory)}
                       </div>
                     </div>
                   </div>
                   
-                  {/* Revised Interactive Story Slider */}
-                  <div className="w-full max-w-5xl mx-auto aspect-[16/10] md:aspect-[21/9] rounded-[2rem] overflow-hidden shadow-2xl border-[6px] md:border-[8px] border-white relative z-10 bg-white">
-                     <ImageSlider photos={displayData.storyPhotos} altText="Our Story" containerClass="w-full h-full" fitClass="object-cover" />
+                  {/* Interactive Story Slider - Faster 3x Slide & Square format */}
+                  <div className="w-full max-w-md mx-auto aspect-square rounded-[2rem] overflow-hidden shadow-2xl border-[6px] md:border-[8px] border-white relative z-10 bg-white order-1 lg:order-2">
+                     <ImageSlider photos={displayData.storyPhotos} altText="Our Story" containerClass="w-full h-full" fitClass="object-cover" slideInterval={1500} />
                   </div>
                   
                 </div>
               </section>
 
               {/* ENTOURAGE */}
-              <section id="entourage" className="py-10 md:py-14 px-4 bg-white/20 backdrop-blur-sm border-y border-white transition-all">
+              <section id="entourage" className="py-10 md:py-14 px-4 bg-white/20 backdrop-blur-sm border-y border-white transition-all relative z-20">
                 <div className="max-w-screen-lg mx-auto text-center">
                   <SectionHeading title="The Entourage" subtitle="Our Loved Ones" Icon={Users} />
                   
@@ -1142,7 +1312,7 @@ export default function App() {
               </section>
 
               {/* VENUES */}
-              <section id="venues" className="py-10 md:py-14 px-4 max-w-screen-xl mx-auto transition-all">
+              <section id="venues" className="py-10 md:py-14 px-4 max-w-screen-xl mx-auto transition-all relative z-20">
                 <SectionHeading title="The Venues" subtitle="Where & When" Icon={Church} />
                 <div className="grid lg:grid-cols-2 gap-6 md:gap-10">
                   <div className="bg-white p-2 shadow-2xl relative rounded">
@@ -1175,7 +1345,7 @@ export default function App() {
               </section>
 
               {/* DETAILS & ATTIRE */}
-              <section id="details" className="py-10 md:py-14 px-4 bg-white/60 border-t border-white transition-all">
+              <section id="details" className="py-10 md:py-14 px-4 bg-white/60 border-t border-white transition-all relative z-20">
                 <div className="max-w-screen-xl mx-auto grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
                    <div className="text-center md:text-left">
                       <SectionHeading title="Attire" subtitle="Dress Code & Details" Icon={Sparkles} />
@@ -1205,7 +1375,7 @@ export default function App() {
               </section>
 
               {/* REMINDERS & UNPLUGGED CEREMONY */}
-              <section id="reminders" className="py-10 md:py-14 px-4 bg-[#faf9f6]/80 backdrop-blur-sm border-y border-white">
+              <section id="reminders" className="py-10 md:py-14 px-4 bg-white/60 backdrop-blur-sm border-y border-white relative z-20">
                  <div className="max-w-screen-md mx-auto text-center">
                     <SectionHeading title="Important Details" subtitle="Please Note" Icon={Info} />
                     <div className="grid md:grid-cols-2 gap-6 md:gap-8 text-left">
@@ -1233,18 +1403,24 @@ export default function App() {
               </section>
 
               {/* GIFTS */}
-              <section id="gifts" className="py-10 md:py-14 px-4 relative bg-[#faf9f6] border-b border-white">
+              <section id="gifts" className="py-10 md:py-14 px-4 relative bg-white/40 border-b border-white z-20">
                 <div className="max-w-screen-md mx-auto text-center">
                   <SectionHeading title="Send Some Love" subtitle="Gifts & Registry" Icon={Gift} />
                   <p className="text-base font-serif leading-relaxed text-gray-800 mb-8 max-w-2xl mx-auto">{String(displayData.giftText)}</p>
 
                   <div className="max-w-4xl mx-auto">
-                    {/* QR CODES */}
                     {displayData.qrCodeUrls && displayData.qrCodeUrls.length > 0 && (
-                      <div className="flex flex-wrap justify-center gap-6">
+                      <div className="flex flex-wrap justify-center gap-8">
                         {displayData.qrCodeUrls.map((qr, idx) => (
-                           <div key={idx} className="w-32 h-32 md:w-40 md:h-40 bg-white p-3 shadow-xl rounded-2xl border border-gray-200 transition-transform hover:scale-105">
-                             <img src={qr} alt={`QR Code ${idx + 1}`} className="w-full h-full object-contain" />
+                           <div key={idx} className="w-48 h-48 md:w-64 md:h-64 bg-white p-4 shadow-xl rounded-2xl border border-gray-200 transition-transform hover:scale-105 group relative overflow-hidden flex flex-col items-center justify-center">
+                             <img src={qr} alt={`QR Code ${idx + 1}`} className="w-full h-full object-contain mb-1 transition-opacity" />
+                             
+                             <div className="absolute inset-0 bg-white/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-4">
+                                <span className="font-serif italic text-weddingDark font-bold text-lg">Scan or Save</span>
+                                <button onClick={() => downloadImage(qr, `Wedding_QR_${idx+1}.png`)} className="bg-weddingDark text-white px-5 py-2.5 rounded-full text-[10px] md:text-xs uppercase tracking-widest font-bold flex items-center gap-2 hover:bg-weddingAccent transition-colors shadow-lg active:scale-95">
+                                   <Download size={16}/> Save to Device
+                                </button>
+                             </div>
                            </div>
                         ))}
                       </div>
@@ -1253,25 +1429,13 @@ export default function App() {
                 </div>
               </section>
 
-              {/* GUESTBOOK - SCROLLING TIMELINE FORMAT */}
-              <section id="guestbook" className="py-10 md:py-14 px-4 relative bg-white/40 backdrop-blur-md border-b">
-                <div className="max-w-screen-md mx-auto text-center">
+              {/* GUESTBOOK - HORIZONTAL CAROUSEL */}
+              <section id="guestbook" className="py-10 md:py-16 px-0 md:px-4 relative bg-white/40 backdrop-blur-md border-b z-20">
+                <div className="w-full text-center">
                   <SectionHeading title="Guestbook" subtitle="Wishes & Love" Icon={MessageSquareHeart} />
                   
                   {displayMessages.length > 0 ? (
-                    <div className="relative w-full max-w-2xl mx-auto h-[350px] md:h-[450px] bg-white/50 backdrop-blur-xl border border-white p-4 md:p-6 rounded-[2rem] shadow-inner overflow-y-auto space-y-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                      <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
-                      
-                      {displayMessages.map((m) => (
-                        <div key={m.id} className="bg-[#faf9f6]/95 p-5 md:p-6 border border-white shadow-sm rounded-2xl flex flex-col md:flex-row gap-4 items-start text-left group transition-all duration-300 hover:shadow-md">
-                          <MessageSquareHeart className="w-5 h-5 md:w-6 md:h-6 text-weddingSage/80 shrink-0 mt-1" />
-                          <div className="flex-1">
-                             <p className="text-sm md:text-base font-serif italic leading-relaxed text-gray-800 mb-3">"{String(m.message)}"</p>
-                             <p className="text-[8px] md:text-[9px] uppercase tracking-widest font-bold text-weddingAccent border-t border-gray-100 pt-2">- {String(m.submittedName)}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    <GuestbookCarousel messages={displayMessages} handleLike={handleLikeMessage} localLikes={localLikes} />
                   ) : (
                     <div className="text-center text-gray-400 font-serif italic py-8 text-sm md:text-base">Be the first to leave a message...</div>
                   )}
@@ -1279,7 +1443,7 @@ export default function App() {
               </section>
 
               {/* RSVP */}
-              <section id="rsvp" className="py-14 md:py-16 px-4 bg-[#1f2b22] text-white transition-all">
+              <section id="rsvp" className="py-14 md:py-16 px-4 bg-[#1f2b22] text-white transition-all relative z-20">
                 <div className="max-w-screen-md mx-auto">
                   
                   <SectionHeading title="Join the Celebration" subtitle="RSVP" Icon={Send} isDark />
@@ -1338,7 +1502,7 @@ export default function App() {
               </section>
 
               {/* FOOTER & LOGOUT */}
-              <footer className="py-12 md:py-16 text-center bg-[#faf9f6] border-t border-gray-200 relative z-10 transition-all">
+              <footer className="py-12 md:py-16 text-center bg-white/80 border-t border-gray-200 relative z-20 transition-all">
                 <p className="font-script text-4xl sm:text-5xl md:text-6xl text-weddingDark mb-3 select-none break-words px-4 leading-normal">{String(displayData.groomName)} &amp; {String(displayData.brideName)}</p>
                 <div className="w-16 h-px bg-weddingSage mx-auto mb-6 opacity-50"></div>
                 <p className="text-[8px] md:text-[9px] uppercase font-bold tracking-[0.5em] text-gray-500 mb-6">{String(displayData.weddingDate)} • {String(displayData.weddingLocation)}</p>
@@ -1379,9 +1543,9 @@ export default function App() {
               </div>
 
               {/* Sidebar Tabs */}
-              <div className="flex bg-white border-b border-gray-200 shrink-0 text-[10px] font-bold uppercase tracking-widest">
-                {['details', 'entourage', 'media', 'guests'].map(tab => (
-                   <button key={tab} onClick={()=>setAdminTab(tab)} className={`flex-1 py-4 text-center border-b-2 transition-colors ${adminTab === tab ? 'border-weddingDark text-weddingDark bg-gray-50/50' : 'border-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}>
+              <div className="flex bg-white border-b border-gray-200 shrink-0 text-[9px] font-bold uppercase tracking-widest overflow-x-auto">
+                {['details', 'design', 'entourage', 'media', 'guests'].map(tab => (
+                   <button key={tab} onClick={()=>setAdminTab(tab)} className={`flex-1 py-4 px-2 text-center border-b-2 transition-colors ${adminTab === tab ? 'border-weddingDark text-weddingDark bg-gray-50/50' : 'border-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}>
                      {tab}
                    </button>
                 ))}
@@ -1389,6 +1553,7 @@ export default function App() {
 
               {/* Sidebar Forms Area */}
               <div className="flex-1 overflow-y-auto p-5 pb-32">
+                 
                  {adminTab === 'details' && (
                     <div className="animate-in fade-in duration-300 space-y-6">
                        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
@@ -1423,6 +1588,65 @@ export default function App() {
                           <TextInput label="Unplugged Ceremony" isTextArea value={editForm.unpluggedText} onChange={val=>setEditForm({...editForm, unpluggedText: val})} />
                           <TextInput label="Important Reminders" isTextArea value={editForm.remindersText} onChange={val=>setEditForm({...editForm, remindersText: val})} />
                           <TextInput label="Gift Message Intro" isTextArea value={editForm.giftText} onChange={val=>setEditForm({...editForm, giftText: val})} />
+                       </div>
+                    </div>
+                 )}
+
+                 {adminTab === 'design' && (
+                    <div className="animate-in fade-in duration-300 space-y-6">
+                       <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                          <h3 className="text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 border-b border-gray-100 pb-2 flex items-center gap-2">
+                             <Palette size={14}/> Aesthetics & Theme
+                          </h3>
+
+                          <div className="flex gap-4 mb-5">
+                              <div className="flex-1">
+                                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Base Bg Color</label>
+                                  <input type="color" value={editForm.themeBgColor || '#faf9f6'} onChange={e => setEditForm({...editForm, themeBgColor: e.target.value})} className="w-full h-10 rounded cursor-pointer border-0"/>
+                              </div>
+                              <div className="flex-1">
+                                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Border Color</label>
+                                  <input type="color" value={editForm.themeBorderColor || '#ceb878'} onChange={e => setEditForm({...editForm, themeBorderColor: e.target.value})} className="w-full h-10 rounded cursor-pointer border-0"/>
+                              </div>
+                          </div>
+
+                          <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Outer Frame / Border Style</label>
+                          <select value={editForm.themeBorder || 'none'} onChange={e => setEditForm({...editForm, themeBorder: e.target.value})} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm mb-6 focus:outline-none focus:border-weddingAccent">
+                             <option value="none">None</option>
+                             <option value="solid">Solid Classic</option>
+                             <option value="double">Elegant Double</option>
+                             <option value="dashed">Dashed Outline</option>
+                          </select>
+
+                          <div className="p-4 bg-gray-50 rounded-lg border border-gray-100 mb-6">
+                              <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-3">Optional Brushes / Background Overlays</h4>
+                              <p className="text-xs text-gray-400 mb-4 italic">Paste an image URL below to create a watercolor/splatter background texture over the base color.</p>
+                              
+                              <SinglePhotoManager 
+                                label="Background Overlay Image" 
+                                url={editForm.themeTextureUrl} 
+                                onChange={val=>setEditForm({...editForm, themeTextureUrl: val})} 
+                                placeholder="E.g. https://images.unsplash.com/photo-1579546929518-9e396f3cc809"
+                              />
+                              <div className="flex items-center gap-2 mt-[-10px] mb-6">
+                                <button onClick={() => setEditForm({...editForm, themeTextureUrl: "https://images.unsplash.com/photo-1601662528567-526cd06f3598?auto=format&fit=crop&q=80"})} className="text-[9px] uppercase tracking-widest font-bold text-weddingAccent underline hover:text-black">
+                                   Load Example Watercolor Pink Texture
+                                </button>
+                              </div>
+
+                              <SinglePhotoManager 
+                                label="Top-Left Corner Decor" 
+                                url={editForm.themeCornerTopLeft} 
+                                onChange={val=>setEditForm({...editForm, themeCornerTopLeft: val})} 
+                                placeholder="Paste transparent floral PNG..."
+                              />
+                              <SinglePhotoManager 
+                                label="Bottom-Right Corner Decor" 
+                                url={editForm.themeCornerBottomRight} 
+                                onChange={val=>setEditForm({...editForm, themeCornerBottomRight: val})} 
+                                placeholder="Paste transparent floral PNG..."
+                              />
+                          </div>
                        </div>
                     </div>
                  )}
