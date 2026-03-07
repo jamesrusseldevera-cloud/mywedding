@@ -893,10 +893,13 @@ export default function App() {
     const universalCodes = ['#jamesfoundhiscassie', '#cassiechosejames'];
     const isUniversal = universalCodes.includes(code);
     
-    // Find guest by EXACT code, or by EXACT name if universal code is used
-    let guest = invitees.find(i => String(i.code).toLowerCase() === code);
-    if (!guest && isUniversal) {
+    // Find guest by EXACT name if universal code is used, otherwise find by unique code.
+    // This prevents one universal code submission from overwriting the previous universal code submissions.
+    let guest = null;
+    if (isUniversal) {
       guest = invitees.find(i => String(i.name).toLowerCase() === rsvpForm.name.trim().toLowerCase());
+    } else {
+      guest = invitees.find(i => String(i.code).toLowerCase() === code);
     }
     
     setIsSubmitting(true);
