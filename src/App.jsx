@@ -6,7 +6,7 @@ import {
   ChevronLeft, ChevronRight, LayoutGrid, StickyNote, Info, 
   Github, Globe, Terminal, Cloud, AlertCircle, ExternalLink, 
   MapPin, Music, Play, Pause, MailOpen, Camera, GripVertical, Plus,
-  BookHeart, Users, Church, Send, Sparkles, Flame, Wind, Infinity as InfinityIcon, BookOpen, Coins, Gem, Palette, Images
+  BookHeart, Users, Church, Send, Sparkles, Flame, Wind, Infinity as InfinityIcon, BookOpen, Coins, Gem, Palette, Images, Search, Filter
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
@@ -107,7 +107,7 @@ const DEFAULT_DETAILS = {
   themeBgColor: "#faf9f6",
   themeBorder: "none",
   themeBorderColor: "#ceb878",
-  themeTextureUrl: "", // Admin can apply watercolor overlays
+  themeTextureUrl: "", 
   themeCornerTopLeft: "", 
   themeCornerBottomRight: ""
 };
@@ -400,7 +400,7 @@ const FlipInvitation = ({ pages = [], groom, bride }) => {
 };
 
 // --- Horizontal Scroll Guestbook Carousel Component ---
-const GuestbookCarousel = ({ messages, handleLike, localLikes }) => {
+const GuestbookCarousel = ({ messages, handleLike, localLikes, sessionLikes }) => {
   const scrollRef = useRef(null);
   
   const scroll = (direction) => {
@@ -419,7 +419,7 @@ const GuestbookCarousel = ({ messages, handleLike, localLikes }) => {
       <div ref={scrollRef} className="flex overflow-x-auto gap-4 md:gap-6 snap-x snap-mandatory py-4 sm:py-6 px-1 sm:px-2 no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
         {messages.map((m) => {
           const likesCount = localLikes[m.id] !== undefined ? localLikes[m.id] : (m.likes || 0);
-          const isLiked = localStorage.getItem(`liked_${m.id}`);
+          const isLiked = sessionLikes.has(m.id);
           
           return (
             <div key={m.id} className="w-[85%] shrink-0 sm:w-[60%] md:w-[45%] lg:w-[calc(33.333%-1rem)] snap-center bg-white/95 p-4 sm:p-5 md:p-6 border border-white shadow-sm rounded-2xl flex flex-col group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative h-56 sm:h-64">
@@ -671,6 +671,7 @@ export default function App() {
   const [submitError, setSubmitError] = useState('');
   
   const [localLikes, setLocalLikes] = useState({}); // Optimistic UI local likes
+  const [sessionLikes, setSessionLikes] = useState(new Set()); // Session-based likes tracker
   
   // Admin UI States
   const [showAdminLogin, setShowAdminLogin] = useState(false);
@@ -680,9 +681,14 @@ export default function App() {
   const [isSavingDetails, setIsSavingDetails] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [adminError, setAdminError] = useState('');
+  
   const [newGuestName, setNewGuestName] = useState('');
   const [newGuestCode, setNewGuestCode] = useState('');
   
+  // Admin Guest Filter/Search
+  const [guestSearch, setGuestSearch] = useState('');
+  const [guestFilter, setGuestFilter] = useState('All'); 
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioError, setAudioError] = useState(false);
 
@@ -723,7 +729,6 @@ export default function App() {
     let palette = Array.isArray(data.colorPalette) ? data.colorPalette : DEFAULT_DETAILS.colorPalette;
     if (palette.length === 0) palette = DEFAULT_DETAILS.colorPalette;
 
-    // Migrate from old single invitationImage to an array if needed
     let invPages = toArr(data.invitationPages, ',');
     if (invPages.length === 0 && data.invitationImage) invPages = [data.invitationImage];
     if (invPages.length === 0) invPages = DEFAULT_DETAILS.invitationPages;
@@ -751,15 +756,11 @@ export default function App() {
   };
 
   const displayData = (isAdminAuth && editForm) ? editForm : details;
-  
-  // Fallback to the reliable Piano MP3 if the field is corrupted
   const safeAudioUrl = displayData?.backgroundMusicUrl?.trim() || "https://www.mfiles.co.uk/mp3-downloads/debussy-clair-de-lune.mp3";
   const audioSrc = safeAudioUrl.startsWith('http') || safeAudioUrl.startsWith('data:') ? safeAudioUrl : encodeURI(safeAudioUrl);
 
-  // --- AUDIO ACTIONS ---
   const handleOpenInvitation = async () => {
     setIsLanding(false);
-    // Auto-play the audio when the guest opens the invitation
     if (audioRef.current) {
        try {
           await audioRef.current.play();
@@ -788,9 +789,7 @@ export default function App() {
     }
   };
 
-  // --- STYLES INJECTION ---
   useEffect(() => {
-    // Force viewport meta tag for mobile responsiveness in canvas/iframe
     let viewportMeta = document.querySelector('meta[name="viewport"]');
     if (!viewportMeta) {
       viewportMeta = document.createElement('meta');
@@ -828,8 +827,6 @@ export default function App() {
       .no-scrollbar::-webkit-scrollbar { display: none; }
       .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       html, body { overflow-x: hidden; max-width: 100%; }
-      
-      /* iOS Safari safe height fallback */
       @supports (-webkit-touch-callout: none) {
         .ios-h-safe { height: -webkit-fill-available; min-height: 100dvh; }
       }
@@ -844,7 +841,6 @@ export default function App() {
     };
   }, []);
 
-  // --- FIREBASE SYNC & LOCAL STORAGE FALLBACK ---
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -859,14 +855,6 @@ export default function App() {
 
   useEffect(() => {
     if (!user) return;
-    
-    // Load local storage first as an immediate fallback
-    const localData = localStorage.getItem(`wedding_config_${appId}`);
-    if (localData) {
-       const normalizedLocal = normalizeData(JSON.parse(localData));
-       setDetails(normalizedLocal);
-       if (!editForm) setEditForm(normalizedLocal);
-    }
 
     const unsubConfig = onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_config')), (snapshot) => {
       const mainDoc = snapshot.docs.find(doc => doc.id === 'main');
@@ -874,23 +862,17 @@ export default function App() {
         const normalized = normalizeData(mainDoc.data());
         setDetails(normalized);
         if (!editForm) setEditForm(normalized);
-      } else if (!localData) {
+      } else {
         const normalized = normalizeData(DEFAULT_DETAILS);
         setDetails(normalized);
         if (!editForm) setEditForm(normalized);
       }
-    }, (err) => {
-        console.warn("Firebase Read Failed. Using LocalStorage fallback.", err);
-    });
-
-    const localGuests = localStorage.getItem(`wedding_guests_${appId}`);
-    if (localGuests) setInvitees(JSON.parse(localGuests));
+    }, (err) => console.error("Firebase Config Read Failed:", err));
 
     const unsubGuests = onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees')), (snapshot) => {
       const guests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setInvitees(guests);
-      localStorage.setItem(`wedding_guests_${appId}`, JSON.stringify(guests));
-    }, (err) => console.warn("Guest List Read Failed."));
+    }, (err) => console.error("Firebase Guest List Read Failed:", err));
     
     return () => { unsubConfig(); unsubGuests(); };
   }, [user]);
@@ -899,11 +881,19 @@ export default function App() {
   const handleRsvpSubmit = async (e) => {
     e.preventDefault();
     setSubmitError('');
+
+    if (!user) {
+       setSubmitError("Connection not established yet. Please wait a moment and try again.");
+       return;
+    }
+
     const code = rsvpForm.enteredCode.trim().toLowerCase();
+    
+    // Case-insensitive universal code acceptance
     const universalCodes = ['#jamesfoundhiscassie', '#cassiechosejames'];
     const isUniversal = universalCodes.includes(code);
     
-    // Find guest by code, or by name if universal code is used
+    // Find guest by EXACT code, or by EXACT name if universal code is used
     let guest = invitees.find(i => String(i.code).toLowerCase() === code);
     if (!guest && isUniversal) {
       guest = invitees.find(i => String(i.name).toLowerCase() === rsvpForm.name.trim().toLowerCase());
@@ -921,10 +911,10 @@ export default function App() {
     };
 
     if (!guest && isUniversal) {
-      // Add new guest automatically if using universal code
+      // NEW GUEST entry using universal code
       const newGuestData = { 
         name: rsvpForm.name, 
-        code: rsvpForm.enteredCode, 
+        code: rsvpForm.enteredCode, // Save original case they typed
         likes: 0,
         ...rsvpData,
         timestamp: Date.now() 
@@ -933,55 +923,45 @@ export default function App() {
         await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), newGuestData);
         setSubmitSuccess(true);
       } catch (err) { 
-        const localGuests = [...invitees, { id: `local_${Date.now()}`, ...newGuestData }];
-        setInvitees(localGuests);
-        localStorage.setItem(`wedding_guests_${appId}`, JSON.stringify(localGuests));
-        setSubmitSuccess(true);
+        console.error("Firebase Add Guest Error (RSVP):", err);
+        setSubmitError("Failed to save RSVP to the database. Permissions or connection issue.");
       }
       setIsSubmitting(false);
       return;
     } else if (!guest) {
-      setSubmitError("Security code not found. Please check your invitation."); 
+      setSubmitError("Security code not found. Please check your invitation or use a valid universal code."); 
       setIsSubmitting(false);
       return; 
     }
     
     try {
+      // UPDATE EXISTING GUEST (either via unique code, or name match with universal code)
       await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees', guest.id), rsvpData);
       setSubmitSuccess(true);
     } catch (err) { 
-      const localGuests = [...invitees];
-      const idx = localGuests.findIndex(g => g.id === guest.id);
-      if(idx > -1) {
-         localGuests[idx] = { ...localGuests[idx], ...rsvpData };
-         setInvitees(localGuests);
-         localStorage.setItem(`wedding_guests_${appId}`, JSON.stringify(localGuests));
-         setSubmitSuccess(true);
-      } else {
-         setSubmitError("System error. Try again later."); 
-      }
+      console.error("Firebase Update RSVP Error:", err);
+      setSubmitError("Failed to update RSVP in the database. Permissions or connection issue.");
     }
     setIsSubmitting(false);
   };
 
   // --- GUESTBOOK LIKES HANDLER ---
   const handleLikeMessage = async (id, currentLikes) => {
-    const likedKey = `liked_${id}`;
-    if (localStorage.getItem(likedKey)) return; // Prevent multiple likes
+    if (sessionLikes.has(id)) return; // Prevent multiple likes in session
+    if (!user) return; // Strict Firebase check
 
     // Optimistic UI update
     setLocalLikes(prev => ({ ...prev, [id]: (currentLikes || 0) + 1 }));
-    localStorage.setItem(likedKey, 'true');
+    setSessionLikes(prev => new Set(prev).add(id));
 
-    // Skip database sync for sample messages
-    if (String(id).startsWith('s')) return;
+    if (String(id).startsWith('s')) return; // Skip DB for sample messages
 
     try {
        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees', id), {
           likes: (currentLikes || 0) + 1
        });
-    } catch(e) {
-       console.warn("Could not sync like to DB, but local state was updated.");
+    } catch(err) {
+       console.error("Firebase Like Sync Error:", err);
     }
   };
 
@@ -997,19 +977,18 @@ export default function App() {
   };
 
   const handlePublishChanges = async () => {
-    if(!editForm) return;
+    if (!editForm) return;
+    if (!user) { showToast("Authentication pending..."); return; }
+    
     setIsSavingDetails(true);
-    
-    localStorage.setItem(`wedding_config_${appId}`, JSON.stringify(editForm));
-    setDetails(editForm);
-    
     try { 
       await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wedding_config', 'main'), editForm); 
+      setDetails(editForm);
       showToast("Published Live!"); 
     } 
-    catch(e) { 
-      console.warn("Firebase Backend Denied. Using Local Frontend Save.");
-      showToast("Saved to Frontend (Backend Sync Blocked)"); 
+    catch(err) { 
+      console.error("Firebase Publish Config Error:", err);
+      showToast("Failed to publish config. Check DB rules."); 
     }
     setIsSavingDetails(false);
   };
@@ -1017,29 +996,28 @@ export default function App() {
   const handleAddGuest = async (e) => {
     e.preventDefault();
     if (!newGuestName) return;
+    if (!user) { showToast("Authentication pending..."); return; }
     
     const finalCode = newGuestCode.trim() ? String(newGuestCode).trim() : '#JamesFoundHisCassie';
-    const newGuest = { id: `local_${Date.now()}`, name: newGuestName, code: finalCode, status: 'Pending', message: '', messageApproved: false, timestamp: Date.now(), likes: 0 };
+    const newGuest = { name: newGuestName, code: finalCode, status: 'Pending', message: '', messageApproved: false, timestamp: Date.now(), likes: 0 };
     
     try {
       await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), newGuest);
       showToast("Guest added successfully");
-    } catch (error) { 
-      const updatedList = [...invitees, newGuest];
-      setInvitees(updatedList);
-      localStorage.setItem(`wedding_guests_${appId}`, JSON.stringify(updatedList));
-      showToast("Guest added (Locally)"); 
+    } catch (err) { 
+      console.error("Firebase Admin Add Guest Error:", err);
+      showToast("Failed to add guest to database."); 
     }
     setNewGuestName(''); setNewGuestCode('');
   };
 
   const toggleMessageApproval = async (id, currentStatus) => {
+    if (!user) return;
     try {
       await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees', id), { messageApproved: !currentStatus });
-    } catch(e) {
-      const updatedList = invitees.map(g => g.id === id ? { ...g, messageApproved: !currentStatus } : g);
-      setInvitees(updatedList);
-      localStorage.setItem(`wedding_guests_${appId}`, JSON.stringify(updatedList));
+    } catch(err) {
+      console.error("Firebase Toggle Message Error:", err);
+      showToast("Failed to update message status.");
     }
   };
 
@@ -1051,6 +1029,7 @@ export default function App() {
   };
 
   const handleBulkUploadCSV = (e) => {
+    if (!user) { showToast("Authentication required"); return; }
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
@@ -1064,7 +1043,9 @@ export default function App() {
           
           if (name) { 
              if (!code) code = '#JamesFoundHisCassie';
-             try { await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), { name, code, status: 'Pending', timestamp: Date.now(), likes: 0 }); } catch(e){} 
+             try { 
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), { name, code, status: 'Pending', timestamp: Date.now(), likes: 0 }); 
+             } catch(err) { console.error("Bulk upload error:", err); } 
           }
         }
       }
@@ -1074,17 +1055,17 @@ export default function App() {
   };
 
   const handleDeleteGuest = async (id) => {
+    if (!user) return;
     try { 
       await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees', id)); 
       showToast("Guest removed."); 
-    } catch (error) { 
-      const updatedList = invitees.filter(g => g.id !== id);
-      setInvitees(updatedList);
-      localStorage.setItem(`wedding_guests_${appId}`, JSON.stringify(updatedList));
-      showToast("Guest removed (Locally)."); 
+    } catch (err) { 
+      console.error("Firebase Delete Guest Error:", err);
+      showToast("Failed to remove guest from database."); 
     }
   };
 
+  // --- DERIVED DATA ---
   const principalPairs = [];
   for (let i = 0; i < (displayData.entouragePrincipal || []).length; i += 2) {
     principalPairs.push({ male: displayData.entouragePrincipal[i] || '', female: displayData.entouragePrincipal[i+1] || '' });
@@ -1097,6 +1078,25 @@ export default function App() {
 
   const dbApprovedMessages = invitees.filter(i => i.message && i.messageApproved && i.submittedName);
   const displayMessages = dbApprovedMessages.length > 0 ? dbApprovedMessages : SAMPLE_MESSAGES;
+
+  // Filtered Guests for Admin Panel (handles up to 300 scale easily)
+  const filteredGuests = invitees.filter(g => {
+    const matchesSearch = String(g.name || '').toLowerCase().includes(guestSearch.toLowerCase()) || 
+                          String(g.code || '').toLowerCase().includes(guestSearch.toLowerCase());
+    if (!matchesSearch) return false;
+    
+    if (guestFilter === 'All') return true;
+    if (guestFilter === 'Attending') return g.status === 'Attending';
+    if (guestFilter === 'Declined') return g.status === 'Declined';
+    if (guestFilter === 'Pending') return g.status === 'Pending';
+    if (guestFilter === 'Needs Approval') return g.message && !g.messageApproved;
+    
+    return true;
+  }).sort((a, b) => (b.respondedAt || b.timestamp || 0) - (a.respondedAt || a.timestamp || 0));
+
+  const totalAttending = invitees.filter(g => g.status === 'Attending').length;
+  const totalDeclined = invitees.filter(g => g.status === 'Declined').length;
+  const totalPending = invitees.filter(g => g.status === 'Pending').length;
 
   // ==========================================
   // RENDER LOGIC
@@ -1490,7 +1490,7 @@ export default function App() {
                   <SectionHeading title="Guestbook" subtitle="Wishes & Love" Icon={MessageSquareHeart} />
                   
                   {displayMessages.length > 0 ? (
-                    <GuestbookCarousel messages={displayMessages} handleLike={handleLikeMessage} localLikes={localLikes} />
+                    <GuestbookCarousel messages={displayMessages} handleLike={handleLikeMessage} localLikes={localLikes} sessionLikes={sessionLikes} />
                   ) : (
                     <div className="text-center text-gray-400 font-serif italic py-6 sm:py-8 text-xs sm:text-sm md:text-base px-4">Be the first to leave a message...</div>
                   )}
@@ -1745,6 +1745,17 @@ export default function App() {
 
                  {adminTab === 'guests' && (
                     <div className="animate-in fade-in duration-300 w-full">
+                       
+                       {/* STATS */}
+                       <div className="flex justify-between items-center mb-4 px-1">
+                          <div className="flex gap-4 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                             <span className="text-weddingDark">Total: {invitees.length}</span>
+                             <span className="text-green-600">Yes: {totalAttending}</span>
+                             <span className="text-red-500">No: {totalDeclined}</span>
+                             <span className="text-yellow-600">Wait: {totalPending}</span>
+                          </div>
+                       </div>
+
                        <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm mb-4 sm:mb-6 w-full">
                          <h3 className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 sm:mb-5 border-b border-gray-100 pb-2">Add New Guest</h3>
                          <TextInput label="Guest Name" value={newGuestName} onChange={setNewGuestName} />
@@ -1759,30 +1770,65 @@ export default function App() {
                        
                        <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm w-full">
                           <h3 className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 sm:mb-5 border-b border-gray-100 pb-2 flex justify-between items-center">
-                            Guest List <span className="text-gray-400 font-normal">{invitees.length} total</span>
+                            Manage Guest List
                           </h3>
-                          <div className="flex gap-2 mb-4 w-full">
+
+                          {/* SEARCH & FILTER FOR 300+ ENTRIES */}
+                          <div className="flex flex-col gap-3 mb-4">
+                             <div className="relative">
+                               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                               <input 
+                                 type="text" 
+                                 placeholder="Search by name or code..." 
+                                 value={guestSearch}
+                                 onChange={(e) => setGuestSearch(e.target.value)}
+                                 className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-weddingAccent transition-colors"
+                               />
+                             </div>
+                             <div className="relative">
+                               <Filter size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                               <select 
+                                 value={guestFilter} 
+                                 onChange={(e) => setGuestFilter(e.target.value)}
+                                 className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-weddingAccent appearance-none cursor-pointer"
+                               >
+                                  <option value="All">All Guests</option>
+                                  <option value="Attending">Attending Only</option>
+                                  <option value="Declined">Declined Only</option>
+                                  <option value="Pending">Pending (No Response)</option>
+                                  <option value="Needs Approval">Needs Message Approval</option>
+                               </select>
+                             </div>
+                          </div>
+
+                          <div className="flex gap-2 mb-4 w-full pt-2 border-t border-gray-100">
                              <input type="file" accept=".csv" ref={fileInputRef} onChange={handleBulkUploadCSV} className="hidden" />
                              <button onClick={() => fileInputRef.current?.click()} className="flex-1 py-1.5 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-gray-500 hover:text-weddingAccent transition-colors touch-manipulation"><Upload size={10} className="sm:w-3 sm:h-3 inline mr-1"/> Import CSV</button>
                              <button onClick={handleDownloadCSV} className="flex-1 py-1.5 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-gray-500 hover:text-weddingAccent transition-colors touch-manipulation"><Download size={10} className="sm:w-3 sm:h-3 inline mr-1"/> Export</button>
                           </div>
-                          <div className="space-y-2 sm:space-y-3 w-full">
-                             {invitees.map(i => (
+
+                          <div className="space-y-2 sm:space-y-3 w-full max-h-[60vh] overflow-y-auto pr-1">
+                             {filteredGuests.map(i => (
                                 <div key={i.id} className="p-2.5 sm:p-3 bg-gray-50 border border-gray-200 rounded-lg relative group w-full overflow-hidden">
                                    <button onClick={() => handleDeleteGuest(i.id)} className="absolute top-2 right-2 text-gray-300 hover:text-red-500 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity p-1 touch-manipulation"><Trash2 size={12} className="sm:w-[14px] sm:h-[14px]"/></button>
                                    <div className="font-bold text-xs sm:text-sm text-gray-800 pr-6 truncate w-full">{String(i.name)}</div>
                                    <div className="text-[9px] sm:text-[10px] font-mono font-bold text-weddingAccent uppercase tracking-widest mt-1 mb-1.5 sm:mb-2 truncate w-full">Code: {String(i.code)}</div>
                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs gap-2 sm:gap-0 w-full">
-                                     <span className={`px-2 py-0.5 rounded text-[8px] sm:text-[9px] font-bold uppercase ${i.status === 'Attending' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}`}>{String(i.status)}</span>
+                                     <span className={`px-2 py-0.5 rounded text-[8px] sm:text-[9px] font-bold uppercase ${i.status === 'Attending' ? 'bg-green-100 text-green-700' : i.status === 'Declined' ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-500'}`}>{String(i.status)}</span>
                                      {i.message && (
                                        <button onClick={() => toggleMessageApproval(i.id, i.messageApproved)} className={`flex items-center gap-1 text-[8px] sm:text-[9px] font-bold uppercase touch-manipulation ${i.messageApproved ? 'text-pink-500' : 'text-gray-400'}`}>
                                          <Heart size={10} className="sm:w-3 sm:h-3" fill={i.messageApproved ? "currentColor" : "none"}/> {i.messageApproved ? 'Visible' : 'Hidden'}
                                        </button>
                                      )}
                                    </div>
+                                   {i.message && (
+                                      <div className="mt-2 pt-2 border-t border-gray-200/60 text-xs font-serif italic text-gray-600 break-words line-clamp-2" title={String(i.message)}>
+                                        "{String(i.message)}"
+                                      </div>
+                                   )}
                                 </div>
                              ))}
-                             {invitees.length === 0 && <div className="text-center text-xs text-gray-400 italic py-4">No guests added yet.</div>}
+                             {filteredGuests.length === 0 && <div className="text-center text-xs text-gray-400 italic py-4">No guests found.</div>}
                           </div>
                        </div>
                     </div>
