@@ -870,7 +870,17 @@ export default function App() {
     }, (err) => console.error("Firebase Config Read Failed:", err));
 
     const unsubGuests = onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees')), (snapshot) => {
-      const guests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const guests = snapshot.docs.map(doc => {
+         const data = doc.data();
+         return { 
+           id: doc.id, 
+           ...data,
+           // STRICT SANITIZATION: Default missing or undefined fields to safe strings
+           code: data.code || '#JamesFoundHisCassie',
+           name: data.name || 'Unknown Guest',
+           status: data.status || 'Pending'
+         };
+      });
       setInvitees(guests);
     }, (err) => console.error("Firebase Guest List Read Failed:", err));
     
@@ -918,8 +928,9 @@ export default function App() {
     if (!guest && isUniversal) {
       // NEW GUEST entry using universal code
       const newGuestData = { 
-        name: rsvpForm.name || '', 
-        code: rsvpForm.enteredCode || '', // Save original case they typed
+        name: rsvpForm.name || 'Unknown', 
+        // Force the code to strictly save a string in the DB
+        code: rsvpForm.enteredCode ? String(rsvpForm.enteredCode) : '#JamesFoundHisCassie', 
         likes: 0,
         ...rsvpData,
         timestamp: Date.now() 
@@ -1003,8 +1014,17 @@ export default function App() {
     if (!newGuestName) return;
     if (!user) { showToast("Authentication pending..."); return; }
     
-    const finalCode = newGuestCode.trim() ? String(newGuestCode).trim() : '#JamesFoundHisCassie';
-    const newGuest = { name: newGuestName || '', code: finalCode, status: 'Pending', message: '', messageApproved: false, timestamp: Date.now(), likes: 0 };
+    // Explicit safety checks
+    const finalCode = newGuestCode && String(newGuestCode).trim() ? String(newGuestCode).trim() : '#JamesFoundHisCassie';
+    const newGuest = { 
+       name: newGuestName || 'Unknown Guest', 
+       code: finalCode, 
+       status: 'Pending', 
+       message: '', 
+       messageApproved: false, 
+       timestamp: Date.now(), 
+       likes: 0 
+    };
     
     try {
       await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), newGuest);
@@ -1047,9 +1067,16 @@ export default function App() {
           let code = cols[1] ? cols[1].replace(/"/g, '').trim() : '';
           
           if (name) { 
-             if (!code) code = '#JamesFoundHisCassie';
+             // Enforce absolute fallback
+             if (!code || code === 'undefined') code = '#JamesFoundHisCassie';
              try { 
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), { name: name || '', code, status: 'Pending', timestamp: Date.now(), likes: 0 }); 
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), { 
+                   name: name || 'Unknown', 
+                   code: String(code), 
+                   status: 'Pending', 
+                   timestamp: Date.now(), 
+                   likes: 0 
+                }); 
              } catch(err) { console.error("Bulk upload error:", err); } 
           }
         }
@@ -1817,7 +1844,9 @@ export default function App() {
                                 <div key={i.id} className="p-2.5 sm:p-3 bg-gray-50 border border-gray-200 rounded-lg relative group w-full overflow-hidden">
                                    <button onClick={() => handleDeleteGuest(i.id)} className="absolute top-2 right-2 text-gray-300 hover:text-red-500 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity p-1 touch-manipulation"><Trash2 size={12} className="sm:w-[14px] sm:h-[14px]"/></button>
                                    <div className="font-bold text-xs sm:text-sm text-gray-800 pr-6 truncate w-full">{String(i.name)}</div>
-                                   <div className="text-[9px] sm:text-[10px] font-mono font-bold text-weddingAccent uppercase tracking-widest mt-1 mb-1.5 sm:mb-2 truncate w-full">Code: {String(i.code)}</div>
+                                   <div className="text-[9px] sm:text-[10px] font-mono font-bold text-weddingAccent uppercase tracking-widest mt-1 mb-1.5 sm:mb-2 truncate w-full">
+                                     Code: {i.code && i.code !== 'undefined' ? String(i.code) : '#JamesFoundHisCassie'}
+                                   </div>
                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs gap-2 sm:gap-0 w-full">
                                      <span className={`px-2 py-0.5 rounded text-[8px] sm:text-[9px] font-bold uppercase ${i.status === 'Attending' ? 'bg-green-100 text-green-700' : i.status === 'Declined' ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-500'}`}>{String(i.status)}</span>
                                      {i.message && (
