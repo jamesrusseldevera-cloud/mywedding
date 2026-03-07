@@ -902,10 +902,12 @@ export default function App() {
     setIsSubmitting(true);
     
     const status = rsvpForm.attending === 'yes' ? 'Attending' : 'Declined';
+    
+    // Explicitly define fallback strings to prevent 'undefined' values throwing Firebase rules errors
     const rsvpData = { 
-       status: status, 
-       submittedName: rsvpForm.name, 
-       message: rsvpForm.message, 
+       status: status || 'Pending', 
+       submittedName: rsvpForm.name || '', 
+       message: rsvpForm.message || '', 
        respondedAt: Date.now(),
        messageApproved: false
     };
@@ -913,8 +915,8 @@ export default function App() {
     if (!guest && isUniversal) {
       // NEW GUEST entry using universal code
       const newGuestData = { 
-        name: rsvpForm.name, 
-        code: rsvpForm.enteredCode, // Save original case they typed
+        name: rsvpForm.name || '', 
+        code: rsvpForm.enteredCode || '', // Save original case they typed
         likes: 0,
         ...rsvpData,
         timestamp: Date.now() 
@@ -924,7 +926,7 @@ export default function App() {
         setSubmitSuccess(true);
       } catch (err) { 
         console.error("Firebase Add Guest Error (RSVP):", err);
-        setSubmitError("Failed to save RSVP to the database. Permissions or connection issue.");
+        setSubmitError(`Failed to save RSVP: ${err.message}`);
       }
       setIsSubmitting(false);
       return;
@@ -935,12 +937,12 @@ export default function App() {
     }
     
     try {
-      // UPDATE EXISTING GUEST (either via unique code, or name match with universal code)
-      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees', guest.id), rsvpData);
+      // safely update using merge: true to avoid "document does not exist" and other updateDoc permission errors
+      await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees', String(guest.id)), rsvpData, { merge: true });
       setSubmitSuccess(true);
     } catch (err) { 
       console.error("Firebase Update RSVP Error:", err);
-      setSubmitError("Failed to update RSVP in the database. Permissions or connection issue.");
+      setSubmitError(`Update Failed: ${err.message}`);
     }
     setIsSubmitting(false);
   };
@@ -957,9 +959,9 @@ export default function App() {
     if (String(id).startsWith('s')) return; // Skip DB for sample messages
 
     try {
-       await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees', id), {
+       await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees', String(id)), {
           likes: (currentLikes || 0) + 1
-       });
+       }, { merge: true });
     } catch(err) {
        console.error("Firebase Like Sync Error:", err);
     }
@@ -999,14 +1001,14 @@ export default function App() {
     if (!user) { showToast("Authentication pending..."); return; }
     
     const finalCode = newGuestCode.trim() ? String(newGuestCode).trim() : '#JamesFoundHisCassie';
-    const newGuest = { name: newGuestName, code: finalCode, status: 'Pending', message: '', messageApproved: false, timestamp: Date.now(), likes: 0 };
+    const newGuest = { name: newGuestName || '', code: finalCode, status: 'Pending', message: '', messageApproved: false, timestamp: Date.now(), likes: 0 };
     
     try {
       await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), newGuest);
       showToast("Guest added successfully");
     } catch (err) { 
       console.error("Firebase Admin Add Guest Error:", err);
-      showToast("Failed to add guest to database."); 
+      showToast(`Failed to add guest: ${err.message}`); 
     }
     setNewGuestName(''); setNewGuestCode('');
   };
@@ -1014,10 +1016,10 @@ export default function App() {
   const toggleMessageApproval = async (id, currentStatus) => {
     if (!user) return;
     try {
-      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees', id), { messageApproved: !currentStatus });
+      await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees', String(id)), { messageApproved: !currentStatus }, { merge: true });
     } catch(err) {
       console.error("Firebase Toggle Message Error:", err);
-      showToast("Failed to update message status.");
+      showToast(`Failed to update message: ${err.message}`);
     }
   };
 
@@ -1044,7 +1046,7 @@ export default function App() {
           if (name) { 
              if (!code) code = '#JamesFoundHisCassie';
              try { 
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), { name, code, status: 'Pending', timestamp: Date.now(), likes: 0 }); 
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), { name: name || '', code, status: 'Pending', timestamp: Date.now(), likes: 0 }); 
              } catch(err) { console.error("Bulk upload error:", err); } 
           }
         }
@@ -1061,7 +1063,7 @@ export default function App() {
       showToast("Guest removed."); 
     } catch (err) { 
       console.error("Firebase Delete Guest Error:", err);
-      showToast("Failed to remove guest from database."); 
+      showToast(`Failed to remove guest: ${err.message}`); 
     }
   };
 
