@@ -407,9 +407,8 @@ const GuestbookCarousel = ({ messages, handleLike, localLikes, sessionLikes }) =
   const scroll = (direction) => {
     if(scrollRef.current) {
       const { clientWidth, scrollLeft, scrollWidth } = scrollRef.current;
-      // Dynamically calculate the width of exactly ONE card plus the gap (16px)
       const itemWidth = scrollRef.current.children[0]?.offsetWidth || 0;
-      const gap = 16; 
+      const gap = 12; // Adjusted for slightly tighter gap on mobile (gap-3)
       const scrollAmount = itemWidth + gap;
 
       if (direction === 'left') {
@@ -427,9 +426,7 @@ const GuestbookCarousel = ({ messages, handleLike, localLikes, sessionLikes }) =
 
   // Auto Slider Effect
   useEffect(() => {
-    // Pause if hovered or touched, or if there aren't enough messages to scroll
     if (isHovered || messages.length <= 1) return; 
-    
     const interval = setInterval(() => {
       scroll('right');
     }, 3500); 
@@ -439,31 +436,49 @@ const GuestbookCarousel = ({ messages, handleLike, localLikes, sessionLikes }) =
 
   return (
     <div 
-      className="relative w-full max-w-screen-xl mx-auto px-8 sm:px-10 md:px-14"
+      className="relative w-full max-w-screen-xl mx-auto px-6 sm:px-10 md:px-14"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onTouchStart={() => setIsHovered(true)}
       onTouchEnd={() => setIsHovered(false)}
     >
       {/* Navigation buttons */}
-      <button onClick={()=>scroll('left')} className="flex absolute left-0 md:left-2 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-100 p-1.5 md:p-2.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all text-weddingDark hover:bg-weddingSage hover:text-white touch-manipulation">
-        <ChevronLeft size={20} className="w-4 h-4 md:w-6 md:h-6"/>
+      <button onClick={()=>scroll('left')} className="flex absolute left-0 md:left-2 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-100 p-1 sm:p-1.5 md:p-2.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all text-weddingDark hover:bg-weddingSage hover:text-white touch-manipulation">
+        <ChevronLeft size={16} className="w-4 h-4 md:w-6 md:h-6"/>
       </button>
       
-      <div ref={scrollRef} className="flex overflow-x-auto gap-4 snap-x snap-mandatory py-4 sm:py-6 px-1 no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
+      <div ref={scrollRef} className="flex overflow-x-auto gap-3 sm:gap-4 snap-x snap-mandatory py-2 sm:py-6 px-1 no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
         {messages.map((m) => {
           const likesCount = localLikes[m.id] !== undefined ? localLikes[m.id] : (m.likes || 0);
           const isLiked = sessionLikes.has(m.id);
           
           return (
-            {/* DYNAMIC WIDTH: 85% width on mobile, 45% on tablets, ~33% on laptops */}
-            <div key={m.id} className="w-[85%] sm:w-[45%] lg:w-[calc(33.333%-1rem)] shrink-0 snap-center bg-white/95 p-4 sm:p-5 md:p-6 border border-white shadow-sm rounded-2xl flex flex-col group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative h-56 sm:h-64">
-               <MessageSquareHeart className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-weddingSage shrink-0 mb-2 sm:mb-3 md:mb-4" />
-               <div className="flex-1 overflow-y-auto mb-2 sm:mb-3 md:mb-4 pr-1 sm:pr-2 no-scrollbar" style={{ scrollbarWidth: 'none' }}>
-                  <p className="text-sm md:text-base font-serif italic leading-relaxed text-gray-800">"{String(m.message)}"</p>
+            {/* HEIGHT REDUCED (h-40 on mobile), PADDING TIGHTENED (p-3 on mobile) */}
+            <div key={m.id} className="w-[85%] sm:w-[45%] lg:w-[calc(33.333%-1rem)] shrink-0 snap-center bg-white/95 p-3 sm:p-5 md:p-6 border border-white shadow-sm rounded-xl sm:rounded-2xl flex flex-col group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative h-40 sm:h-56 md:h-64">
+               <MessageSquareHeart className="w-3.5 h-3.5 sm:w-5 sm:h-5 md:w-6 md:h-6 text-weddingSage shrink-0 mb-1.5 sm:mb-3 md:mb-4" />
+               <div className="flex-1 overflow-y-auto mb-1.5 sm:mb-3 md:mb-4 pr-1 sm:pr-2 no-scrollbar" style={{ scrollbarWidth: 'none' }}>
+                  {/* TEXT SIZE REDUCED to text-xs on mobile */}
+                  <p className="text-xs sm:text-sm md:text-base font-serif italic leading-relaxed text-gray-800">"{String(m.message)}"</p>
                </div>
-               <div className="border-t border-gray-100 pt-2 sm:pt-3 md:pt-4 flex justify-between items-end mt-auto gap-2">
-                  <p className="
+               <div className="border-t border-gray-100 pt-1.5 sm:pt-3 md:pt-4 flex justify-between items-end mt-auto gap-2">
+                  <p className="text-[7px] sm:text-[8px] md:text-[9px] uppercase tracking-[0.1em] sm:tracking-[0.2em] font-bold text-weddingAccent break-words flex-1 leading-snug truncate">- {String(m.submittedName)}</p>
+                  
+                  <button onClick={() => handleLike(m.id, m.likes)} className={`flex items-center justify-center gap-1 sm:gap-1.5 text-[8px] sm:text-[10px] font-bold transition-all px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-sm shrink-0 touch-manipulation ${isLiked ? 'bg-red-50 text-red-500 border border-red-100' : 'bg-gray-50 text-gray-400 border border-gray-100 hover:text-red-500 hover:bg-red-50 hover:border-red-100 lg:hover:scale-105 active:scale-95'}`}>
+                     <Heart size={10} className={`w-2.5 h-2.5 sm:w-3 sm:h-3 ${isLiked ? "fill-current" : ""}`} /> 
+                     <span>{likesCount}</span>
+                  </button>
+               </div>
+            </div>
+          )
+        })}
+      </div>
+
+      <button onClick={()=>scroll('right')} className="flex absolute right-0 md:right-2 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-100 p-1 sm:p-1.5 md:p-2.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all text-weddingDark hover:bg-weddingSage hover:text-white touch-manipulation">
+        <ChevronRight size={16} className="w-4 h-4 md:w-6 md:h-6"/>
+      </button>
+    </div>
+  );
+};
 
 // ==========================================
 // 4. ADMIN EDITOR COMPONENTS
