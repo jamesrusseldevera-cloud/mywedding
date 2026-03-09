@@ -116,6 +116,7 @@ const SAMPLE_MESSAGES = [
   { id: 's1', message: "Wishing you a lifetime of love, laughter, and endless happiness. We cannot wait to witness your beautiful day!", submittedName: "The Smith Family", likes: 12 },
   { id: 's2', message: "So incredibly happy for you both! Cheers to the beautiful couple and the amazing journey ahead.", submittedName: "Aunt Sarah & Uncle Mike", likes: 8 },
   { id: 's3', message: "May your love continue to grow stronger with each passing day. See you at the wedding!", submittedName: "Cousin Mark", likes: 4 },
+  { id: 's4', message: "Here's to a long and happy marriage. Can't wait to celebrate with you guys on the dance floor!", submittedName: "The Johnsons", likes: 2 }
 ];
 
 // ==========================================
@@ -406,71 +407,84 @@ const GuestbookCarousel = ({ messages, handleLike, localLikes, sessionLikes }) =
 
   const scroll = (direction) => {
     if(scrollRef.current) {
-      const { clientWidth, scrollLeft, scrollWidth } = scrollRef.current;
-      const itemWidth = scrollRef.current.children[0]?.offsetWidth || 0;
-      const gap = 12; // gap-3 in Tailwind is 12px
+      const container = scrollRef.current;
+      const { clientWidth, scrollLeft, scrollWidth } = container;
+      const itemWidth = container.children[0]?.offsetWidth || 0;
+      
+      // Calculate exact scroll amount based on item width + gap
+      const gapMatch = window.getComputedStyle(container).gap.match(/\d+/);
+      const gap = gapMatch ? parseInt(gapMatch[0]) : 16; 
       const scrollAmount = itemWidth + gap;
 
       if (direction === 'left') {
-        scrollRef.current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+        container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
       } else {
         // Auto-loop back to the start if we've reached the end
-        if (scrollLeft + clientWidth >= scrollWidth - 50) {
-          scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+        if (scrollLeft + clientWidth >= scrollWidth - 10) {
+          container.scrollTo({ left: 0, behavior: 'smooth' });
         } else {
-          scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+          container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
         }
       }
     }
   };
 
-  // Auto Slider Effect
+  // Robust Auto Slider Effect
   useEffect(() => {
     if (isHovered || messages.length <= 1) return; 
-    const interval = setInterval(() => {
-      scroll('right');
-    }, 3500); 
+    let timeout;
     
-    return () => clearInterval(interval);
+    const startAutoScroll = () => {
+       timeout = setInterval(() => {
+          scroll('right');
+       }, 3500); 
+    };
+
+    startAutoScroll();
+    return () => clearInterval(timeout);
   }, [isHovered, messages.length]);
 
   return (
     <div 
-      className="relative w-full max-w-screen-xl mx-auto px-6 sm:px-10 md:px-14"
+      className="relative w-full max-w-screen-xl mx-auto px-0 sm:px-10 md:px-14 group"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onTouchStart={() => setIsHovered(true)}
       onTouchEnd={() => setIsHovered(false)}
+      onTouchCancel={() => setIsHovered(false)}
     >
-      {/* Navigation buttons */}
-      <button onClick={()=>scroll('left')} className="flex absolute left-0 md:left-2 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-100 p-1 sm:p-1.5 md:p-2.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all text-weddingDark hover:bg-weddingSage hover:text-white touch-manipulation">
+      {/* Navigation buttons - Hidden on very small mobile to prioritize swipe */}
+      <button onClick={()=>scroll('left')} className="hidden sm:flex absolute left-0 md:left-2 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-100 p-1 sm:p-1.5 md:p-2.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all text-weddingDark hover:bg-weddingSage hover:text-white touch-manipulation">
         <ChevronLeft size={16} className="w-4 h-4 md:w-6 md:h-6"/>
       </button>
       
-      {/* w-full on container, overflow-x-auto handles scroll. */}
-      <div ref={scrollRef} className="flex overflow-x-auto gap-3 sm:gap-4 snap-x snap-mandatory py-2 sm:py-6 px-1 no-scrollbar w-full" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
+      {/* Scroll Container */}
+      <div 
+         ref={scrollRef} 
+         className="flex overflow-x-auto gap-4 sm:gap-6 snap-x snap-mandatory py-6 sm:py-8 px-6 sm:px-4 no-scrollbar w-full scroll-smooth" 
+         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+      >
         {messages.map((m) => {
           const likesCount = localLikes[m.id] !== undefined ? localLikes[m.id] : (m.likes || 0);
           const isLiked = sessionLikes.has(m.id);
           
-          // BUG FIX FOR MOBILE: Removed `w-[85%]` percentage width.
-          // Using fixed `w-[80vw]` capped at `max-w-[280px]` prevents flexbox from miscalculating percentages based on infinite scroll widths.
           return (
-            <div key={m.id} className="w-[80vw] max-w-[280px] sm:max-w-none sm:w-[320px] md:w-[350px] shrink-0 snap-center bg-white/95 p-3 sm:p-5 md:p-6 border border-white shadow-sm rounded-xl sm:rounded-2xl flex flex-col group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative h-40 sm:h-56 md:h-64">
-               <MessageSquareHeart className="w-3.5 h-3.5 sm:w-5 sm:h-5 md:w-6 md:h-6 text-weddingSage shrink-0 mb-1.5 sm:mb-3 md:mb-4" />
+            <div 
+               key={m.id} 
+               className="w-[80vw] max-w-[300px] sm:max-w-none sm:w-[340px] md:w-[380px] shrink-0 snap-center bg-white/95 p-5 sm:p-6 md:p-8 border border-white shadow-lg rounded-2xl sm:rounded-3xl flex flex-col transition-all duration-300 hover:-translate-y-2 relative h-[220px] sm:h-[260px] md:h-[280px]"
+            >
+               <MessageSquareHeart className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-weddingSage shrink-0 mb-2 sm:mb-3 md:mb-4" />
                
-               {/* BUG FIX FOR TEXT: Added `overflow-x-hidden`, `break-words`, `whitespace-pre-wrap` 
-                   to force long words to wrap instead of stretching the flex item layout.
-                */}
-               <div className="flex-1 overflow-y-auto overflow-x-hidden mb-1.5 sm:mb-3 md:mb-4 pr-1 sm:pr-2 no-scrollbar" style={{ scrollbarWidth: 'none' }}>
-                  <p className="text-xs sm:text-sm md:text-base font-serif italic leading-relaxed text-gray-800 break-words whitespace-pre-wrap">"{String(m.message)}"</p>
+               {/* Ensures long continuous strings don't break layout */}
+               <div className="flex-1 overflow-y-auto overflow-x-hidden mb-2 sm:mb-4 pr-2 no-scrollbar" style={{ scrollbarWidth: 'none' }}>
+                  <p className="text-sm sm:text-base md:text-lg font-serif italic leading-relaxed text-gray-800 break-words whitespace-pre-wrap">"{String(m.message)}"</p>
                </div>
                
-               <div className="border-t border-gray-100 pt-1.5 sm:pt-3 md:pt-4 flex justify-between items-end mt-auto gap-2">
-                  <p className="text-[7px] sm:text-[8px] md:text-[9px] uppercase tracking-[0.1em] sm:tracking-[0.2em] font-bold text-weddingAccent break-words flex-1 leading-snug truncate">- {String(m.submittedName)}</p>
+               <div className="border-t border-gray-100 pt-2 sm:pt-3 md:pt-4 flex justify-between items-end mt-auto gap-2">
+                  <p className="text-[8px] sm:text-[9px] md:text-[10px] uppercase tracking-[0.1em] sm:tracking-[0.2em] font-bold text-weddingAccent break-words flex-1 leading-snug truncate">- {String(m.submittedName)}</p>
                   
-                  <button onClick={() => handleLike(m.id, m.likes)} className={`flex items-center justify-center gap-1 sm:gap-1.5 text-[8px] sm:text-[10px] font-bold transition-all px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-sm shrink-0 touch-manipulation ${isLiked ? 'bg-red-50 text-red-500 border border-red-100' : 'bg-gray-50 text-gray-400 border border-gray-100 hover:text-red-500 hover:bg-red-50 hover:border-red-100 lg:hover:scale-105 active:scale-95'}`}>
-                     <Heart size={10} className={`w-2.5 h-2.5 sm:w-3 sm:h-3 ${isLiked ? "fill-current" : ""}`} /> 
+                  <button onClick={() => handleLike(m.id, m.likes)} className={`flex items-center justify-center gap-1 sm:gap-1.5 text-[9px] sm:text-[11px] font-bold transition-all px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-sm shrink-0 touch-manipulation ${isLiked ? 'bg-red-50 text-red-500 border border-red-100' : 'bg-gray-50 text-gray-400 border border-gray-100 hover:text-red-500 hover:bg-red-50 hover:border-red-100 lg:hover:scale-105 active:scale-95'}`}>
+                     <Heart size={12} className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isLiked ? "fill-current" : ""}`} /> 
                      <span>{likesCount}</span>
                   </button>
                </div>
@@ -479,7 +493,7 @@ const GuestbookCarousel = ({ messages, handleLike, localLikes, sessionLikes }) =
         })}
       </div>
 
-      <button onClick={()=>scroll('right')} className="flex absolute right-0 md:right-2 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-100 p-1 sm:p-1.5 md:p-2.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all text-weddingDark hover:bg-weddingSage hover:text-white touch-manipulation">
+      <button onClick={()=>scroll('right')} className="hidden sm:flex absolute right-0 md:right-2 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-100 p-1 sm:p-1.5 md:p-2.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all text-weddingDark hover:bg-weddingSage hover:text-white touch-manipulation">
         <ChevronRight size={16} className="w-4 h-4 md:w-6 md:h-6"/>
       </button>
     </div>
@@ -1555,7 +1569,7 @@ export default function App() {
               </section>
 
               {/* GUESTBOOK - HORIZONTAL CAROUSEL */}
-              <section id="guestbook" className="py-8 sm:py-10 md:py-16 px-0 md:px-4 relative bg-white/40 backdrop-blur-md border-b z-20 w-full overflow-hidden">
+              <section id="guestbook" className="py-8 sm:py-10 md:py-16 px-0 relative bg-white/40 backdrop-blur-md border-b z-20 w-full overflow-hidden">
                 <div className="w-full text-center">
                   <SectionHeading title="Guestbook" subtitle="Wishes & Love" Icon={MessageSquareHeart} />
                   
