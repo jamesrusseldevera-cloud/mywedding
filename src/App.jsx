@@ -402,36 +402,69 @@ const FlipInvitation = ({ pages = [], groom, bride }) => {
 // --- Horizontal Scroll Guestbook Carousel Component ---
 const GuestbookCarousel = ({ messages, handleLike, localLikes, sessionLikes }) => {
   const scrollRef = useRef(null);
-  
+  const [isHovered, setIsHovered] = useState(false);
+
   const scroll = (direction) => {
     if(scrollRef.current) {
-      const { clientWidth } = scrollRef.current;
-      scrollRef.current.scrollBy({ left: direction === 'left' ? -clientWidth : clientWidth, behavior: 'smooth' });
+      const { clientWidth, scrollLeft, scrollWidth } = scrollRef.current;
+      // Calculate item width including the gap to slide exactly one message at a time
+      const itemWidth = scrollRef.current.children[0]?.offsetWidth || clientWidth / 3;
+      const gap = 16; // 1rem gap (gap-4)
+      const scrollAmount = itemWidth + gap;
+
+      if (direction === 'left') {
+        scrollRef.current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+      } else {
+        // Auto-loop back to the start if we've reached the end
+        if (scrollLeft + clientWidth >= scrollWidth - 10) {
+          scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        }
+      }
     }
   };
 
+  // Auto Slider Effect
+  useEffect(() => {
+    if (isHovered || messages.length <= 3) return; // Pause on hover or if 3 or fewer messages
+    const interval = setInterval(() => {
+      scroll('right');
+    }, 3500); // Slides every 3.5 seconds
+    
+    return () => clearInterval(interval);
+  }, [isHovered, messages.length]);
+
   return (
-    <div className="relative w-full max-w-screen-xl mx-auto px-4 sm:px-6 md:px-14">
-      <button onClick={()=>scroll('left')} className="hidden sm:flex absolute left-0 md:left-2 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-100 p-2 md:p-2.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all text-weddingDark hover:bg-weddingSage hover:text-white touch-manipulation">
-        <ChevronLeft size={20} className="md:w-6 md:h-6"/>
+    <div 
+      className="relative w-full max-w-screen-xl mx-auto px-8 sm:px-10 md:px-14"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onTouchStart={() => setIsHovered(true)}
+      onTouchEnd={() => setIsHovered(false)}
+    >
+      {/* Navigation buttons are now visible on mobile (removed 'hidden sm:flex') */}
+      <button onClick={()=>scroll('left')} className="flex absolute left-0 md:left-2 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-100 p-1.5 md:p-2.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all text-weddingDark hover:bg-weddingSage hover:text-white touch-manipulation">
+        <ChevronLeft size={20} className="w-4 h-4 md:w-6 md:h-6"/>
       </button>
       
-      <div ref={scrollRef} className="flex overflow-x-auto gap-4 md:gap-6 snap-x snap-mandatory py-4 sm:py-6 px-1 sm:px-2 no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
+      <div ref={scrollRef} className="flex overflow-x-auto gap-4 snap-x snap-mandatory py-4 sm:py-6 px-1 no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
         {messages.map((m) => {
           const likesCount = localLikes[m.id] !== undefined ? localLikes[m.id] : (m.likes || 0);
           const isLiked = sessionLikes.has(m.id);
           
           return (
-            <div key={m.id} className="w-[85%] shrink-0 sm:w-[60%] md:w-[45%] lg:w-[calc(33.333%-1rem)] snap-center bg-white/95 p-4 sm:p-5 md:p-6 border border-white shadow-sm rounded-2xl flex flex-col group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative h-56 sm:h-64">
+            {/* Locked width to exactly 1/3 minus gap margin for 3 items at all times */}
+            <div key={m.id} className="w-[calc(33.333%-0.7rem)] shrink-0 snap-center bg-white/95 p-3 sm:p-5 md:p-6 border border-white shadow-sm rounded-2xl flex flex-col group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative h-48 sm:h-64">
                <MessageSquareHeart className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-weddingSage shrink-0 mb-2 sm:mb-3 md:mb-4" />
                <div className="flex-1 overflow-y-auto mb-2 sm:mb-3 md:mb-4 pr-1 sm:pr-2 no-scrollbar" style={{ scrollbarWidth: 'none' }}>
-                  <p className="text-sm md:text-base font-serif italic leading-relaxed text-gray-800">"{String(m.message)}"</p>
+                  <p className="text-[10px] sm:text-sm md:text-base font-serif italic leading-relaxed text-gray-800">"{String(m.message)}"</p>
                </div>
-               <div className="border-t border-gray-100 pt-2 sm:pt-3 md:pt-4 flex justify-between items-end mt-auto gap-2">
-                  <p className="text-[7px] sm:text-[8px] md:text-[9px] uppercase tracking-[0.1em] sm:tracking-[0.2em] font-bold text-weddingAccent break-words flex-1 leading-snug">- {String(m.submittedName)}</p>
+               <div className="border-t border-gray-100 pt-2 sm:pt-3 md:pt-4 flex justify-between items-end mt-auto gap-1 sm:gap-2">
+                  <p className="text-[6px] sm:text-[8px] md:text-[9px] uppercase tracking-[0.1em] sm:tracking-[0.2em] font-bold text-weddingAccent break-words flex-1 leading-snug truncate">- {String(m.submittedName)}</p>
                   
-                  <button onClick={() => handleLike(m.id, m.likes)} className={`flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] font-bold transition-all px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-sm shrink-0 touch-manipulation ${isLiked ? 'bg-red-50 text-red-500 border border-red-100' : 'bg-gray-50 text-gray-400 border border-gray-100 hover:text-red-500 hover:bg-red-50 hover:border-red-100 lg:hover:scale-105 active:scale-95'}`}>
-                     <Heart size={10} className={`sm:w-3 sm:h-3 ${isLiked ? "fill-current" : ""}`} /> 
+                  <button onClick={() => handleLike(m.id, m.likes)} className={`flex items-center justify-center gap-1 text-[8px] sm:text-[10px] font-bold transition-all px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-sm shrink-0 touch-manipulation ${isLiked ? 'bg-red-50 text-red-500 border border-red-100' : 'bg-gray-50 text-gray-400 border border-gray-100 hover:text-red-500 hover:bg-red-50 hover:border-red-100 lg:hover:scale-105 active:scale-95'}`}>
+                     <Heart size={10} className={`w-2 h-2 sm:w-3 sm:h-3 ${isLiked ? "fill-current" : ""}`} /> 
                      <span>{likesCount}</span>
                   </button>
                </div>
@@ -440,8 +473,8 @@ const GuestbookCarousel = ({ messages, handleLike, localLikes, sessionLikes }) =
         })}
       </div>
 
-      <button onClick={()=>scroll('right')} className="hidden sm:flex absolute right-0 md:right-2 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-100 p-2 md:p-2.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all text-weddingDark hover:bg-weddingSage hover:text-white touch-manipulation">
-        <ChevronRight size={20} className="md:w-6 md:h-6"/>
+      <button onClick={()=>scroll('right')} className="flex absolute right-0 md:right-2 top-1/2 -translate-y-1/2 z-10 bg-white border border-gray-100 p-1.5 md:p-2.5 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all text-weddingDark hover:bg-weddingSage hover:text-white touch-manipulation">
+        <ChevronRight size={20} className="w-4 h-4 md:w-6 md:h-6"/>
       </button>
     </div>
   );
