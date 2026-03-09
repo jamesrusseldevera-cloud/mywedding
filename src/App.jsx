@@ -408,7 +408,7 @@ const GuestbookCarousel = ({ messages, handleLike, localLikes, sessionLikes }) =
     if(scrollRef.current) {
       const { clientWidth, scrollLeft, scrollWidth } = scrollRef.current;
       const itemWidth = scrollRef.current.children[0]?.offsetWidth || 0;
-      const gap = 12; // Adjusted for slightly tighter gap on mobile (gap-3)
+      const gap = 12; // gap-3 in Tailwind is 12px
       const scrollAmount = itemWidth + gap;
 
       if (direction === 'left') {
@@ -447,19 +447,25 @@ const GuestbookCarousel = ({ messages, handleLike, localLikes, sessionLikes }) =
         <ChevronLeft size={16} className="w-4 h-4 md:w-6 md:h-6"/>
       </button>
       
-      <div ref={scrollRef} className="flex overflow-x-auto gap-3 sm:gap-4 snap-x snap-mandatory py-2 sm:py-6 px-1 no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
+      {/* w-full on container, overflow-x-auto handles scroll. */}
+      <div ref={scrollRef} className="flex overflow-x-auto gap-3 sm:gap-4 snap-x snap-mandatory py-2 sm:py-6 px-1 no-scrollbar w-full" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
         {messages.map((m) => {
           const likesCount = localLikes[m.id] !== undefined ? localLikes[m.id] : (m.likes || 0);
           const isLiked = sessionLikes.has(m.id);
           
+          // BUG FIX FOR MOBILE: Removed `w-[85%]` percentage width.
+          // Using fixed `w-[80vw]` capped at `max-w-[280px]` prevents flexbox from miscalculating percentages based on infinite scroll widths.
           return (
-            {/* HEIGHT REDUCED (h-40 on mobile), PADDING TIGHTENED (p-3 on mobile) */}
-            <div key={m.id} className="w-[85%] sm:w-[45%] lg:w-[calc(33.333%-1rem)] shrink-0 snap-center bg-white/95 p-3 sm:p-5 md:p-6 border border-white shadow-sm rounded-xl sm:rounded-2xl flex flex-col group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative h-40 sm:h-56 md:h-64">
+            <div key={m.id} className="w-[80vw] max-w-[280px] sm:max-w-none sm:w-[320px] md:w-[350px] shrink-0 snap-center bg-white/95 p-3 sm:p-5 md:p-6 border border-white shadow-sm rounded-xl sm:rounded-2xl flex flex-col group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative h-40 sm:h-56 md:h-64">
                <MessageSquareHeart className="w-3.5 h-3.5 sm:w-5 sm:h-5 md:w-6 md:h-6 text-weddingSage shrink-0 mb-1.5 sm:mb-3 md:mb-4" />
-               <div className="flex-1 overflow-y-auto mb-1.5 sm:mb-3 md:mb-4 pr-1 sm:pr-2 no-scrollbar" style={{ scrollbarWidth: 'none' }}>
-                  {/* TEXT SIZE REDUCED to text-xs on mobile */}
-                  <p className="text-xs sm:text-sm md:text-base font-serif italic leading-relaxed text-gray-800">"{String(m.message)}"</p>
+               
+               {/* BUG FIX FOR TEXT: Added `overflow-x-hidden`, `break-words`, `whitespace-pre-wrap` 
+                   to force long words to wrap instead of stretching the flex item layout.
+                */}
+               <div className="flex-1 overflow-y-auto overflow-x-hidden mb-1.5 sm:mb-3 md:mb-4 pr-1 sm:pr-2 no-scrollbar" style={{ scrollbarWidth: 'none' }}>
+                  <p className="text-xs sm:text-sm md:text-base font-serif italic leading-relaxed text-gray-800 break-words whitespace-pre-wrap">"{String(m.message)}"</p>
                </div>
+               
                <div className="border-t border-gray-100 pt-1.5 sm:pt-3 md:pt-4 flex justify-between items-end mt-auto gap-2">
                   <p className="text-[7px] sm:text-[8px] md:text-[9px] uppercase tracking-[0.1em] sm:tracking-[0.2em] font-bold text-weddingAccent break-words flex-1 leading-snug truncate">- {String(m.submittedName)}</p>
                   
@@ -858,7 +864,7 @@ export default function App() {
     styleSheet.innerText = `
       .no-scrollbar::-webkit-scrollbar { display: none; }
       .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      html, body { overflow-x: hidden; max-width: 100%; }
+      html, body { overflow-x: hidden; max-width: 100vw; }
       @supports (-webkit-touch-callout: none) {
         .ios-h-safe { height: -webkit-fill-available; min-height: 100dvh; }
       }
@@ -1193,12 +1199,12 @@ export default function App() {
           displayData={displayData}
         />
       ) : (
-        <div className="ios-h-safe h-[100dvh] w-full flex overflow-hidden" style={{ fontFamily: "'Montserrat', sans-serif", backgroundColor: displayData.themeBgColor || '#faf9f6' }}>
+        <div className="ios-h-safe h-[100dvh] w-full flex overflow-hidden max-w-[100vw]" style={{ fontFamily: "'Montserrat', sans-serif", backgroundColor: displayData.themeBgColor || '#faf9f6' }}>
           
           {/* ========================================================= */}
           {/* LEFT: LIVE WEBSITE PREVIEW */}
           {/* ========================================================= */}
-          <div className={`flex-1 relative h-full overflow-y-auto overflow-x-hidden transition-all duration-300 text-weddingDark selection:bg-weddingYellow/40 scroll-smooth shadow-[inset_0_0_50px_rgba(0,0,0,0.05)]`}>
+          <div className={`flex-1 relative h-full overflow-y-auto overflow-x-hidden max-w-[100vw] transition-all duration-300 text-weddingDark selection:bg-weddingYellow/40 scroll-smooth shadow-[inset_0_0_50px_rgba(0,0,0,0.05)]`}>
             
             {/* Global Design Border (Admin Editable) */}
             {displayData.themeBorder && displayData.themeBorder !== 'none' && (
