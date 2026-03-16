@@ -714,6 +714,7 @@ export default function App() {
   // Data States
   const [details, setDetails] = useState(DEFAULT_DETAILS);
   const [editForm, setEditForm] = useState(null); 
+  const [guestPhotos, setGuestPhotos] = useState([]);
   
   // App UI States
   const [invitees, setInvitees] = useState([]);
@@ -725,10 +726,15 @@ export default function App() {
   const [localLikes, setLocalLikes] = useState({}); // Optimistic UI local likes
   const [sessionLikes, setSessionLikes] = useState(new Set()); // Session-based likes tracker
   
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [photoUploaderName, setPhotoUploaderName] = useState('');
+  const guestPhotoInputRef = useRef(null);
+
   // Admin UI States
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
   const [isAdminAuth, setIsAdminAuth] = useState(false);
+  const [adminRole, setAdminRole] = useState(null); // 'super' or 'viewer'
   const [adminTab, setAdminTab] = useState('details'); 
   const [isSavingDetails, setIsSavingDetails] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -746,7 +752,9 @@ export default function App() {
 
   const audioRef = useRef(null);
   const fileInputRef = useRef(null);
-  const ADMIN_PASSWORD = "Eternity&Leaves2026!";
+
+  const SUPER_ADMIN_PASSWORD = "Eternity&Leaves2026!";
+  const VIEWER_ADMIN_PASSWORD = "ConfirmedOnly2026!";
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -936,7 +944,12 @@ export default function App() {
       setInvitees(guests);
     }, (err) => console.error("Firebase Guest List Read Failed:", err));
     
-    return () => { unsubConfig(); unsubGuests(); };
+    const unsubPhotos = onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_photos')), (snapshot) => {
+      const photos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a,b) => b.timestamp - a.timestamp);
+      setGuestPhotos(photos);
+    }, (err) => console.error("Firebase Photos Read Failed:", err));
+
+    return () => { unsubConfig(); unsubGuests(); unsubPhotos(); };
   }, [user]);
 
   // --- RSVP HANDLER ---
@@ -955,8 +968,6 @@ export default function App() {
     const universalCodes = ['#jamesfoundhiscassie', '#cassiechosejames'];
     const isUniversal = universalCodes.includes(code);
     
-    // Find guest by EXACT name if universal code is used, otherwise find by unique code.
-    // This prevents one universal code submission from overwriting the previous universal code submissions.
     let guest = null;
     if (isUniversal) {
       guest = invitees.find(i => String(i.name).toLowerCase() === rsvpForm.name.trim().toLowerCase());
@@ -968,7 +979,6 @@ export default function App() {
     
     const status = rsvpForm.attending === 'yes' ? 'Attending' : 'Declined';
     
-    // Explicitly define fallback strings to prevent 'undefined' values throwing Firebase rules errors
     const rsvpData = { 
        status: status || 'Pending', 
        submittedName: rsvpForm.name || '', 
@@ -981,7 +991,6 @@ export default function App() {
       // NEW GUEST entry using universal code
       const newGuestData = { 
         name: rsvpForm.name || 'Unknown', 
-        // Force the code to strictly save a string in the DB
         code: rsvpForm.enteredCode ? String(rsvpForm.enteredCode) : '#JamesFoundHisCassie', 
         likes: 0,
         ...rsvpData,
@@ -1003,7 +1012,6 @@ export default function App() {
     }
     
     try {
-      // safely update using merge: true to avoid "document does not exist" and other updateDoc permission errors
       await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees', String(guest.id)), rsvpData, { merge: true });
       setSubmitSuccess(true);
     } catch (err) { 
@@ -1015,10 +1023,9 @@ export default function App() {
 
   // --- GUESTBOOK LIKES HANDLER ---
   const handleLikeMessage = async (id, currentLikes) => {
-    if (sessionLikes.has(id)) return; // Prevent multiple likes in session
-    if (!user) return; // Strict Firebase check
+    if (sessionLikes.has(id)) return; 
+    if (!user) return; 
 
-    // Optimistic UI update
     setLocalLikes(prev => ({ ...prev, [id]: (currentLikes || 0) + 1 }));
     setSessionLikes(prev => new Set(prev).add(id));
 
@@ -1033,15 +1040,54 @@ export default function App() {
     }
   };
 
+  // --- SHARED MOMENTS PHOTO UPLOAD HANDLER ---
+  const handleGuestPhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!user) { showToast("Authentication pending..."); return; }
+
+    setIsUploadingPhoto(true);
+    try {
+      const storageRef = ref(storage, `artifacts/${appId}/public/data/guest_photos/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`);
+      await uploadBytes(storageRef, file);
+      const downloadUrl = await getDownloadURL(storageRef);
+
+      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_photos'), {
+        url: downloadUrl,
+        uploaderName: photoUploaderName || 'Anonymous Guest',
+        timestamp: Date.now()
+      });
+      showToast("Photo shared successfully!");
+      setPhotoUploaderName(''); 
+    } catch (err) {
+      console.error("Firebase Photo Upload Error:", err);
+      showToast("Upload failed. File might be too large.");
+    } finally {
+      setIsUploadingPhoto(false);
+      if (guestPhotoInputRef.current) guestPhotoInputRef.current.value = '';
+    }
+  };
+
   // --- ADMIN ACTIONS ---
   const handleAdminLogin = (e) => {
     e.preventDefault();
-    if (adminPassword === ADMIN_PASSWORD) {
+    if (adminPassword === SUPER_ADMIN_PASSWORD) {
       setEditForm(JSON.parse(JSON.stringify(details)));
       setIsAdminAuth(true);
+      setAdminRole('super');
       setShowAdminLogin(false);
       setAdminPassword('');
-    } else { setAdminError('Incorrect password'); }
+      setAdminTab('details');
+    } else if (adminPassword === VIEWER_ADMIN_PASSWORD) {
+      setEditForm(JSON.parse(JSON.stringify(details))); 
+      setIsAdminAuth(true);
+      setAdminRole('viewer');
+      setShowAdminLogin(false);
+      setAdminPassword('');
+      setAdminTab('guests'); // Viewer defaults directly to guests
+    } else { 
+      setAdminError('Incorrect password'); 
+    }
   };
 
   const handlePublishChanges = async () => {
@@ -1066,7 +1112,6 @@ export default function App() {
     if (!newGuestName) return;
     if (!user) { showToast("Authentication pending..."); return; }
     
-    // Explicit safety checks
     const finalCode = newGuestCode && String(newGuestCode).trim() ? String(newGuestCode).trim() : '#JamesFoundHisCassie';
     const newGuest = { 
        name: newGuestName || 'Unknown Guest', 
@@ -1099,11 +1144,44 @@ export default function App() {
   };
 
   const handleDownloadCSV = () => {
-    const headers = ['Name', 'Code', 'Status', 'Message'];
-    const csvRows = invitees.map(i => `"${i.name}","${i.code}","${i.status}","${(i.message || '').replace(/"/g, '""')}"`);
-    const csvContent = "data:text/csv;charset=utf-8," + headers.join(',') + '\n' + csvRows.join('\n');
-    const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent)); link.setAttribute("download", "wedding_guest_list.csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    // Viewer exports only confirmed guests. Super Admin exports all currently filtered.
+    const exportList = adminRole === 'viewer' ? invitees.filter(i => i.status === 'Attending') : filteredGuests;
+    
+    const headers = ['Name', 'Code', 'Status', 'Message', 'Responded At'];
+    const csvRows = exportList.map(i => {
+       const date = i.respondedAt ? new Date(i.respondedAt).toLocaleString() : 'N/A';
+       return `"${(i.name||'').replace(/"/g, '""')}","${(i.code||'').replace(/"/g, '""')}","${i.status}","${(i.message || '').replace(/"/g, '""')}","${date}"`;
+    });
+    
+    // Add BOM for proper UTF-8 Excel parsing
+    const csvContent = "\uFEFF" + headers.join(',') + '\n' + csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    const link = document.createElement("a"); 
+    link.href = URL.createObjectURL(blob); 
+    link.download = adminRole === 'viewer' ? "confirmed_guests.csv" : "wedding_guest_list.csv"; 
+    document.body.appendChild(link); 
+    link.click(); 
+    document.body.removeChild(link);
   };
+
+  const handleDownloadPhotosCSV = () => {
+    const headers = ['Uploader Name', 'Photo URL', 'Uploaded At'];
+    const csvRows = guestPhotos.map(p => {
+       const date = p.timestamp ? new Date(p.timestamp).toLocaleString() : 'N/A';
+       return `"${(p.uploaderName||'').replace(/"/g, '""')}","${p.url}","${date}"`;
+    });
+    
+    const csvContent = "\uFEFF" + headers.join(',') + '\n' + csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "guest_photos.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 
   const handleBulkUploadCSV = (e) => {
     if (!user) { showToast("Authentication required"); return; }
@@ -1119,7 +1197,6 @@ export default function App() {
           let code = cols[1] ? cols[1].replace(/"/g, '').trim() : '';
           
           if (name) { 
-             // Enforce absolute fallback
              if (!code || code === 'undefined') code = '#JamesFoundHisCassie';
              try { 
                 await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wedding_invitees'), { 
@@ -1149,6 +1226,17 @@ export default function App() {
     }
   };
 
+  const handleDeleteGuestPhoto = async (id) => {
+    if (!user) return;
+    try { 
+      await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wedding_photos', id)); 
+      showToast("Photo removed."); 
+    } catch (err) { 
+      console.error("Firebase Delete Photo Error:", err);
+      showToast(`Failed to delete photo: ${err.message}`); 
+    }
+  };
+
   // --- DERIVED DATA ---
   const principalPairs = [];
   for (let i = 0; i < (displayData.entouragePrincipal || []).length; i += 2) {
@@ -1163,12 +1251,14 @@ export default function App() {
   const dbApprovedMessages = invitees.filter(i => i.message && i.messageApproved && i.submittedName);
   const displayMessages = dbApprovedMessages.length > 0 ? dbApprovedMessages : SAMPLE_MESSAGES;
 
-  // Filtered Guests for Admin Panel (handles up to 300 scale easily)
+  // Filtered Guests
   const filteredGuests = invitees.filter(g => {
     const matchesSearch = String(g.name || '').toLowerCase().includes(guestSearch.toLowerCase()) || 
                           String(g.code || '').toLowerCase().includes(guestSearch.toLowerCase());
     if (!matchesSearch) return false;
     
+    if (adminRole === 'viewer') return g.status === 'Attending';
+
     if (guestFilter === 'All') return true;
     if (guestFilter === 'Attending') return g.status === 'Attending';
     if (guestFilter === 'Declined') return g.status === 'Declined';
@@ -1268,10 +1358,10 @@ export default function App() {
                <span className="hidden md:inline text-[9px] uppercase font-bold tracking-[0.2em] mr-1">RSVP</span>
             </button>
 
-            {/* Navigation (Classy, Smaller Font, Mobile Scrollable) */}
+            {/* Navigation */}
             <nav className={`fixed top-0 left-0 right-0 z-40 py-2.5 sm:py-3 md:py-4 bg-white/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm transition-all overflow-x-auto no-scrollbar w-full ${isAdminAuth ? 'md:right-[450px]' : ''}`}>
               <div className="w-max min-w-full mx-auto px-4 sm:px-6 flex justify-center gap-4 sm:gap-6 md:gap-8 text-[8px] sm:text-[10px] md:text-[11px] uppercase tracking-[0.2em] sm:tracking-[0.3em] md:tracking-[0.4em] font-serif text-gray-600">
-                {['Home', 'Invitation', 'Story', 'Entourage', 'Venues', 'Reminders', 'Gifts', 'RSVP'].map(t => (
+                {['Home', 'Invitation', 'Story', 'Entourage', 'Venues', 'Moments', 'Reminders', 'Gifts', 'RSVP'].map(t => (
                   <button key={t} onClick={() => document.getElementById(t.toLowerCase()).scrollIntoView({behavior: 'smooth'})} className="hover:text-weddingDark transition-all active:scale-95 border-b-2 border-transparent hover:border-weddingAccent pb-1 shrink-0 touch-manipulation">{t}</button>
                 ))}
               </div>
@@ -1483,6 +1573,49 @@ export default function App() {
                 </div>
               </section>
 
+              {/* SHARED MOMENTS / PHOTO GUESTBOOK */}
+              <section id="moments" className="py-8 sm:py-10 md:py-16 px-4 relative bg-white/40 border-y border-white z-20 w-full overflow-hidden">
+                 <div className="max-w-screen-xl mx-auto">
+                    <SectionHeading title="Shared Moments" subtitle="Photo Guestbook" Icon={Images} />
+                    
+                    {/* Upload Form */}
+                    <div className="bg-white/80 backdrop-blur-sm p-5 sm:p-8 rounded-2xl shadow-sm border border-white max-w-md mx-auto mb-8 sm:mb-12 text-center transition-transform hover:-translate-y-1">
+                       <h4 className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 flex justify-center items-center gap-2"><Camera size={14}/> Share a Photo</h4>
+                       <input 
+                         type="text" 
+                         placeholder="Your Name (Required)" 
+                         value={photoUploaderName} 
+                         onChange={e=>setPhotoUploaderName(e.target.value)} 
+                         className="w-full mb-4 py-2 px-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-weddingAccent font-serif" 
+                       />
+                       <input type="file" accept="image/*" ref={guestPhotoInputRef} onChange={handleGuestPhotoUpload} className="hidden" />
+                       <button 
+                          onClick={()=>guestPhotoInputRef.current?.click()} 
+                          disabled={isUploadingPhoto || !photoUploaderName.trim()} 
+                          className="w-full bg-weddingDark text-white py-3 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-widest hover:bg-weddingAccent disabled:opacity-50 flex justify-center items-center gap-2 touch-manipulation transition-all"
+                       >
+                          <Upload size={14} /> {isUploadingPhoto ? 'Uploading securely...' : 'Choose & Upload Photo'}
+                       </button>
+                    </div>
+
+                    {/* Photo Grid */}
+                    {guestPhotos.length > 0 ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+                         {guestPhotos.map(photo => (
+                           <div key={photo.id} className="aspect-square relative group overflow-hidden rounded-xl shadow-md border border-gray-100 bg-gray-50">
+                              <img src={photo.url} alt="Guest memory" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/0 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3 sm:p-4 pointer-events-none">
+                                 <p className="text-white text-[8px] sm:text-[10px] uppercase tracking-widest font-bold truncate w-full">{photo.uploaderName}</p>
+                              </div>
+                           </div>
+                         ))}
+                      </div>
+                    ) : (
+                      <div className="text-center text-gray-500 font-serif italic py-8 border border-dashed border-gray-300 rounded-xl bg-white/30">Be the first to share a captured memory with us...</div>
+                    )}
+                 </div>
+              </section>
+
               {/* DETAILS & ATTIRE */}
               <section id="details" className="py-8 sm:py-10 md:py-14 px-4 bg-white/60 border-t border-white transition-all relative z-20 w-full overflow-hidden">
                 <div className="max-w-screen-xl mx-auto grid lg:grid-cols-2 gap-6 sm:gap-8 md:gap-12 items-center w-full">
@@ -1671,29 +1804,41 @@ export default function App() {
                    <h2 className="font-serif italic text-xl sm:text-2xl text-weddingDark font-bold flex items-center gap-2">
                      <Edit2 size={18} className="text-weddingAccent sm:w-5 sm:h-5"/> Live Editor
                    </h2>
-                   <p className="text-[8px] sm:text-[9px] uppercase tracking-widest text-gray-400 mt-1 font-bold">Preview updates instantly</p>
+                   <p className="text-[8px] sm:text-[9px] uppercase tracking-widest text-gray-400 mt-1 font-bold">
+                      {adminRole === 'super' ? 'Preview updates instantly' : 'Viewing Confirmed Guests'}
+                   </p>
                  </div>
                  <div className="flex gap-1.5 sm:gap-2">
-                    <button onClick={handlePublishChanges} disabled={isSavingDetails} className="bg-weddingDark text-weddingYellow px-3 sm:px-4 py-1.5 sm:py-2 text-[9px] sm:text-[10px] uppercase font-bold tracking-widest rounded-lg flex items-center gap-1.5 sm:gap-2 hover:bg-black transition-colors disabled:opacity-50 touch-manipulation">
-                       {isSavingDetails ? 'Saving...' : <><Save size={12} className="sm:w-3.5 sm:h-3.5"/> Publish</>}
-                    </button>
+                    {adminRole === 'super' && (
+                       <button onClick={handlePublishChanges} disabled={isSavingDetails} className="bg-weddingDark text-weddingYellow px-3 sm:px-4 py-1.5 sm:py-2 text-[9px] sm:text-[10px] uppercase font-bold tracking-widest rounded-lg flex items-center gap-1.5 sm:gap-2 hover:bg-black transition-colors disabled:opacity-50 touch-manipulation">
+                          {isSavingDetails ? 'Saving...' : <><Save size={12} className="sm:w-3.5 sm:h-3.5"/> Publish</>}
+                       </button>
+                    )}
                     <button onClick={()=>setIsAdminAuth(false)} className="text-red-400 p-1.5 sm:p-2 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors border border-transparent hover:border-red-100 touch-manipulation"><X size={16} className="sm:w-[18px] sm:h-[18px]"/></button>
                  </div>
               </div>
 
               {/* Sidebar Tabs */}
-              <div className="flex bg-white border-b border-gray-200 shrink-0 text-[8px] sm:text-[9px] font-bold uppercase tracking-widest overflow-x-auto no-scrollbar">
-                {['details', 'design', 'entourage', 'media', 'guests'].map(tab => (
-                   <button key={tab} onClick={()=>setAdminTab(tab)} className={`flex-1 py-3 sm:py-4 px-2 text-center border-b-2 transition-colors shrink-0 touch-manipulation ${adminTab === tab ? 'border-weddingDark text-weddingDark bg-gray-50/50' : 'border-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}>
-                     {tab}
-                   </button>
-                ))}
-              </div>
+              {adminRole === 'super' ? (
+                <div className="flex bg-white border-b border-gray-200 shrink-0 text-[8px] sm:text-[9px] font-bold uppercase tracking-widest overflow-x-auto no-scrollbar">
+                  {['details', 'design', 'entourage', 'media', 'photos', 'guests'].map(tab => (
+                     <button key={tab} onClick={()=>setAdminTab(tab)} className={`flex-1 py-3 sm:py-4 px-2 text-center border-b-2 transition-colors shrink-0 touch-manipulation ${adminTab === tab ? 'border-weddingDark text-weddingDark bg-gray-50/50' : 'border-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}>
+                       {tab}
+                     </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex bg-white border-b border-gray-200 shrink-0 text-[8px] sm:text-[9px] font-bold uppercase tracking-widest overflow-x-auto no-scrollbar">
+                  <button className="flex-1 py-3 sm:py-4 px-2 text-center border-b-2 border-weddingDark text-weddingDark bg-gray-50/50 transition-colors shrink-0 touch-manipulation">
+                    Confirmed Guests List
+                  </button>
+                </div>
+              )}
 
               {/* Sidebar Forms Area */}
               <div className="flex-1 overflow-y-auto p-4 sm:p-5 pb-32">
                  
-                 {adminTab === 'details' && (
+                 {adminTab === 'details' && adminRole === 'super' && (
                     <div className="animate-in fade-in duration-300 space-y-4 sm:space-y-6">
                        <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm">
                           <h3 className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 border-b border-gray-100 pb-2">Basic Details</h3>
@@ -1731,7 +1876,7 @@ export default function App() {
                     </div>
                  )}
 
-                 {adminTab === 'design' && (
+                 {adminTab === 'design' && adminRole === 'super' && (
                     <div className="animate-in fade-in duration-300 space-y-4 sm:space-y-6">
                        <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm">
                           <h3 className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 border-b border-gray-100 pb-2 flex items-center gap-2">
@@ -1790,7 +1935,7 @@ export default function App() {
                     </div>
                  )}
 
-                 {adminTab === 'entourage' && (
+                 {adminTab === 'entourage' && adminRole === 'super' && (
                     <div className="animate-in fade-in duration-300">
                        <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm mb-4 sm:mb-6 w-full">
                           <h3 className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 sm:mb-5 border-b border-gray-100 pb-2">Roles</h3>
@@ -1812,7 +1957,7 @@ export default function App() {
                     </div>
                  )}
 
-                 {adminTab === 'media' && (
+                 {adminTab === 'media' && adminRole === 'super' && (
                     <div className="animate-in fade-in duration-300 w-full overflow-hidden">
                        <AudioManager label="Background Music" url={editForm.backgroundMusicUrl} onChange={val=>setEditForm({...editForm, backgroundMusicUrl: val})} showToast={showToast} user={user} appId={appId} storage={storage} />
                        
@@ -1827,37 +1972,63 @@ export default function App() {
                     </div>
                  )}
 
+                 {adminTab === 'photos' && adminRole === 'super' && (
+                    <div className="animate-in fade-in duration-300 w-full">
+                       <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm w-full">
+                          <h3 className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 border-b border-gray-100 pb-2">Guest Photos</h3>
+                          <button onClick={handleDownloadPhotosCSV} className="mb-4 py-2 w-full bg-gray-50 border border-gray-200 rounded-lg text-[9px] font-bold uppercase tracking-widest text-gray-500 hover:text-weddingAccent transition-colors flex items-center justify-center gap-2">
+                             <FileSpreadsheet size={12}/> Export Photos Data to Excel
+                          </button>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                             {guestPhotos.map(p => (
+                               <div key={p.id} className="relative aspect-square rounded overflow-hidden group border border-gray-200">
+                                  <img src={p.url} className="w-full h-full object-cover" />
+                                  <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-1 text-center truncate text-white text-[8px]">{p.uploaderName}</div>
+                                  <button onClick={() => handleDeleteGuestPhoto(p.id)} className="absolute top-1 right-1 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={10}/></button>
+                               </div>
+                             ))}
+                             {guestPhotos.length === 0 && <p className="text-xs text-gray-400 col-span-2 py-4 italic text-center">No photos uploaded yet.</p>}
+                          </div>
+                       </div>
+                    </div>
+                 )}
+
                  {adminTab === 'guests' && (
                     <div className="animate-in fade-in duration-300 w-full">
                        
                        {/* STATS */}
-                       <div className="flex justify-between items-center mb-4 px-1">
-                          <div className="flex gap-4 text-[10px] font-bold uppercase tracking-widest text-gray-500">
-                             <span className="text-weddingDark">Total: {invitees.length}</span>
-                             <span className="text-green-600">Yes: {totalAttending}</span>
-                             <span className="text-red-500">No: {totalDeclined}</span>
-                             <span className="text-yellow-600">Wait: {totalPending}</span>
-                          </div>
-                       </div>
-
-                       <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm mb-4 sm:mb-6 w-full">
-                         <h3 className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 sm:mb-5 border-b border-gray-100 pb-2">Add New Guest</h3>
-                         <TextInput label="Guest Name" value={newGuestName} onChange={setNewGuestName} />
-                         <div className="mb-4 sm:mb-5 w-full">
-                           <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Unique Code (Leave blank for #JamesFoundHisCassie)</label>
-                           <div className="flex gap-2 w-full">
-                             <input type="text" value={newGuestCode} onChange={(e) => setNewGuestCode(e.target.value)} className="flex-1 w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[16px] sm:text-sm focus:outline-none focus:border-weddingAccent focus:bg-white transition-colors" placeholder="#JamesFoundHisCassie" />
-                           </div>
+                       {adminRole === 'super' && (
+                         <div className="flex justify-between items-center mb-4 px-1">
+                            <div className="flex gap-4 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                               <span className="text-weddingDark">Total: {invitees.length}</span>
+                               <span className="text-green-600">Yes: {totalAttending}</span>
+                               <span className="text-red-500">No: {totalDeclined}</span>
+                               <span className="text-yellow-600">Wait: {totalPending}</span>
+                            </div>
                          </div>
-                         <button onClick={handleAddGuest} className="w-full bg-weddingDark text-white py-2.5 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors touch-manipulation">Add Guest</button>
-                       </div>
+                       )}
+
+                       {/* ADD NEW GUEST (Super Only) */}
+                       {adminRole === 'super' && (
+                         <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm mb-4 sm:mb-6 w-full">
+                           <h3 className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 sm:mb-5 border-b border-gray-100 pb-2">Add New Guest</h3>
+                           <TextInput label="Guest Name" value={newGuestName} onChange={setNewGuestName} />
+                           <div className="mb-4 sm:mb-5 w-full">
+                             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Unique Code (Leave blank for #JamesFoundHisCassie)</label>
+                             <div className="flex gap-2 w-full">
+                               <input type="text" value={newGuestCode} onChange={(e) => setNewGuestCode(e.target.value)} className="flex-1 w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[16px] sm:text-sm focus:outline-none focus:border-weddingAccent focus:bg-white transition-colors" placeholder="#JamesFoundHisCassie" />
+                             </div>
+                           </div>
+                           <button onClick={handleAddGuest} className="w-full bg-weddingDark text-white py-2.5 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors touch-manipulation">Add Guest</button>
+                         </div>
+                       )}
                        
                        <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm w-full">
                           <h3 className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 sm:mb-5 border-b border-gray-100 pb-2 flex justify-between items-center">
-                            Manage Guest List
+                            {adminRole === 'super' ? 'Manage Guest List' : 'Confirmed Attendees'}
                           </h3>
 
-                          {/* SEARCH & FILTER FOR 300+ ENTRIES */}
+                          {/* SEARCH & FILTER */}
                           <div className="flex flex-col gap-3 mb-4">
                              <div className="relative">
                                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -1869,39 +2040,52 @@ export default function App() {
                                  className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-weddingAccent transition-colors"
                                />
                              </div>
-                             <div className="relative">
-                               <Filter size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                               <select 
-                                 value={guestFilter} 
-                                 onChange={(e) => setGuestFilter(e.target.value)}
-                                 className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-weddingAccent appearance-none cursor-pointer"
-                               >
-                                  <option value="All">All Guests</option>
-                                  <option value="Attending">Attending Only</option>
-                                  <option value="Declined">Declined Only</option>
-                                  <option value="Pending">Pending (No Response)</option>
-                                  <option value="Needs Approval">Needs Message Approval</option>
-                               </select>
-                             </div>
+                             
+                             {/* Filter dropdown (Super Admin Only) */}
+                             {adminRole === 'super' && (
+                               <div className="relative">
+                                 <Filter size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                 <select 
+                                   value={guestFilter} 
+                                   onChange={(e) => setGuestFilter(e.target.value)}
+                                   className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-weddingAccent appearance-none cursor-pointer"
+                                 >
+                                    <option value="All">All Guests</option>
+                                    <option value="Attending">Attending Only</option>
+                                    <option value="Declined">Declined Only</option>
+                                    <option value="Pending">Pending (No Response)</option>
+                                    <option value="Needs Approval">Needs Message Approval</option>
+                                 </select>
+                               </div>
+                             )}
                           </div>
 
+                          {/* EXCEL EXPORT OPTIONS */}
                           <div className="flex gap-2 mb-4 w-full pt-2 border-t border-gray-100">
-                             <input type="file" accept=".csv" ref={fileInputRef} onChange={handleBulkUploadCSV} className="hidden" />
-                             <button onClick={() => fileInputRef.current?.click()} className="flex-1 py-1.5 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-gray-500 hover:text-weddingAccent transition-colors touch-manipulation"><Upload size={10} className="sm:w-3 sm:h-3 inline mr-1"/> Import CSV</button>
-                             <button onClick={handleDownloadCSV} className="flex-1 py-1.5 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-gray-500 hover:text-weddingAccent transition-colors touch-manipulation"><Download size={10} className="sm:w-3 sm:h-3 inline mr-1"/> Export</button>
+                             {adminRole === 'super' && (
+                               <>
+                                 <input type="file" accept=".csv" ref={fileInputRef} onChange={handleBulkUploadCSV} className="hidden" />
+                                 <button onClick={() => fileInputRef.current?.click()} className="flex-1 py-1.5 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-gray-500 hover:text-weddingAccent transition-colors touch-manipulation flex justify-center items-center gap-1"><Upload size={10} /> Import CSV</button>
+                               </>
+                             )}
+                             <button onClick={handleDownloadCSV} className="flex-1 py-1.5 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-gray-500 hover:text-weddingAccent transition-colors touch-manipulation flex justify-center items-center gap-1">
+                                <FileSpreadsheet size={12}/> {adminRole === 'super' ? 'Export CSV' : 'Export to Excel'}
+                             </button>
                           </div>
 
                           <div className="space-y-2 sm:space-y-3 w-full max-h-[60vh] overflow-y-auto pr-1">
                              {filteredGuests.map(i => (
                                 <div key={i.id} className="p-2.5 sm:p-3 bg-gray-50 border border-gray-200 rounded-lg relative group w-full overflow-hidden">
-                                   <button onClick={() => handleDeleteGuest(i.id)} className="absolute top-2 right-2 text-gray-300 hover:text-red-500 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity p-1 touch-manipulation"><Trash2 size={12} className="sm:w-[14px] sm:h-[14px]"/></button>
+                                   {adminRole === 'super' && (
+                                      <button onClick={() => handleDeleteGuest(i.id)} className="absolute top-2 right-2 text-gray-300 hover:text-red-500 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity p-1 touch-manipulation"><Trash2 size={12} className="sm:w-[14px] sm:h-[14px]"/></button>
+                                   )}
                                    <div className="font-bold text-xs sm:text-sm text-gray-800 pr-6 truncate w-full">{String(i.name)}</div>
                                    <div className="text-[9px] sm:text-[10px] font-mono font-bold text-weddingAccent uppercase tracking-widest mt-1 mb-1.5 sm:mb-2 truncate w-full">
                                      Code: {i.code && i.code !== 'undefined' ? String(i.code) : '#JamesFoundHisCassie'}
                                    </div>
                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs gap-2 sm:gap-0 w-full">
                                      <span className={`px-2 py-0.5 rounded text-[8px] sm:text-[9px] font-bold uppercase ${i.status === 'Attending' ? 'bg-green-100 text-green-700' : i.status === 'Declined' ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-500'}`}>{String(i.status)}</span>
-                                     {i.message && (
+                                     {i.message && adminRole === 'super' && (
                                        <button onClick={() => toggleMessageApproval(i.id, i.messageApproved)} className={`flex items-center gap-1 text-[8px] sm:text-[9px] font-bold uppercase touch-manipulation ${i.messageApproved ? 'text-pink-500' : 'text-gray-400'}`}>
                                          <Heart size={10} className="sm:w-3 sm:h-3" fill={i.messageApproved ? "currentColor" : "none"}/> {i.messageApproved ? 'Visible' : 'Hidden'}
                                        </button>
@@ -1928,10 +2112,19 @@ export default function App() {
             <div className="fixed inset-0 z-[1000] bg-[#faf9f6]/95 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 text-weddingDark">
               <div className="max-w-sm w-full text-center animate-in zoom-in duration-300">
                 <button onClick={() => setShowAdminLogin(false)} className="mb-8 sm:mb-12 text-gray-300 hover:text-black transition-transform hover:rotate-90 focus:outline-none touch-manipulation"><X size={32} className="sm:w-10 sm:h-10 mx-auto" /></button>
-                <h3 className="text-2xl sm:text-3xl font-serif mb-8 sm:mb-10 italic">Secure Access</h3>
+                <h3 className="text-2xl sm:text-3xl font-serif mb-2 italic">Secure Access</h3>
+                <p className="text-[10px] sm:text-xs text-gray-500 mb-8 sm:mb-10 font-bold tracking-widest uppercase">Enter Staff or Viewer Password</p>
                 <form onSubmit={handleAdminLogin} className="w-full">
-                  <input type="password" autoFocus value={adminPassword} onChange={e=>setAdminPassword(e.target.value)} className="w-full border-b-2 border-weddingDark text-center py-4 sm:py-6 mb-8 sm:mb-12 tracking-[0.5em] sm:tracking-[0.8em] text-2xl sm:text-3xl focus:outline-none bg-transparent rounded-none" placeholder="••••••••" />
+                  <input type="password" autoFocus value={adminPassword} onChange={e=>setAdminPassword(e.target.value)} className="w-full border-b-2 border-weddingDark text-center py-4 sm:py-6 mb-6 sm:mb-8 tracking-[0.5em] sm:tracking-[0.8em] text-2xl sm:text-3xl focus:outline-none bg-transparent rounded-none" placeholder="••••••••" />
                   {adminError && <p className="text-red-500 text-[9px] sm:text-[10px] font-bold mb-6 sm:mb-8 uppercase tracking-[0.2em]">{String(adminError)}</p>}
+                  
+                  {/* Development Passwords Hint Box */}
+                  <div className="bg-white p-3 rounded-lg border border-gray-200 mb-6 text-left shadow-sm">
+                     <p className="text-[9px] uppercase font-bold text-gray-500 mb-2 border-b border-gray-100 pb-1">Test Passwords:</p>
+                     <p className="text-[10px] font-mono text-weddingDark break-all mb-1">Super Admin: <strong>Eternity&Leaves2026!</strong></p>
+                     <p className="text-[10px] font-mono text-weddingDark break-all">Viewer Admin: <strong>ConfirmedOnly2026!</strong></p>
+                  </div>
+
                   <button className="w-full bg-weddingDark text-white py-4 sm:py-5 rounded-2xl font-bold uppercase tracking-[0.2em] sm:tracking-[0.3em] text-[10px] sm:text-[11px] shadow-2xl active:scale-95 transition-all hover:bg-black touch-manipulation">Verify Credentials</button>
                 </form>
               </div>
