@@ -2143,18 +2143,6 @@ export default function App() {
                   <input type="password" autoFocus value={adminPassword} onChange={e=>setAdminPassword(e.target.value)} className="w-full border-b-2 border-weddingDark text-center py-4 sm:py-6 mb-6 sm:mb-8 tracking-[0.5em] sm:tracking-[0.8em] text-2xl sm:text-3xl focus:outline-none bg-transparent rounded-none" placeholder="••••••••" />
                   {adminError && <p className="text-red-500 text-[9px] sm:text-[10px] font-bold mb-6 sm:mb-8 uppercase tracking-[0.2em]">{String(adminError)}</p>}
                   
-                  {/* Development Passwords Hint Box */}
-                  <div className="bg-white p-3 rounded-lg border border-gray-200 mb-6 text-left shadow-sm">
-                     <p className="text-[9px] uppercase font-bold text-gray-500 mb-2 border-b border-gray-100 pb-1">Test Passwords:</p>
-                     <p className="text-[10px] font-mono text-weddingDark break-all mb-1">Super Admin: <strong>Eternity&Leaves2026!</strong></p>
-                     <p className="text-[10px] font-mono text-weddingDark break-all">Viewer Admin: <strong>ConfirmedOnly2026!</strong></p>
-                  </div>
-
-                  <button className="w-full bg-weddingDark text-white py-4 sm:py-5 rounded-2xl font-bold uppercase tracking-[0.2em] sm:tracking-[0.3em] text-[10px] sm:text-[11px] shadow-2xl active:scale-95 transition-all hover:bg-black touch-manipulation">Verify Credentials</button>
-                </form>
-              </div>
-            </div>
-          )}
 
           {toastMessage && (
             <div className="fixed bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 bg-weddingDark text-white px-6 sm:px-10 py-3 sm:py-4 rounded-full text-[9px] sm:text-[11px] uppercase font-bold tracking-widest z-[1000] shadow-2xl animate-bounce whitespace-nowrap max-w-[90vw] truncate">
