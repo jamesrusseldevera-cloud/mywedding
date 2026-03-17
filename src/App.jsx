@@ -66,6 +66,7 @@ const DEFAULT_DETAILS = {
   dressCodeText: "Filipiniana or Formal Attire. We kindly request our guests to dress elegantly in shades of Sage Green, Pastel Yellow, Beige, or neutral light tones. Please avoid wearing bright neon colors or pure white.",
   colorPalette: ['#b8c6a7', '#ffee8c', '#f5e2c5', '#F1CEBE', '#e2d5c3', '#d9e2d5'],
   giftText: "With all that we have, we’ve been truly blessed. Your presence and prayers are all that we request. But if you desire to give nonetheless, a monetary gift is one we suggest.",
+  googleDriveUploadUrl: "",
   
   qrCodeUrls: [
     "https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg"
@@ -798,6 +799,7 @@ export default function App() {
        ...data,
        colorPalette: palette,
        invitationPages: invPages,
+       googleDriveUploadUrl: data.googleDriveUploadUrl || "",
        storyPhotos: toArr(data.storyPhotos || data.storyPhotoUrl, ','),
        ceremonyPhotos: toArr(data.ceremonyPhotos || data.ceremonyPhotoUrl, ','),
        receptionPhotos: toArr(data.receptionPhotos || data.receptionPhotoUrl, ','),
@@ -1581,21 +1583,38 @@ export default function App() {
                     {/* Upload Form */}
                     <div className="bg-white/80 backdrop-blur-sm p-5 sm:p-8 rounded-2xl shadow-sm border border-white max-w-md mx-auto mb-8 sm:mb-12 text-center transition-transform hover:-translate-y-1">
                        <h4 className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 flex justify-center items-center gap-2"><Camera size={14}/> Share a Photo</h4>
-                       <input 
-                         type="text" 
-                         placeholder="Your Name (Required)" 
-                         value={photoUploaderName} 
-                         onChange={e=>setPhotoUploaderName(e.target.value)} 
-                         className="w-full mb-4 py-2 px-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-weddingAccent font-serif" 
-                       />
-                       <input type="file" accept="image/*" ref={guestPhotoInputRef} onChange={handleGuestPhotoUpload} className="hidden" />
-                       <button 
-                          onClick={()=>guestPhotoInputRef.current?.click()} 
-                          disabled={isUploadingPhoto || !photoUploaderName.trim()} 
-                          className="w-full bg-weddingDark text-white py-3 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-widest hover:bg-weddingAccent disabled:opacity-50 flex justify-center items-center gap-2 touch-manipulation transition-all"
-                       >
-                          <Upload size={14} /> {isUploadingPhoto ? 'Uploading securely...' : 'Choose & Upload Photo'}
-                       </button>
+                       
+                       {displayData.googleDriveUploadUrl ? (
+                          <div className="flex flex-col items-center gap-4">
+                             <p className="text-xs sm:text-sm text-gray-600 font-serif italic">Tap the button below to upload your captured memories directly to our shared Google Drive folder.</p>
+                             <a 
+                                href={displayData.googleDriveUploadUrl} 
+                                target="_blank" 
+                                rel="noreferrer"
+                                className="w-full bg-weddingDark text-white py-3 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-widest hover:bg-weddingAccent flex justify-center items-center gap-2 touch-manipulation transition-all shadow-lg"
+                             >
+                                <Cloud size={14} /> Open Google Drive
+                             </a>
+                          </div>
+                       ) : (
+                          <>
+                             <input 
+                               type="text" 
+                               placeholder="Your Name (Required)" 
+                               value={photoUploaderName} 
+                               onChange={e=>setPhotoUploaderName(e.target.value)} 
+                               className="w-full mb-4 py-2 px-3 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-weddingAccent font-serif" 
+                             />
+                             <input type="file" accept="image/*" ref={guestPhotoInputRef} onChange={handleGuestPhotoUpload} className="hidden" />
+                             <button 
+                                onClick={()=>guestPhotoInputRef.current?.click()} 
+                                disabled={isUploadingPhoto || !photoUploaderName.trim()} 
+                                className="w-full bg-weddingDark text-white py-3 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-widest hover:bg-weddingAccent disabled:opacity-50 flex justify-center items-center gap-2 touch-manipulation transition-all"
+                             >
+                                <Upload size={14} /> {isUploadingPhoto ? 'Uploading securely...' : 'Choose & Upload Photo'}
+                             </button>
+                          </>
+                       )}
                     </div>
 
                     {/* Photo Grid */}
@@ -1961,6 +1980,12 @@ export default function App() {
                     <div className="animate-in fade-in duration-300 w-full overflow-hidden">
                        <AudioManager label="Background Music" url={editForm.backgroundMusicUrl} onChange={val=>setEditForm({...editForm, backgroundMusicUrl: val})} showToast={showToast} user={user} appId={appId} storage={storage} />
                        
+                       <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm w-full mb-6">
+                          <h3 className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 border-b border-gray-100 pb-2 flex items-center gap-2"><Cloud size={12}/> Guest Upload Link</h3>
+                          <p className="text-[10px] text-gray-500 mb-3 italic">Paste a Google Drive folder link here. Guests will be redirected to this link to upload photos instead of using the built-in uploader.</p>
+                          <TextInput label="Google Drive Folder URL" value={editForm.googleDriveUploadUrl} onChange={val=>setEditForm({...editForm, googleDriveUploadUrl: val})} />
+                       </div>
+
                        <SinglePhotoManager label="Landing Page Logo" url={editForm.logoUrl} onChange={val=>setEditForm({...editForm, logoUrl: val})} />
                        <PhotoManager label="Formal Invitation Pages" urls={editForm.invitationPages} onChange={arr=>setEditForm({...editForm, invitationPages: arr})} showToast={showToast} />
 
@@ -2118,6 +2143,12 @@ export default function App() {
                   <input type="password" autoFocus value={adminPassword} onChange={e=>setAdminPassword(e.target.value)} className="w-full border-b-2 border-weddingDark text-center py-4 sm:py-6 mb-6 sm:mb-8 tracking-[0.5em] sm:tracking-[0.8em] text-2xl sm:text-3xl focus:outline-none bg-transparent rounded-none" placeholder="••••••••" />
                   {adminError && <p className="text-red-500 text-[9px] sm:text-[10px] font-bold mb-6 sm:mb-8 uppercase tracking-[0.2em]">{String(adminError)}</p>}
                   
+                  {/* Development Passwords Hint Box */}
+                  <div className="bg-white p-3 rounded-lg border border-gray-200 mb-6 text-left shadow-sm">
+                     <p className="text-[9px] uppercase font-bold text-gray-500 mb-2 border-b border-gray-100 pb-1">Test Passwords:</p>
+                     <p className="text-[10px] font-mono text-weddingDark break-all mb-1">Super Admin: <strong>Eternity&Leaves2026!</strong></p>
+                     <p className="text-[10px] font-mono text-weddingDark break-all">Viewer Admin: <strong>ConfirmedOnly2026!</strong></p>
+                  </div>
 
                   <button className="w-full bg-weddingDark text-white py-4 sm:py-5 rounded-2xl font-bold uppercase tracking-[0.2em] sm:tracking-[0.3em] text-[10px] sm:text-[11px] shadow-2xl active:scale-95 transition-all hover:bg-black touch-manipulation">Verify Credentials</button>
                 </form>
