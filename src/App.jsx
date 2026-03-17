@@ -2144,6 +2144,12 @@ export default function App() {
                   {adminError && <p className="text-red-500 text-[9px] sm:text-[10px] font-bold mb-6 sm:mb-8 uppercase tracking-[0.2em]">{String(adminError)}</p>}
                   
 
+                  <button className="w-full bg-weddingDark text-white py-4 sm:py-5 rounded-2xl font-bold uppercase tracking-[0.2em] sm:tracking-[0.3em] text-[10px] sm:text-[11px] shadow-2xl active:scale-95 transition-all hover:bg-black touch-manipulation">Verify Credentials</button>
+                </form>
+              </div>
+            </div>
+          )}
+
           {toastMessage && (
             <div className="fixed bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 bg-weddingDark text-white px-6 sm:px-10 py-3 sm:py-4 rounded-full text-[9px] sm:text-[11px] uppercase font-bold tracking-widest z-[1000] shadow-2xl animate-bounce whitespace-nowrap max-w-[90vw] truncate">
               {toastMessage}
