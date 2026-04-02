@@ -61,14 +61,14 @@ const DEFAULT_DETAILS = {
   dressCodeText: "Filipiniana or Formal Attire. We kindly request our guests to dress elegantly in shades of Sage Green, Pastel Yellow, Beige, or neutral light tones. Please avoid wearing bright neon colors or pure white.",
   colorPalette: ['#b8c6a7', '#ffee8c', '#f5e2c5', '#F1CEBE', '#e2d5c3', '#d9e2d5'],
   giftText: "With all that we have, we’ve been truly blessed. Your presence and prayers are all that we request. But if you desire to give nonetheless, a monetary gift is one we suggest.",
-  socialFeedUrl: "https://padlet.com/embed/gbeoms8dohio64o3", // Paste TagEmbed or Padlet URL here
+  socialFeedUrl: "https://padlet.com/embed/gbeoms8dohio64o3", 
   
   qrCodeUrls: [
     "https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg"
   ], 
   rsvpDeadline: "March 1st, 2026",
-  isRsvpClosed: true, // Default to true for "On the Day"
-  showRsvpSection: false, // Option to turn completely off or on
+  isRsvpClosed: true, 
+  showRsvpSection: false, 
   
   programTimeline: [
     { time: "3:00 PM", title: "Wedding Ceremony", desc: "Sacred Heart of Jesus Parish" },
@@ -77,6 +77,12 @@ const DEFAULT_DETAILS = {
     { time: "7:00 PM", title: "Dinner Reception", desc: "Let's feast!" },
     { time: "8:30 PM", title: "Program Proper", desc: "Speeches, Cake Cutting & First Dance" },
     { time: "10:00 PM", title: "After Party", desc: "Drinks, Music, and Dancing!" }
+  ],
+
+  // New Dedicated Seat Map Data
+  seatMap: [
+    { id: '1', name: "Maria Clara", seat: "Table 1" },
+    { id: '2', name: "Juan Dela Cruz", seat: "Table 2" }
   ],
 
   bestMan: "Melvin B. De Vera",
@@ -530,6 +536,7 @@ export default function App() {
 
   const audioRef = useRef(null);
   const fileInputRef = useRef(null);
+  const seatFileInputRef = useRef(null);
 
   const SUPER_ADMIN_PASSWORD = "Eternity&Leaves2026!";
   const VIEWER_ADMIN_PASSWORD = "ConfirmedOnly2026!";
@@ -579,6 +586,7 @@ export default function App() {
        socialFeedUrl: data.socialFeedUrl || "",
        colorPalette: palette,
        invitationPages: invPages,
+       seatMap: Array.isArray(data.seatMap) ? data.seatMap : DEFAULT_DETAILS.seatMap,
        programTimeline: Array.isArray(data.programTimeline) ? data.programTimeline : DEFAULT_DETAILS.programTimeline,
        storyPhotos: toArr(data.storyPhotos || data.storyPhotoUrl, ','),
        ceremonyPhotos: toArr(data.ceremonyPhotos || data.ceremonyPhotoUrl, ','),
@@ -845,6 +853,31 @@ export default function App() {
     setIsSavingDetails(false);
   };
 
+  // Dedicated Seat Map CSV Upload
+  const handleSeatCSVUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const rows = event.target.result.split('\n');
+      const newSeatMap = [];
+      for (let i = 1; i < rows.length; i++) {
+        const cols = rows[i].split(',');
+        if (cols.length >= 2) {
+          const name = cols[0] ? cols[0].replace(/"/g, '').trim() : '';
+          const seat = cols[1] ? cols[1].replace(/"/g, '').trim() : '';
+          if (name) {
+            newSeatMap.push({ id: crypto.randomUUID(), name, seat });
+          }
+        }
+      }
+      setEditForm({ ...editForm, seatMap: newSeatMap });
+      showToast("Seat map loaded! Click Publish to save to live site.");
+    };
+    reader.readAsText(file);
+    e.target.value = null;
+  };
+
   const handleAddGuest = async (e) => {
     e.preventDefault();
     if (!newGuestName) return;
@@ -955,9 +988,9 @@ export default function App() {
   const totalDeclined = invitees.filter(g => g.status === 'Declined').length;
   const totalPending = invitees.filter(g => g.status === 'Pending').length;
 
-  // Seat Locator Filter Logic
+  // Dedicated Seat Locator Filter Logic (now maps to independent seatMap, not RSVP list)
   const seatMatches = seatSearch.trim().length > 1 
-    ? invitees.filter(g => String(g.name).toLowerCase().includes(seatSearch.toLowerCase())) 
+    ? (displayData.seatMap || []).filter(g => String(g.name).toLowerCase().includes(seatSearch.toLowerCase())) 
     : [];
 
   return (
@@ -1085,7 +1118,7 @@ export default function App() {
                  </div>
               </section>
 
-              {/* SEAT LOCATOR */}
+              {/* SEAT LOCATOR (Now Maps from Final Confirmation CSV) */}
               <section id="seats" className="py-12 sm:py-16 px-4 bg-[#1f2b22] text-white relative z-20 w-full">
                  <SectionHeading title="Find Your Seat" subtitle="Table Locator" Icon={Map} isDark />
                  <div className="max-w-md mx-auto text-center mt-[-10px]">
@@ -1411,7 +1444,7 @@ export default function App() {
 
               {adminRole === 'super' ? (
                 <div className="flex bg-white border-b border-gray-200 shrink-0 text-[8px] sm:text-[9px] font-bold uppercase tracking-widest overflow-x-auto no-scrollbar">
-                  {['details', 'program', 'media', 'guests'].map(tab => (
+                  {['details', 'program', 'media', 'guests', 'locator'].map(tab => (
                      <button key={tab} onClick={()=>setAdminTab(tab)} className={`flex-1 py-3 sm:py-4 px-2 text-center border-b-2 transition-colors shrink-0 touch-manipulation ${adminTab === tab ? 'border-weddingDark text-weddingDark bg-gray-50/50' : 'border-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}>
                        {tab}
                      </button>
@@ -1499,6 +1532,39 @@ export default function App() {
                     </div>
                  )}
 
+                 {adminTab === 'locator' && adminRole === 'super' && (
+                    <div className="animate-in fade-in duration-300 space-y-4 sm:space-y-6">
+                       <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm">
+                          <h3 className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 border-b border-gray-100 pb-2 flex items-center gap-2">
+                             <Map size={12}/> Seat Locator Database
+                          </h3>
+                          <p className="text-[10px] text-gray-500 mb-4 italic">Upload your final coordinator's confirmation CSV here. This updates the Seat Locator mapping <b>independently</b> from your original RSVP list.</p>
+                          
+                          <div className="flex gap-2 mb-4 w-full pt-2 border-t border-gray-100">
+                             <input type="file" accept=".csv" ref={seatFileInputRef} onChange={handleSeatCSVUpload} className="hidden" />
+                             <button onClick={() => seatFileInputRef.current?.click()} className="flex-1 py-2 sm:py-2.5 bg-weddingDark text-white rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors flex justify-center items-center gap-2 touch-manipulation">
+                                <Upload size={14} /> Upload Final Seats CSV (Name, Seat)
+                             </button>
+                          </div>
+
+                          <div className="mt-4 flex justify-between items-center bg-weddingSage/20 p-3 rounded-lg border border-weddingSage/30">
+                             <span className="text-[10px] font-bold uppercase tracking-widest text-weddingDark">Total Assigned Guests:</span>
+                             <span className="font-mono font-bold text-weddingAccent">{editForm.seatMap?.length || 0}</span>
+                          </div>
+
+                          <div className="mt-4 max-h-[40vh] overflow-y-auto space-y-2 pr-1 no-scrollbar">
+                             {(editForm.seatMap || []).map((s, idx) => (
+                                <div key={idx} className="flex justify-between items-center p-2.5 bg-gray-50 border border-gray-100 rounded-lg text-xs">
+                                   <span className="font-bold text-gray-800 truncate pr-4 flex-1">{s.name}</span>
+                                   <span className="text-[9px] font-bold tracking-widest uppercase text-weddingAccent bg-white px-2 py-1 rounded shadow-sm border border-gray-100 shrink-0">{s.seat}</span>
+                                </div>
+                             ))}
+                             {!(editForm.seatMap?.length) && <p className="text-center text-xs italic text-gray-400 py-4">No seat assignments loaded.</p>}
+                          </div>
+                       </div>
+                    </div>
+                 )}
+
                  {adminTab === 'guests' && (
                     <div className="animate-in fade-in duration-300 w-full">
                        
@@ -1515,7 +1581,7 @@ export default function App() {
                        {/* ADD NEW GUEST (Super Only) */}
                        {adminRole === 'super' && (
                          <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm mb-4 sm:mb-6 w-full">
-                           <h3 className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 sm:mb-5 border-b border-gray-100 pb-2">Add New Guest</h3>
+                           <h3 className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 sm:mb-5 border-b border-gray-100 pb-2">Add RSVP Record Manually</h3>
                            <TextInput label="Guest Name" value={newGuestName} onChange={setNewGuestName} />
                            
                            <div className="grid grid-cols-2 gap-4 mb-5">
@@ -1524,18 +1590,18 @@ export default function App() {
                                  <input type="text" value={newGuestCode} onChange={(e) => setNewGuestCode(e.target.value)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-weddingAccent focus:bg-white" placeholder="Optional" />
                               </div>
                               <div>
-                                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Seat / Table</label>
-                                 <input type="text" value={newGuestSeat} onChange={(e) => setNewGuestSeat(e.target.value)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-weddingAccent focus:bg-white" placeholder="e.g. Table 5" />
+                                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Status</label>
+                                 <input type="text" value={newGuestSeat} onChange={(e) => setNewGuestSeat(e.target.value)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-weddingAccent focus:bg-white" placeholder="e.g. Attending" />
                               </div>
                            </div>
                            
-                           <button onClick={handleAddGuest} className="w-full bg-weddingDark text-white py-2.5 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors touch-manipulation">Add Guest</button>
+                           <button onClick={handleAddGuest} className="w-full bg-weddingDark text-white py-2.5 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors touch-manipulation">Add Record</button>
                          </div>
                        )}
                        
                        <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm w-full">
                           <h3 className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 sm:mb-5 border-b border-gray-100 pb-2 flex justify-between items-center">
-                            {adminRole === 'super' ? 'Manage Guest List' : 'Confirmed Attendees'}
+                            {adminRole === 'super' ? 'Manage RSVP List' : 'Confirmed Attendees'}
                           </h3>
 
                           {/* SEARCH & FILTER */}
@@ -1565,11 +1631,11 @@ export default function App() {
                              {adminRole === 'super' && (
                                <>
                                  <input type="file" accept=".csv" ref={fileInputRef} onChange={handleBulkUploadCSV} className="hidden" />
-                                 <button onClick={() => fileInputRef.current?.click()} className="flex-1 py-1.5 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-gray-500 hover:text-weddingAccent transition-colors flex justify-center items-center gap-1"><Upload size={10} /> Import CSV (Name, Code, Seat)</button>
+                                 <button onClick={() => fileInputRef.current?.click()} className="flex-1 py-1.5 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-gray-500 hover:text-weddingAccent transition-colors flex justify-center items-center gap-1"><Upload size={10} /> Import Base RSVP List</button>
                                </>
                              )}
                              <button onClick={handleDownloadCSV} className="flex-1 py-1.5 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-gray-500 hover:text-weddingAccent transition-colors flex justify-center items-center gap-1">
-                                <FileSpreadsheet size={12}/> {adminRole === 'super' ? 'Export CSV' : 'Export to Excel'}
+                                <FileSpreadsheet size={12}/> Export
                              </button>
                           </div>
 
@@ -1580,8 +1646,8 @@ export default function App() {
                                       <button onClick={() => handleDeleteGuest(i.id)} className="absolute top-2 right-2 text-gray-300 hover:text-red-500 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity p-1 touch-manipulation"><Trash2 size={12} className="sm:w-[14px] sm:h-[14px]"/></button>
                                    )}
                                    <div className="font-bold text-xs sm:text-sm text-gray-800 pr-6 truncate w-full">{String(i.name)}</div>
-                                   <div className="text-[9px] sm:text-[10px] font-mono font-bold text-weddingAccent uppercase tracking-widest mt-1 mb-1.5 sm:mb-2 truncate w-full">
-                                      Seat: {i.seat}
+                                   <div className="text-[9px] sm:text-[10px] font-mono font-bold text-gray-400 uppercase tracking-widest mt-1 mb-1.5 sm:mb-2 truncate w-full">
+                                      Code: {i.code}
                                    </div>
                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs gap-2 sm:gap-0 w-full">
                                      <span className={`px-2 py-0.5 rounded text-[8px] sm:text-[9px] font-bold uppercase ${i.status === 'Attending' ? 'bg-green-100 text-green-700' : i.status === 'Declined' ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-500'}`}>{String(i.status)}</span>
