@@ -482,6 +482,71 @@ const ProgramManager = ({ timeline = [], onChange }) => {
   );
 };
 
+// --- Seat Map Editing Component ---
+const SeatMapManager = ({ seatMap = [], onChange }) => {
+  const [newName, setNewName] = useState('');
+  const [newSeat, setNewSeat] = useState('');
+  const [editingIndex, setEditingIndex] = useState(null);
+
+  const handleAdd = () => {
+    if (!newName.trim()) return;
+    onChange([{ id: crypto.randomUUID(), name: newName.trim(), seat: newSeat.trim() || 'Unassigned' }, ...seatMap]);
+    setNewName(''); 
+    setNewSeat('');
+  };
+
+  const handleRemove = (idx) => {
+    const updated = [...seatMap];
+    updated.splice(idx, 1);
+    onChange(updated);
+    setEditingIndex(null);
+  };
+
+  const updateItem = (idx, field, val) => {
+    const updated = [...seatMap];
+    updated[idx] = { ...updated[idx], [field]: val };
+    onChange(updated);
+  };
+
+  return (
+    <div className="mt-4 space-y-3 w-full">
+       <div className="flex gap-2 bg-gray-50 p-2 rounded-lg border border-gray-200 shadow-inner w-full">
+          <input type="text" placeholder="Guest Name" value={newName} onChange={e=>setNewName(e.target.value)} className="flex-1 min-w-0 bg-white border border-gray-200 text-xs px-2.5 py-2 rounded focus:outline-none focus:border-weddingAccent" />
+          <input type="text" placeholder="Seat" value={newSeat} onChange={e=>setNewSeat(e.target.value)} className="w-20 sm:w-24 bg-white border border-gray-200 text-xs px-2.5 py-2 rounded focus:outline-none focus:border-weddingAccent" />
+          <button onClick={handleAdd} className="bg-weddingDark text-white px-3 py-2 rounded text-[9px] font-bold uppercase hover:bg-weddingAccent transition-colors touch-manipulation"><Plus size={14}/></button>
+       </div>
+
+       <div className="max-h-[40vh] overflow-y-auto space-y-2 pr-1 no-scrollbar w-full">
+          {seatMap.map((s, idx) => (
+             <div key={s.id || idx} className="flex justify-between items-center p-2 sm:p-2.5 bg-white border border-gray-100 shadow-sm rounded-lg text-xs group transition-all w-full">
+                {editingIndex === idx ? (
+                   <div className="flex flex-1 gap-2 mr-2 min-w-0">
+                      <input type="text" value={s.name} onChange={e=>updateItem(idx, 'name', e.target.value)} className="flex-1 min-w-0 bg-gray-50 border border-gray-300 px-2 py-1.5 rounded focus:outline-none focus:border-weddingAccent" />
+                      <input type="text" value={s.seat} onChange={e=>updateItem(idx, 'seat', e.target.value)} className="w-16 sm:w-20 bg-gray-50 border border-gray-300 px-2 py-1.5 rounded focus:outline-none focus:border-weddingAccent" />
+                   </div>
+                ) : (
+                   <div className="flex flex-1 items-center justify-between mr-2 min-w-0">
+                      <span className="font-bold text-gray-800 truncate pr-2 w-full">{s.name}</span>
+                      <span className="text-[8px] sm:text-[9px] font-bold tracking-widest uppercase text-weddingAccent bg-gray-50 px-2 py-1 rounded border border-gray-100 shrink-0 truncate max-w-[80px] sm:max-w-none text-center">{s.seat}</span>
+                   </div>
+                )}
+
+                <div className="flex gap-1 sm:gap-1.5 shrink-0 ml-1">
+                   <button onClick={() => setEditingIndex(editingIndex === idx ? null : idx)} className="p-1.5 sm:p-2 text-gray-400 hover:text-weddingAccent bg-gray-50 hover:bg-white rounded shadow-sm border border-gray-100 transition-colors touch-manipulation">
+                      {editingIndex === idx ? <CheckCircle size={12} className="text-green-500 sm:w-3.5 sm:h-3.5"/> : <Edit2 size={12} className="sm:w-3.5 sm:h-3.5"/>}
+                   </button>
+                   <button onClick={() => handleRemove(idx)} className="p-1.5 sm:p-2 text-gray-400 hover:text-red-500 bg-gray-50 hover:bg-white rounded shadow-sm border border-gray-100 transition-colors touch-manipulation">
+                      <Trash2 size={12} className="sm:w-3.5 sm:h-3.5"/>
+                   </button>
+                </div>
+             </div>
+          ))}
+          {!(seatMap?.length) && <p className="text-center text-xs italic text-gray-400 py-6 bg-gray-50 rounded-lg border border-gray-200">No seat assignments loaded.</p>}
+       </div>
+    </div>
+  );
+};
+
 
 // ==========================================
 // 5. MAIN APPLICATION
@@ -1547,20 +1612,13 @@ export default function App() {
                              </button>
                           </div>
 
-                          <div className="mt-4 flex justify-between items-center bg-weddingSage/20 p-3 rounded-lg border border-weddingSage/30">
+                          <div className="mt-4 flex justify-between items-center bg-weddingSage/20 p-3 rounded-lg border border-weddingSage/30 mb-2">
                              <span className="text-[10px] font-bold uppercase tracking-widest text-weddingDark">Total Assigned Guests:</span>
                              <span className="font-mono font-bold text-weddingAccent">{editForm.seatMap?.length || 0}</span>
                           </div>
 
-                          <div className="mt-4 max-h-[40vh] overflow-y-auto space-y-2 pr-1 no-scrollbar">
-                             {(editForm.seatMap || []).map((s, idx) => (
-                                <div key={idx} className="flex justify-between items-center p-2.5 bg-gray-50 border border-gray-100 rounded-lg text-xs">
-                                   <span className="font-bold text-gray-800 truncate pr-4 flex-1">{s.name}</span>
-                                   <span className="text-[9px] font-bold tracking-widest uppercase text-weddingAccent bg-white px-2 py-1 rounded shadow-sm border border-gray-100 shrink-0">{s.seat}</span>
-                                </div>
-                             ))}
-                             {!(editForm.seatMap?.length) && <p className="text-center text-xs italic text-gray-400 py-4">No seat assignments loaded.</p>}
-                          </div>
+                          {/* New Full Editing Capabilities */}
+                          <SeatMapManager seatMap={editForm.seatMap} onChange={(arr) => setEditForm({...editForm, seatMap: arr})} />
                        </div>
                     </div>
                  )}
@@ -1595,104 +1653,4 @@ export default function App() {
                               </div>
                            </div>
                            
-                           <button onClick={handleAddGuest} className="w-full bg-weddingDark text-white py-2.5 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors touch-manipulation">Add Record</button>
-                         </div>
-                       )}
-                       
-                       <div className="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm w-full">
-                          <h3 className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-weddingAccent mb-4 sm:mb-5 border-b border-gray-100 pb-2 flex justify-between items-center">
-                            {adminRole === 'super' ? 'Manage RSVP List' : 'Confirmed Attendees'}
-                          </h3>
-
-                          {/* SEARCH & FILTER */}
-                          <div className="flex flex-col gap-3 mb-4">
-                             <div className="relative">
-                               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                               <input type="text" placeholder="Search by name or code..." value={guestSearch} onChange={(e) => setGuestSearch(e.target.value)} className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-weddingAccent" />
-                             </div>
-                             
-                             {adminRole === 'super' && (
-                               <div className="relative">
-                                 <Filter size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                                 <select value={guestFilter} onChange={(e) => setGuestFilter(e.target.value)} className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-weddingAccent appearance-none cursor-pointer">
-                                    <option value="All">All Guests</option>
-                                    <option value="Attending">Attending Only</option>
-                                    <option value="Declined">Declined Only</option>
-                                    <option value="Pending">Pending (No Response)</option>
-                                    <option value="Guestbook">Guestbook Only</option>
-                                    <option value="Needs Approval">Needs Message Approval</option>
-                                 </select>
-                               </div>
-                             )}
-                          </div>
-
-                          {/* EXCEL EXPORT OPTIONS */}
-                          <div className="flex gap-2 mb-4 w-full pt-2 border-t border-gray-100">
-                             {adminRole === 'super' && (
-                               <>
-                                 <input type="file" accept=".csv" ref={fileInputRef} onChange={handleBulkUploadCSV} className="hidden" />
-                                 <button onClick={() => fileInputRef.current?.click()} className="flex-1 py-1.5 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-gray-500 hover:text-weddingAccent transition-colors flex justify-center items-center gap-1"><Upload size={10} /> Import Base RSVP List</button>
-                               </>
-                             )}
-                             <button onClick={handleDownloadCSV} className="flex-1 py-1.5 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-gray-500 hover:text-weddingAccent transition-colors flex justify-center items-center gap-1">
-                                <FileSpreadsheet size={12}/> Export
-                             </button>
-                          </div>
-
-                          <div className="space-y-2 sm:space-y-3 w-full max-h-[60vh] overflow-y-auto pr-1">
-                             {filteredGuests.map(i => (
-                                <div key={i.id} className="p-2.5 sm:p-3 bg-gray-50 border border-gray-200 rounded-lg relative group w-full overflow-hidden">
-                                   {adminRole === 'super' && (
-                                      <button onClick={() => handleDeleteGuest(i.id)} className="absolute top-2 right-2 text-gray-300 hover:text-red-500 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity p-1 touch-manipulation"><Trash2 size={12} className="sm:w-[14px] sm:h-[14px]"/></button>
-                                   )}
-                                   <div className="font-bold text-xs sm:text-sm text-gray-800 pr-6 truncate w-full">{String(i.name)}</div>
-                                   <div className="text-[9px] sm:text-[10px] font-mono font-bold text-gray-400 uppercase tracking-widest mt-1 mb-1.5 sm:mb-2 truncate w-full">
-                                      Code: {i.code}
-                                   </div>
-                                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs gap-2 sm:gap-0 w-full">
-                                     <span className={`px-2 py-0.5 rounded text-[8px] sm:text-[9px] font-bold uppercase ${i.status === 'Attending' ? 'bg-green-100 text-green-700' : i.status === 'Declined' ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-500'}`}>{String(i.status)}</span>
-                                     {i.message && adminRole === 'super' && (
-                                       <button onClick={() => toggleMessageApproval(i.id, i.messageApproved)} className={`flex items-center gap-1 text-[8px] sm:text-[9px] font-bold uppercase touch-manipulation ${i.messageApproved ? 'text-pink-500' : 'text-gray-400'}`}>
-                                          <Heart size={10} className="sm:w-3 sm:h-3" fill={i.messageApproved ? "currentColor" : "none"}/> {i.messageApproved ? 'Visible' : 'Hidden'}
-                                       </button>
-                                     )}
-                                   </div>
-                                   {i.message && (
-                                      <div className="mt-2 pt-2 border-t border-gray-200/60 text-xs font-serif italic text-gray-600 break-words line-clamp-2" title={String(i.message)}>"{String(i.message)}"</div>
-                                   )}
-                                </div>
-                             ))}
-                             {filteredGuests.length === 0 && <div className="text-center text-xs text-gray-400 italic py-4">No guests found.</div>}
-                          </div>
-                       </div>
-                    </div>
-                 )}
-              </div>
-            </div>
-          )}
-
-          {showAdminLogin && (
-            <div className="fixed inset-0 z-[1000] bg-[#faf9f6]/95 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 text-weddingDark">
-              <div className="max-w-sm w-full text-center animate-in zoom-in duration-300">
-                <button onClick={() => setShowAdminLogin(false)} className="mb-8 sm:mb-12 text-gray-300 hover:text-black transition-transform hover:rotate-90 focus:outline-none touch-manipulation"><X size={32} className="sm:w-10 sm:h-10 mx-auto" /></button>
-                <h3 className="text-2xl sm:text-3xl font-serif mb-2 italic">Secure Access</h3>
-                <p className="text-[10px] sm:text-xs text-gray-500 mb-8 sm:mb-10 font-bold tracking-widest uppercase">Enter Staff or Viewer Password</p>
-                <form onSubmit={handleAdminLogin} className="w-full">
-                  <input type="password" autoFocus value={adminPassword} onChange={e=>setAdminPassword(e.target.value)} className="w-full border-b-2 border-weddingDark text-center py-4 sm:py-6 mb-6 sm:mb-8 tracking-[0.5em] sm:tracking-[0.8em] text-2xl sm:text-3xl focus:outline-none bg-transparent rounded-none" placeholder="••••••••" />
-                  {adminError && <p className="text-red-500 text-[9px] sm:text-[10px] font-bold mb-6 sm:mb-8 uppercase tracking-[0.2em]">{String(adminError)}</p>}
-                  <button className="w-full bg-weddingDark text-white py-4 sm:py-5 rounded-2xl font-bold uppercase tracking-[0.2em] sm:tracking-[0.3em] text-[10px] sm:text-[11px] shadow-2xl active:scale-95 transition-all hover:bg-black touch-manipulation">Verify Credentials</button>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {toastMessage && (
-            <div className="fixed bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 bg-weddingDark text-white px-6 sm:px-10 py-3 sm:py-4 rounded-full text-[9px] sm:text-[11px] uppercase font-bold tracking-widest z-[1000] shadow-2xl animate-bounce whitespace-nowrap max-w-[90vw] truncate">
-              {toastMessage}
-            </div>
-          )}
-        </div>
-      )}
-    </>
-  );
-}
+                           <button onClick={handleAddGuest} className="w-full bg-weddingDark text-white py-2.5 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking
