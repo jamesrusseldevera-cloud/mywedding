@@ -478,6 +478,40 @@ const SeatMapManager = ({ seatMap = [], onChange }) => {
   );
 };
 
+const ColorPaletteEditor = ({ colors = [], onChange }) => {
+  const addColor = () => {
+    if (colors.length < 8) onChange([...colors, '#ffffff']);
+  };
+  const updateColor = (idx, newColor) => {
+    const newColors = [...colors];
+    newColors[idx] = newColor;
+    onChange(newColors);
+  };
+  const removeColor = (idx) => {
+    onChange(colors.filter((_, i) => i !== idx));
+  };
+
+  return (
+    <div>
+       <label className="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">Color Palette</label>
+       <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 mb-2">
+         {colors.map((c, idx) => (
+           <div key={idx} className="relative group aspect-square rounded-md overflow-hidden border border-gray-200 shadow-sm">
+             <input type="color" value={c} onChange={(e) => updateColor(idx, e.target.value)} className="absolute -inset-2 w-[150%] h-[150%] cursor-pointer p-0 m-0 border-none" />
+             <button onClick={() => removeColor(idx)} className="absolute inset-0 bg-black/50 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity z-10 touch-manipulation">
+               <Trash2 size={14}/>
+             </button>
+           </div>
+         ))}
+         {colors.length < 8 && (
+           <button onClick={addColor} className="aspect-square rounded-md border border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:text-weddingAccent hover:border-weddingAccent transition-colors touch-manipulation">
+             <Plus size={16}/>
+           </button>
+         )}
+       </div>
+    </div>
+  );
+};
 
 // ==========================================
 // 5. MAIN APPLICATION
