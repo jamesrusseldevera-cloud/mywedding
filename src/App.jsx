@@ -1495,6 +1495,12 @@ export default function App() {
                  {adminTab === 'media' && adminRole === 'super' && (
                     <div className="animate-in fade-in duration-300 w-full">
                        <div className="bg-white p-3 sm:p-4 rounded-lg border border-gray-200 shadow-sm w-full mb-4">
+                          <h3 className="text-[9px] font-bold uppercase tracking-widest text-weddingAccent mb-3 border-b border-gray-100 pb-1.5 flex items-center gap-1.5"><Music size={12}/> Background Music</h3>
+                          <p className="text-[9px] text-gray-500 mb-2 italic">Provide a direct link to an MP3 file.</p>
+                          <TextInput label="MP3 File URL" value={editForm.backgroundMusicUrl} onChange={val=>setEditForm({...editForm, backgroundMusicUrl: val})} />
+                       </div>
+                       
+                       <div className="bg-white p-3 sm:p-4 rounded-lg border border-gray-200 shadow-sm w-full mb-4">
                           <h3 className="text-[9px] font-bold uppercase tracking-widest text-weddingAccent mb-3 border-b border-gray-100 pb-1.5 flex items-center gap-1.5"><Hash size={12}/> Social Feed</h3>
                           <p className="text-[9px] text-gray-500 mb-2 italic">Embed Padlet link here.</p>
                           <TextInput label="Widget Embed URL" value={editForm.socialFeedUrl} onChange={val=>setEditForm({...editForm, socialFeedUrl: val})} />
